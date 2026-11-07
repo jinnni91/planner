@@ -469,14 +469,14 @@
 </head>
 <body>
     <div class="app-viewport">
-        <!-- Main Single-Page Landscape Sheet Area (No Cluttered Demo Header) -->
+        <!-- Main Single-Page Landscape Sheet Area -->
         <main class="workspace-area">
             <section class="planner-sheet" aria-label="Landscape Daily Planner">
                 <div class="planner-master-grid">
 
-                    <!-- 1. TOP HEADER: DATE & GOAL (Column 1, Rows 1..2 = Hours 0..1) -->
+                    <!-- 1. TOP HEADER: DATE & GOAL -->
                     <div style="grid-column: 1; grid-row: 1 / span 2;" class="top-date-goal-row b-right-strong b-bottom-strong flex min-h-[52px]">
-                        <!-- DATE CELL (27% width, Clickable Date Picker) -->
+                        <!-- DATE CELL -->
                         <div onclick="openDatePickerModal()" class="top-date-cell w-[27%] min-w-[190px] b-right-strong px-3 pt-1.5 pb-1 flex flex-col overflow-hidden cursor-pointer hover:bg-zinc-50/60 transition-colors" title="CLICK TO SELECT DATE">
                             <div class="flex items-center justify-between flex-shrink-0">
                                 <span class="field-label">DATE</span>
@@ -497,7 +497,7 @@
                             </div>
                         </div>
 
-                        <!-- GOAL CELL (73% width, Clean like original PDF) -->
+                        <!-- GOAL CELL -->
                         <div class="top-goal-cell w-[73%] px-3.5 pt-1.5 pb-1 flex flex-col overflow-hidden">
                             <div class="flex items-center justify-between gap-2 flex-shrink-0">
                                 <span class="field-label">GOAL</span>
@@ -516,16 +516,15 @@
                         </div>
                     </div>
 
-                    <!-- 2. MIDDLE 18 FREE-FORM ROWS (Column 1, Rows 3..20 = Hours 2..19) -->
+                    <!-- 2. MIDDLE 18 FREE-FORM ROWS -->
                     <div id="middleRowsContainer" style="grid-column: 1; grid-row: 3 / span 18;" class="b-right-strong grid grid-cols-2 grid-rows-[repeat(18,minmax(0,1fr))] min-h-0">
                     </div>
 
-                    <!-- 3. DAILY REVIEW SECTION (Column 1, Rows 21..24 = Hours 20..23) -->
+                    <!-- 3. DAILY REVIEW SECTION -->
                     <div style="grid-column: 1; grid-row: 21;" class="portrait-review-row portrait-row-h b-right-strong b-bottom-light px-3 flex items-center">
                         <span class="field-label">DAILY REVIEW</span>
                     </div>
 
-                    <!-- Row 22 (Hour 21): • KEEP : -->
                     <div style="grid-column: 1; grid-row: 22;" class="portrait-review-row portrait-row-h b-right-strong b-bottom-light px-3.5 flex items-center">
                         <div class="inline-flex items-center text-[12px] font-normal text-[#475569] select-none flex-shrink-0 mr-2.5">
                             <span class="inline-flex items-center w-[82px] tracking-[0.03em]">
@@ -538,7 +537,6 @@
                             oninput="handleReviewChange('keep', this.value)">
                     </div>
 
-                    <!-- Row 23 (Hour 22): • PROBLEM : -->
                     <div style="grid-column: 1; grid-row: 23;" class="portrait-review-row portrait-row-h b-right-strong b-bottom-light px-3.5 flex items-center">
                         <div class="inline-flex items-center text-[12px] font-normal text-[#475569] select-none flex-shrink-0 mr-2.5">
                             <span class="inline-flex items-center w-[82px] tracking-[0.03em]">
@@ -551,7 +549,6 @@
                             oninput="handleReviewChange('problem', this.value)">
                     </div>
 
-                    <!-- Row 24 (Hour 23): • TRY : -->
                     <div style="grid-column: 1; grid-row: 24;" class="portrait-review-row portrait-row-h b-right-strong px-3.5 flex items-center">
                         <div class="inline-flex items-center text-[12px] font-normal text-[#475569] select-none flex-shrink-0 mr-2.5">
                             <span class="inline-flex items-center w-[82px] tracking-[0.03em]">
@@ -564,7 +561,7 @@
                             oninput="handleReviewChange('try', this.value)">
                     </div>
 
-                    <!-- 4. RIGHT TIMETABLE (Column 2, Rows 1..24 = Hours 0..23, 10-min 6-grid) -->
+                    <!-- 4. RIGHT TIMETABLE -->
                     <div id="timetableColumnContainer" style="grid-column: 2; grid-row: 1 / span 24;" class="grid grid-rows-[repeat(24,minmax(0,1fr))] min-h-0 relative">
                     </div>
 
@@ -573,15 +570,12 @@
         </main>
     </div>
 
-    <!-- Floating Touch Drag Ghost (iPhone / iPad Touch Drag-and-Drop) -->
+    <!-- Floating Touch Drag Ghost -->
     <div id="touchDragGhost" class="touch-drag-ghost hidden"></div>
 
-    <!-- ============================================================================ -->
-    <!-- MODAL 0: LIQUID GLASS CALENDAR DATE PICKER (AUTO DATE + DAY OF WEEK)         -->
-    <!-- ============================================================================ -->
+    <!-- MODAL 0: DATE PICKER -->
     <div id="datePickerModalBackdrop" onclick="if(event.target===this) closeDatePickerModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="liquid-glass-modal relative rounded-3xl max-w-xs w-full p-5 space-y-3.5 select-none">
-            <!-- Calendar Header: Month / Year + Prev/Next -->
             <div class="flex items-center justify-between">
                 <button type="button" onclick="changeCalendarMonth(-1)"
                     class="liquid-btn-inactive w-8 h-8 rounded-xl flex items-center justify-center font-bold text-slate-700 transition">
@@ -594,7 +588,6 @@
                 </button>
             </div>
 
-            <!-- Day-of-Week Header -->
             <div class="grid grid-cols-7 text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase pt-1">
                 <span class="text-rose-400">SUN</span>
                 <span>MON</span>
@@ -605,20 +598,17 @@
                 <span class="text-blue-400">SAT</span>
             </div>
 
+            <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1 text-center"></div>
+
             <!-- Days Grid -->
             <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1 text-center"></div>
 
-            <!-- Footer Actions: CLEAR DAY / CLOUD / WIDGET / TODAY / CLOSE -->
+            <!-- Footer Actions: CLEAR DAY / WIDGET / TODAY / CLOSE -->
             <div class="flex items-center justify-between pt-2 border-t border-white/60">
                 <div class="flex items-center gap-2">
                     <button type="button" onclick="resetCurrentDatePage()"
                         class="text-[10.5px] font-bold tracking-widest uppercase text-slate-400 hover:text-rose-600 transition px-1 py-1">
                         CLEAR
-                    </button>
-                    <button type="button" onclick="closeDatePickerModal(); openCloudSyncModal();"
-                        class="inline-flex items-center gap-1 text-[10.5px] font-bold tracking-widest uppercase text-slate-500 hover:text-slate-900 transition px-1 py-1">
-                        <span id="calendarCloudStatusDot" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                        CLOUD
                     </button>
                     <button type="button" onclick="closeDatePickerModal(); openWidgetSimulator();"
                         class="text-[10.5px] font-bold tracking-widest uppercase text-slate-500 hover:text-slate-900 transition px-1 py-1">
@@ -640,8 +630,7 @@
     </div>
 
     <!-- ============================================================================ -->
-    <!-- MODAL 0-B: REAL-TIME MULTI-DEVICE CLOUD SYNC MODAL (iPHONE / iPAD / MAC)     -->
-    <!-- ============================================================================ -->
+    <!-- MODAL 0-B: CLOUD SYNC -->
     <div id="cloudSyncModalBackdrop" onclick="if(event.target===this) closeCloudSyncModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/25 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="liquid-glass-modal relative rounded-3xl max-w-md w-full p-5 space-y-3.5 max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between pb-2 border-b border-white/60">
@@ -654,7 +643,6 @@
                 </span>
             </div>
 
-            <!-- Sync Workspace Key (Shared across user's iPhone, iPad, MacBook) -->
             <div class="liquid-glass-subcard rounded-2xl p-3.5 space-y-2">
                 <div class="flex items-center justify-between">
                     <span class="text-[10.5px] font-bold tracking-wider uppercase text-slate-700">SYNC KEY (기기 공통 연동 코드)</span>
@@ -674,25 +662,6 @@
                 </div>
             </div>
 
-            <!-- Firebase Config Setup for GitHub Pages Deployment -->
-            <div class="liquid-glass-subcard rounded-2xl p-3.5 space-y-2 text-[11px] text-slate-700">
-                <div class="flex items-center justify-between">
-                    <span class="font-bold text-slate-900 tracking-wider uppercase text-[10.5px]">GITHUB PAGES 무료 실시간 DB 연결 방법</span>
-                    <button type="button" onclick="connectRuntimeFirebaseConfig()"
-                        class="liquid-btn-inactive px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase transition">
-                        TEST CONNECT
-                    </button>
-                </div>
-                <ol class="list-decimal list-inside space-y-1 text-[10.5px] text-slate-600 leading-relaxed">
-                    <li><strong>console.firebase.google.com</strong> 접속 → 무료 프로젝트 생성</li>
-                    <li><strong>Build → Authentication → Sign-in method</strong>에서 <strong>Anonymous(익명)</strong> 사용 설정</li>
-                    <li><strong>Build → Firestore Database → Create database</strong> 생성 후 <strong>Rules</strong> 탭에서 <code>allow read, write: if request.auth != null;</code> 게시</li>
-                    <li>프로젝트 설정의 웹 앱(<code>&lt;/&gt;</code>) <strong>firebaseConfig</strong> 값을 복사해 코드 내 <code>USER_FIREBASE_CONFIG</code>에 붙여넣거나 아래 칸에 입력 후 연결하세요.</li>
-                </ol>
-                <textarea id="runtimeFirebaseConfigInput" rows="3" placeholder='{"apiKey":"...","authDomain":"...","projectId":"..."}'
-                    class="liquid-input w-full p-2.5 rounded-xl text-[10.5px] font-mono text-slate-800 focus:outline-none"></textarea>
-            </div>
-
             <div class="flex justify-end pt-1">
                 <button type="button" onclick="closeCloudSyncModal()"
                     class="liquid-btn-active h-10 px-5 rounded-xl font-semibold text-xs tracking-wider uppercase transition">
@@ -702,12 +671,9 @@
         </div>
     </div>
 
-    <!-- ============================================================================ -->
-    <!-- MODAL 1: ROW SETTING MODAL (TOPIC / TO-DO, DONE / UNDONE, SHADE, CLEAR/SAVE) -->
-    <!-- ============================================================================ -->
+    <!-- MODAL 1: ROW SETTING MODAL -->
     <div id="taskModalBackdrop" onclick="if(event.target===this) closeTaskModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4">
         <div id="taskModalDialog" class="liquid-glass-modal relative rounded-3xl max-w-sm w-full p-5 space-y-3.5">
-            <!-- 1. Row Type Toggle: TOPIC vs TO-DO (Uniform 44px height) -->
             <div class="grid grid-cols-2 gap-2">
                 <button type="button" id="btnRowTypeTopic" onclick="setModalRowType('topic')"
                     class="liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition">
@@ -719,7 +685,6 @@
                 </button>
             </div>
 
-            <!-- 2. Completion Toggle: DONE vs UNDONE (Uniform 44px height, hidden when TOPIC) -->
             <div id="modalCompletionSection" class="grid grid-cols-2 gap-2">
                 <button type="button" id="btnMarkDone" onclick="setModalTaskDone(true)"
                     class="liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition">
@@ -731,14 +696,12 @@
                 </button>
             </div>
 
-            <!-- 3. Text Input (Uniform 44px height) -->
             <div>
                 <input id="modalTaskTextInput" type="text" placeholder="ENTER TEXT..."
                     class="liquid-input w-full h-11 px-3.5 rounded-[12px] text-[13.5px] font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none"
                     onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveTaskModal(); }">
             </div>
 
-            <!-- 4. Shade Palette: Diagonal Red Slash (None) + 5 Pinned Colors + Rainbow Picker -->
             <div class="flex items-center justify-between pt-1">
                 <div class="flex items-center gap-2">
                     <button type="button" id="taskHlNoneBtn" onclick="setModalTaskHighlight('none')"
@@ -756,7 +719,6 @@
                 </button>
             </div>
 
-            <!-- 5. Bottom Actions: CANCEL & SAVE -->
             <div class="grid grid-cols-2 gap-2 pt-1">
                 <button type="button" onclick="closeTaskModal()"
                     class="liquid-btn-inactive h-11 rounded-[12px] font-semibold text-xs tracking-wider uppercase transition">
@@ -770,12 +732,9 @@
         </div>
     </div>
 
-    <!-- ============================================================================ -->
-    <!-- MODAL 2: TIMETABLE BLOCK MODAL (EDITABLE START/END TIME, TEXT, SHADE)        -->
-    <!-- ============================================================================ -->
+    <!-- MODAL 2: TIMETABLE BLOCK MODAL -->
     <div id="timeBlockModalBackdrop" onclick="if(event.target===this) closeTimeBlockModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4">
         <div id="timeBlockModalDialog" class="liquid-glass-modal relative rounded-3xl max-w-sm w-full p-5 space-y-3.5">
-            <!-- 1. Editable Time Range Dropdowns (10-min intervals, prevents overlap) -->
             <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
                 <select id="tbStartSlotSelect" onchange="handleTbStartSlotChange(this.value)"
                     class="liquid-input h-11 px-3 rounded-[12px] text-[14px] font-bold text-slate-800 text-center tracking-wider uppercase focus:outline-none cursor-pointer">
@@ -786,14 +745,12 @@
                 </select>
             </div>
 
-            <!-- 2. Single-Line Activity Text Input (44px height) -->
             <div>
                 <input id="tbTextInput" type="text" placeholder="ENTER SCHEDULE..."
                     class="liquid-input w-full h-11 px-3.5 rounded-[12px] text-[13.5px] font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none"
                     onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveTimeBlockModal(); }">
             </div>
 
-            <!-- 3. Shade Palette + Text CLEAR Action -->
             <div class="flex items-center justify-between pt-1">
                 <div class="flex items-center gap-2">
                     <button type="button" id="tbHlNoneBtn" onclick="setModalTimeBlockColor('none')"
@@ -811,7 +768,6 @@
                 </button>
             </div>
 
-            <!-- 4. Bottom Actions: CANCEL & SAVE -->
             <div class="grid grid-cols-2 gap-2 pt-1">
                 <button type="button" onclick="closeTimeBlockModal()"
                     class="liquid-btn-inactive h-11 rounded-[12px] font-semibold text-xs tracking-wider uppercase transition">
@@ -825,12 +781,9 @@
         </div>
     </div>
 
-    <!-- ============================================================================ -->
-    <!-- MODAL 3: iOS LIQUID GLASS WIDGET PREVIEW (ADAPTIVE SIZE & SCRIPTABLE SYNC)   -->
-    <!-- ============================================================================ -->
+    <!-- MODAL 3: WIDGET PREVIEW -->
     <div id="widgetSimModalBackdrop" onclick="if(event.target===this) closeWidgetSimulator()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/25 backdrop-blur-md flex items-center justify-center p-4">
         <div id="widgetOuterContainer" class="liquid-glass-widget rounded-[32px] max-w-2xl w-full p-5 sm:p-6 transition-all duration-200 max-h-[92vh] overflow-y-auto">
-            <!-- Sleek Top Header Bar + Size Switcher + Scriptable Sync -->
             <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3.5 border-b border-white/60">
                 <div class="flex items-center gap-2">
                     <span class="w-2.5 h-2.5 rounded-full bg-slate-800 shadow-sm"></span>
@@ -840,8 +793,7 @@
 
                 <div class="flex items-center gap-1.5 flex-wrap">
                     <button type="button" onclick="syncToScriptableApp()"
-                        class="liquid-btn-active px-2.5 py-1 rounded-xl text-[10px] font-bold tracking-wider uppercase transition"
-                        title="SEND CURRENT TO-DOS TO SCRIPTABLE APP ON iOS">
+                        class="liquid-btn-active px-2.5 py-1 rounded-xl text-[10px] font-bold tracking-wider uppercase transition">
                         SYNC iOS
                     </button>
                     <button type="button" onclick="toggleScriptableGuide()"
@@ -849,78 +801,46 @@
                         SCRIPTABLE CODE
                     </button>
                     <div class="inline-flex items-center bg-white/40 border border-white/70 rounded-xl p-0.5 gap-0.5">
-                        <button type="button" id="widgetSizeBtn-small" onclick="setWidgetPreviewSize('small')"
-                            class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">
-                            S
-                        </button>
-                        <button type="button" id="widgetSizeBtn-medium" onclick="setWidgetPreviewSize('medium')"
-                            class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">
-                            M
-                        </button>
-                        <button type="button" id="widgetSizeBtn-large" onclick="setWidgetPreviewSize('large')"
-                            class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">
-                            L
-                        </button>
-                        <button type="button" id="widgetSizeBtn-xl" onclick="setWidgetPreviewSize('xl')"
-                            class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">
-                            XL
-                        </button>
+                        <button type="button" id="widgetSizeBtn-small" onclick="setWidgetPreviewSize('small')" class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">S</button>
+                        <button type="button" id="widgetSizeBtn-medium" onclick="setWidgetPreviewSize('medium')" class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">M</button>
+                        <button type="button" id="widgetSizeBtn-large" onclick="setWidgetPreviewSize('large')" class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">L</button>
+                        <button type="button" id="widgetSizeBtn-xl" onclick="setWidgetPreviewSize('xl')" class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">XL</button>
                     </div>
                     <button onclick="closeWidgetSimulator()" class="w-7 h-7 rounded-full bg-white/40 hover:bg-white/60 border border-white/70 flex items-center justify-center text-slate-700 text-xs transition ml-1">✕</button>
                 </div>
             </div>
 
-            <!-- Collapsible Scriptable Free iOS Widget Setup Box -->
             <div id="scriptableSetupBox" class="hidden liquid-glass-subcard rounded-2xl p-4 mb-4 space-y-2.5 text-[11.5px] text-slate-700">
                 <div class="flex items-center justify-between gap-2">
                     <span class="font-bold text-slate-900 tracking-wider uppercase text-[11px]">FREE iOS WIDGET SETUP (SCRIPTABLE)</span>
                     <div class="flex items-center gap-1.5">
-                        <button type="button" id="copyScriptableBtn" onclick="copyScriptableWidgetCode()"
-                            class="liquid-btn-active px-3 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase transition">
-                            COPY WIDGET SCRIPT
-                        </button>
-                        <button type="button" onclick="copyWidgetJsonData()"
-                            class="liquid-btn-inactive px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase transition">
-                            COPY JSON
-                        </button>
+                        <button type="button" id="copyScriptableBtn" onclick="copyScriptableWidgetCode()" class="liquid-btn-active px-3 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase transition">COPY WIDGET SCRIPT</button>
+                        <button type="button" onclick="copyWidgetJsonData()" class="liquid-btn-inactive px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase transition">COPY JSON</button>
                     </div>
                 </div>
-                <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-600 leading-relaxed">
-                    <li>App Store에서 무료 앱 <strong>Scriptable</strong> 설치 후 우측 상단 <strong>+</strong> 버튼을 눌러 새 스크립트를 만듭니다.</li>
-                    <li>스크립트 이름을 <strong>DailyPlanner</strong>로 지정하고, 위 <strong>COPY WIDGET SCRIPT</strong> 버튼을 눌러 복사한 코드를 붙여넣고 저장합니다.</li>
-                    <li>아이폰·아이패드 홈 화면에 Scriptable 위젯(S/M/L/XL)을 추가하고 <strong>Script: DailyPlanner</strong>로 설정합니다.</li>
-                    <li>플래너 작성 후 상단 <strong>SYNC iOS</strong> 버튼을 누르면 현재 할 일 목록이 실제 iOS 위젯에 즉시 반영됩니다.</li>
-                </ol>
             </div>
 
-            <!-- Adaptive Columns Grid (Dynamic Space Allocation per Size, No Fixed 5-Cap) -->
-            <div id="widgetTopicsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            </div>
+            <div id="widgetTopicsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"></div>
         </div>
     </div>
 
-    <!-- ============================================================================ -->
-    <!-- SLEEK NATIVE-STYLE SPECTRUM COLOR PICKER POPOVER (CENTERED IN ACTIVE MODAL)  -->
-    <!-- ============================================================================ -->
+    <!-- SPECTRUM COLOR PICKER POPOVER -->
     <div id="spectrumPickerOverlay" onclick="if(event.target===this) closeSpectrumPicker()" class="no-print hidden inset-0 z-[70]">
         <div id="spectrumPickerCard" onclick="event.stopPropagation()"
              style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 256px;"
              class="liquid-glass-picker rounded-2xl p-3.5 space-y-3">
-            <!-- 2D Saturation / Brightness Spectrum Area -->
             <div id="svSpectrumBox" class="sv-spectrum-box" style="background-color: hsl(200, 100%, 50%);">
                 <div class="sv-spectrum-white"></div>
                 <div class="sv-spectrum-black"></div>
                 <div id="svSpectrumThumb" class="sv-spectrum-thumb" style="left: 40%; top: 10%;"></div>
             </div>
 
-            <!-- Smooth Rainbow Hue Slider -->
             <div class="px-0.5">
                 <div id="hueSliderTrack" class="hue-slider-track">
                     <div id="hueSliderThumb" class="hue-slider-thumb" style="left: 55%;"></div>
                 </div>
             </div>
 
-            <!-- Live Preview Swatch + Editable HEX + OK Button -->
             <div class="flex items-center justify-between gap-2 pt-0.5">
                 <div class="flex items-center gap-2 flex-1 min-w-0">
                     <span id="pickerLiveSwatch" class="w-7 h-7 rounded-full border border-white/90 shadow-sm flex-shrink-0" style="background-color: #93D5F6;"></span>
@@ -956,13 +876,12 @@
         };
         const DEFAULT_SYNC_KEY = 'my-personal-planner';
 
-        const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0 to 23 (24 hours)
-        const MIDDLE_ROW_COUNT = 18; // 18 rows per column (Hours 2..19)
-        const TOTAL_SLOTS = HOURS.length * 6; // 144 ten-minute slots (00:00 to 24:00)
+        const HOURS = Array.from({ length: 24 }, (_, i) => i);
+        const MIDDLE_ROW_COUNT = 18;
+        const TOTAL_SLOTS = HOURS.length * 6;
         const DOW_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
         const MONTH_NAMES = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 
-        // Default 5 Pinned Shade Colors
         const DEFAULT_PINNED_COLORS = ['#93D5F6', '#F9A8C9', '#FDE072', '#99E6C3', '#D1B3FC'];
 
         const LEGACY_COLOR_MAP = {
@@ -974,7 +893,6 @@
             orange: '#FDBA8C'
         };
 
-        // Cloud Firestore State
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'daily-planner-app';
         let syncWorkspaceKey = DEFAULT_SYNC_KEY;
         let firebaseApp = null;
@@ -1001,22 +919,12 @@
         let activeTbEndSlot = 17;
         let modalTimeBlockColor = '#F9A8C9';
 
-        // Drag-and-Drop TO-DO to Timetable State
         let draggedTodoData = null;
         let dropPreviewSlots = [];
-
-        // Direct Native Color Picker Handler State
         let activePickerTarget = null;
-
-        // Widget Preview Size: 'small' | 'medium' | 'large' | 'xl'
         let activeWidgetSize = 'large';
-
-        // Layout Mode: 'auto' | 'landscape' | 'portrait'
         let currentLayoutMode = 'auto';
 
-        // =========================================================================
-        // DATE KEY & PER-DATE CLOUD STORAGE SYSTEM (AUTO YYYY.MM.DD + DAY OF WEEK)
-        // =========================================================================
         function formatDateKey(dateObj) {
             const y = dateObj.getFullYear();
             const m = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -1042,7 +950,7 @@
 
         let selectedDateKey = getTodayDateKey();
         let calendarViewYear = new Date().getFullYear();
-        let calendarViewMonth = new Date().getMonth(); // 0..11
+        let calendarViewMonth = new Date().getMonth();
 
         function normalizeColorHex(colorVal) {
             if (!colorVal || colorVal === 'none') return 'none';
@@ -1063,7 +971,6 @@
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
 
-        // Clean, Natural Highlighter / Colored Pencil styling (No glossy reflections)
         function applyNaturalShadeStyle(element, hex) {
             const normalized = normalizeColorHex(hex);
             if (!normalized || normalized === 'none') {
@@ -1096,9 +1003,6 @@
             }
         }
 
-        // =========================================================================
-        // CALENDAR DATE PICKER & DATE SWITCHING FUNCTIONS
-        // =========================================================================
         function switchSelectedDate(newDateKey) {
             if (!newDateKey) newDateKey = getTodayDateKey();
             selectedDateKey = newDateKey;
@@ -1205,9 +1109,6 @@
             }
         }
 
-        // =========================================================================
-        // 2D SPECTRUM COLOR PICKER HELPERS & EVENTS
-        // =========================================================================
         let pickerHue = 200;
         let pickerSat = 40;
         let pickerVal = 96;
@@ -1321,9 +1222,7 @@
 
         function closeSpectrumPicker() {
             const overlay = document.getElementById('spectrumPickerOverlay');
-            if (overlay) {
-                overlay.classList.add('hidden');
-            }
+            if (overlay) overlay.classList.add('hidden');
             activePickerTarget = null;
         }
 
@@ -1591,9 +1490,6 @@
             }
         }
 
-        // =========================================================================
-        // REAL-TIME FIREBASE CLOUD SYNC ENGINE (MULTI-DEVICE)
-        // =========================================================================
         function updateCloudStatusUI(status, message) {
             const calDot = document.getElementById('calendarCloudStatusDot');
             const modalDot = document.getElementById('cloudModalDot');
@@ -1636,12 +1532,20 @@
                 auth = getAuth(firebaseApp);
                 db = getFirestore(firebaseApp);
 
-                // RULE 3: Authenticate FIRST before attaching any Firestore listeners
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && !customConfig) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
+                // FIX: Only use custom token if customConfig was explicitly provided or if not running on external GitHub Pages with mismatching tokens.
+                // When using personal firebaseConfig, always authenticate anonymously to avoid token mismatch errors.
+                if (customConfig) {
+                    await signInAnonymously(auth);
+                } else if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && !USER_FIREBASE_CONFIG?.apiKey) {
+                    try {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } catch (e) {
+                        await signInAnonymously(auth);
+                    }
                 } else {
                     await signInAnonymously(auth);
                 }
+
                 currentUser = auth.currentUser;
                 if (!currentUser) {
                     updateCloudStatusUI('error', 'AUTH FAILED');
@@ -1661,7 +1565,6 @@
             if (unsubscribeDaysSnapshot) unsubscribeDaysSnapshot();
             if (unsubscribeSettingsSnapshot) unsubscribeSettingsSnapshot();
 
-            // RULE 1 & RULE 2: Use strict `/artifacts/{appId}/public/data/...` path and simple collection query
             const daysColRef = collection(db, 'artifacts', appId, 'public', 'data', 'planner_days');
             unsubscribeDaysSnapshot = onSnapshot(
                 daysColRef,
@@ -1679,7 +1582,6 @@
                     allPlannersByDate = updatedMap;
                     plannerState = getPlannerDataForDate(selectedDateKey);
 
-                    // Avoid interrupting active typing in text inputs
                     const activeTag = document.activeElement ? document.activeElement.tagName : '';
                     const isTypingOnSheet = activeTag === 'INPUT' && (
                         document.activeElement.id === 'goalInput' ||
@@ -1749,22 +1651,6 @@
             syncWorkspaceKey = cleaned;
             syncInput.value = syncWorkspaceKey;
             attachRealtimeCloudListeners();
-        }
-
-        async function connectRuntimeFirebaseConfig() {
-            const raw = document.getElementById('runtimeFirebaseConfigInput').value.trim();
-            if (!raw) return;
-            try {
-                const normalizedJson = raw
-                    .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":')
-                    .replace(/'/g, '"');
-                const parsed = JSON.parse(normalizedJson);
-                if (parsed && parsed.apiKey) {
-                    await initFirebaseCloudSync(parsed);
-                }
-            } catch (e) {
-                updateCloudStatusUI('error', 'INVALID JSON FORMAT');
-            }
         }
 
         function detectShouldUsePortrait() {
@@ -1843,7 +1729,6 @@
                     pill.appendChild(textSpan);
                     rowEl.appendChild(pill);
 
-                    // Enable dragging filled TO-DO items to the Timetable (Mouse Drag & iPhone/iPad Touch Drag)
                     if (!isTopic && item.text && item.text.trim().length > 0) {
                         rowEl.classList.add('todo-draggable-row', 'group');
                         rowEl.setAttribute('draggable', 'true');
@@ -1851,7 +1736,6 @@
                         const dragHint = document.createElement('span');
                         dragHint.className = 'ml-auto pl-1.5 pr-1 py-1 text-[11px] text-slate-400 opacity-50 group-hover:opacity-100 transition-opacity select-none cursor-grab';
                         dragHint.textContent = '⋮⋮';
-                        dragHint.title = 'DRAG TO TIMETABLE';
                         rowEl.appendChild(dragHint);
 
                         const createPayload = () => ({
@@ -1861,7 +1745,6 @@
                             hl: normalizeColorHex(item.hl)
                         });
 
-                        // 1. Desktop HTML5 Drag and Drop
                         rowEl.addEventListener('dragstart', (e) => {
                             draggedTodoData = createPayload();
                             if (e.dataTransfer) {
@@ -1877,7 +1760,6 @@
                             clearTodoDropPreview();
                         });
 
-                        // 2. iPhone / iPad Touch Drag-and-Drop (Immediate on '⋮⋮' handle, or 240ms long-press on row)
                         let touchLongPressTimer = null;
                         let isTouchDraggingTodo = false;
                         let touchStartX = 0;
@@ -1971,9 +1853,7 @@
                                 cancelTwoTapSelection();
                                 const startSlot = droppedSlot;
                                 const endSlot = clampSlotRangeToEmpty(startSlot, Math.min(TOTAL_SLOTS - 1, startSlot + 5));
-                                const dropColor = (todoPayload.hl && todoPayload.hl !== 'none')
-                                    ? todoPayload.hl
-                                    : (pinnedColors[0] || '#93D5F6');
+                                const dropColor = (todoPayload.hl && todoPayload.hl !== 'none') ? todoPayload.hl : (pinnedColors[0] || '#93D5F6');
                                 openTimeBlockModalForRange(startSlot, endSlot, todoPayload.text, dropColor);
                             }
 
@@ -1992,9 +1872,7 @@
                             openTaskModal(colKey, rowIdx);
                         };
                     } else {
-                        rowEl.onclick = () => {
-                            openTaskModal(colKey, rowIdx);
-                        };
+                        rowEl.onclick = () => openTaskModal(colKey, rowIdx);
                     }
 
                     container.appendChild(rowEl);
@@ -2007,9 +1885,7 @@
             if (!ghost || !payload) return;
             const hlColor = normalizeColorHex(payload.hl);
             ghost.textContent = payload.text;
-            ghost.style.backgroundColor = (hlColor && hlColor !== 'none')
-                ? hexToRgba(hlColor, 0.78)
-                : 'rgba(255, 255, 255, 0.92)';
+            ghost.style.backgroundColor = (hlColor && hlColor !== 'none') ? hexToRgba(hlColor, 0.78) : 'rgba(255, 255, 255, 0.92)';
             ghost.style.left = `${x}px`;
             ghost.style.top = `${y}px`;
             ghost.classList.remove('hidden');
@@ -2037,16 +1913,7 @@
             document.getElementById('dateDD').textContent = parts.dd;
             document.getElementById('dateDOW').textContent = parts.dow;
 
-            const todayBtn = document.getElementById('todayJumpBtn');
-            if (todayBtn) {
-                const isToday = selectedDateKey === getTodayDateKey();
-                todayBtn.className = isToday
-                    ? 'px-1 tracking-wider text-slate-800 font-bold transition'
-                    : 'px-1 tracking-wider text-zinc-400 hover:text-slate-800 transition';
-            }
-
             document.getElementById('goalInput').value = plannerState.goal || '';
-
             document.getElementById('reviewKeep').value = plannerState.review.keep || '';
             document.getElementById('reviewProblem').value = plannerState.review.problem || '';
             document.getElementById('reviewTry').value = plannerState.review.try || '';
@@ -2091,16 +1958,13 @@
             });
         }
 
-        // Clamp a target slot so the range from anchorSlot to targetSlot never crosses an occupied block
         function clampSlotRangeToEmpty(anchorSlot, targetSlot, ignoreBlockId = null) {
             const clampedTarget = Math.max(0, Math.min(TOTAL_SLOTS - 1, targetSlot));
             if (isSlotOccupied(anchorSlot, ignoreBlockId)) return anchorSlot;
             const step = clampedTarget >= anchorSlot ? 1 : -1;
             let lastValid = anchorSlot;
             for (let s = anchorSlot + step; step > 0 ? s <= clampedTarget : s >= clampedTarget; s += step) {
-                if (isSlotOccupied(s, ignoreBlockId)) {
-                    break;
-                }
+                if (isSlotOccupied(s, ignoreBlockId)) break;
                 lastValid = s;
             }
             return lastValid;
@@ -2113,17 +1977,13 @@
             dropPreviewSlots = [startSlot, endSlot];
             document.querySelectorAll('.tt-slot').forEach(el => {
                 const s = Number(el.dataset.slot);
-                if (s >= startSlot && s <= endSlot) {
-                    el.classList.add('tt-slot-drop-preview');
-                }
+                if (s >= startSlot && s <= endSlot) el.classList.add('tt-slot-drop-preview');
             });
         }
 
         function clearTodoDropPreview() {
             dropPreviewSlots = [];
-            document.querySelectorAll('.tt-slot-drop-preview').forEach(el => {
-                el.classList.remove('tt-slot-drop-preview');
-            });
+            document.querySelectorAll('.tt-slot-drop-preview').forEach(el => el.classList.remove('tt-slot-drop-preview'));
         }
 
         function renderTimetable() {
@@ -2132,11 +1992,8 @@
 
             HOURS.forEach((hour, rowIdx) => {
                 let borderBottom = 'b-bottom-light';
-                if (hour === 1 || hour === 10 || hour === 19) {
-                    borderBottom = 'b-bottom-strong';
-                } else if (hour === 23) {
-                    borderBottom = '';
-                }
+                if (hour === 1 || hour === 10 || hour === 19) borderBottom = 'b-bottom-strong';
+                else if (hour === 23) borderBottom = '';
 
                 const rowEl = document.createElement('div');
                 rowEl.className = `portrait-row-h ${borderBottom} flex items-stretch relative min-h-0 overflow-hidden`;
@@ -2165,9 +2022,7 @@
                     if (isDraggingTimetable && dragStartSlot !== null && dragCurrentSlot !== null) {
                         const minS = Math.min(dragStartSlot, dragCurrentSlot);
                         const maxS = Math.max(dragStartSlot, dragCurrentSlot);
-                        if (globalSlot >= minS && globalSlot <= maxS) {
-                            slotEl.classList.add('tt-slot-selecting');
-                        }
+                        if (globalSlot >= minS && globalSlot <= maxS) slotEl.classList.add('tt-slot-selecting');
                     } else if (twoTapStartSlot === globalSlot) {
                         slotEl.classList.add('tt-slot-selecting');
                     }
@@ -2175,7 +2030,6 @@
                     slotEl.addEventListener('pointerdown', (e) => handleSlotPointerDown(e, globalSlot));
                     slotEl.addEventListener('pointerenter', (e) => handleSlotPointerEnter(e, globalSlot));
 
-                    // HTML5 Drag & Drop handlers for copying TO-DO to Timetable
                     slotEl.addEventListener('dragover', (e) => {
                         if (!draggedTodoData) return;
                         if (isSlotOccupied(globalSlot)) {
@@ -2186,10 +2040,6 @@
                         e.preventDefault();
                         if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
                         updateTodoDropPreview(globalSlot);
-                    });
-
-                    slotEl.addEventListener('dragleave', () => {
-                        if (!draggedTodoData) return;
                     });
 
                     slotEl.addEventListener('drop', (e) => {
@@ -2203,12 +2053,8 @@
 
                         cancelTwoTapSelection();
                         const startSlot = globalSlot;
-                        // Default to +60 minutes (6 slots: startSlot .. startSlot + 5), clamped before any occupied slot
                         const endSlot = clampSlotRangeToEmpty(startSlot, Math.min(TOTAL_SLOTS - 1, startSlot + 5));
-                        const dropColor = (todoPayload.hl && todoPayload.hl !== 'none')
-                            ? todoPayload.hl
-                            : (pinnedColors[0] || '#93D5F6');
-
+                        const dropColor = (todoPayload.hl && todoPayload.hl !== 'none') ? todoPayload.hl : (pinnedColors[0] || '#93D5F6');
                         openTimeBlockModalForRange(startSlot, endSlot, todoPayload.text, dropColor);
                     });
 
@@ -2229,7 +2075,6 @@
                     const widthPct = ((segEndCol - segStartCol + 1) / 6) * 100;
 
                     const overlay = document.createElement('div');
-                    overlay.id = `tt-block-el-${block.id}`;
                     overlay.style.left = `${leftPct}%`;
                     overlay.style.width = `${widthPct}%`;
                     overlay.className = 'absolute inset-y-0 z-10 flex items-center px-1.5 pointer-events-none overflow-hidden';
@@ -2256,15 +2101,12 @@
             pointerDownOccupiedBlockId = null;
 
             const existingBlock = getBlockAtSlot(slotIndex);
-
-            // If user is not in Two-Tap mode and clicks an already occupied slot, open its edit modal on pointerup
             if (existingBlock && twoTapStartSlot === null) {
                 pointerDownOccupiedBlockId = existingBlock.id;
                 isDraggingTimetable = false;
                 return;
             }
 
-            // If user is in Two-Tap mode and taps an occupied slot, clamp the second tap before the occupied slot
             if (existingBlock && twoTapStartSlot !== null) {
                 const clampedEnd = clampSlotRangeToEmpty(twoTapStartSlot, slotIndex);
                 const rangeStart = Math.min(twoTapStartSlot, clampedEnd);
@@ -2283,9 +2125,7 @@
         function handleSlotPointerEnter(e, slotIndex) {
             if (!isDraggingTimetable || dragStartSlot === null) return;
             const clampedSlot = clampSlotRangeToEmpty(dragStartSlot, slotIndex);
-            if (slotIndex !== dragStartSlot) {
-                pointerMovedDuringDrag = true;
-            }
+            if (slotIndex !== dragStartSlot) pointerMovedDuringDrag = true;
             if (clampedSlot !== dragCurrentSlot) {
                 dragCurrentSlot = clampedSlot;
                 updateDragVisuals();
@@ -2298,9 +2138,7 @@
             if (el && el.dataset && el.dataset.slot !== undefined) {
                 const slotIdx = Number(el.dataset.slot);
                 const clampedSlot = clampSlotRangeToEmpty(dragStartSlot, slotIdx);
-                if (slotIdx !== dragStartSlot) {
-                    pointerMovedDuringDrag = true;
-                }
+                if (slotIdx !== dragStartSlot) pointerMovedDuringDrag = true;
                 if (clampedSlot !== dragCurrentSlot) {
                     dragCurrentSlot = clampedSlot;
                     updateDragVisuals();
@@ -2357,11 +2195,8 @@
             const maxS = Math.max(dragStartSlot, dragCurrentSlot);
             document.querySelectorAll('.tt-slot').forEach(el => {
                 const s = Number(el.dataset.slot);
-                if (s >= minS && s <= maxS) {
-                    el.classList.add('tt-slot-selecting');
-                } else {
-                    el.classList.remove('tt-slot-selecting');
-                }
+                if (s >= minS && s <= maxS) el.classList.add('tt-slot-selecting');
+                else el.classList.remove('tt-slot-selecting');
             });
         }
 
@@ -2385,19 +2220,12 @@
                 const opt = document.createElement('option');
                 opt.value = s;
                 opt.textContent = slotToTimeStr(s, false);
-                if (isSlotOccupied(s, editingTimeBlockId)) {
-                    opt.disabled = true;
-                }
-                if (s === activeTbStartSlot) {
-                    opt.selected = true;
-                }
+                if (isSlotOccupied(s, editingTimeBlockId)) opt.disabled = true;
+                if (s === activeTbStartSlot) opt.selected = true;
                 startSelect.appendChild(opt);
             }
 
-            // Ensure activeTbEndSlot is valid and does not overlap another block
-            if (activeTbEndSlot < activeTbStartSlot) {
-                activeTbEndSlot = activeTbStartSlot;
-            }
+            if (activeTbEndSlot < activeTbStartSlot) activeTbEndSlot = activeTbStartSlot;
             activeTbEndSlot = clampSlotRangeToEmpty(activeTbStartSlot, activeTbEndSlot, editingTimeBlockId);
 
             endSelect.innerHTML = '';
@@ -2405,12 +2233,8 @@
                 const opt = document.createElement('option');
                 opt.value = e;
                 opt.textContent = slotToTimeStr(e, true);
-                if (isRangeOverlapping(activeTbStartSlot, e, editingTimeBlockId)) {
-                    opt.disabled = true;
-                }
-                if (e === activeTbEndSlot) {
-                    opt.selected = true;
-                }
+                if (isRangeOverlapping(activeTbStartSlot, e, editingTimeBlockId)) opt.disabled = true;
+                if (e === activeTbEndSlot) opt.selected = true;
                 endSelect.appendChild(opt);
             }
         }
@@ -2469,11 +2293,8 @@
             modalTimeBlockColor = normalizeColorHex(color);
             const noneBtn = document.getElementById('tbHlNoneBtn');
             if (noneBtn) {
-                if (modalTimeBlockColor === 'none') {
-                    noneBtn.classList.add('ring-2', 'ring-offset-2', 'ring-slate-800');
-                } else {
-                    noneBtn.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-800');
-                }
+                if (modalTimeBlockColor === 'none') noneBtn.classList.add('ring-2', 'ring-offset-2', 'ring-slate-800');
+                else noneBtn.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-800');
             }
             renderAllPinnedColorBars();
         }
@@ -2574,11 +2395,8 @@
             activeModalTaskHl = normalizeColorHex(hl);
             const noneBtn = document.getElementById('taskHlNoneBtn');
             if (noneBtn) {
-                if (activeModalTaskHl === 'none') {
-                    noneBtn.classList.add('ring-2', 'ring-offset-2', 'ring-slate-800');
-                } else {
-                    noneBtn.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-800');
-                }
+                if (activeModalTaskHl === 'none') noneBtn.classList.add('ring-2', 'ring-offset-2', 'ring-slate-800');
+                else noneBtn.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-800');
             }
             renderAllPinnedColorBars();
         }
@@ -2617,38 +2435,11 @@
             activeModalTaskRef = null;
         }
 
-        // =========================================================================
-        // iOS WIDGET PREVIEW: ADAPTIVE SIZE & DYNAMIC BUDGET (NO FIXED 5-CAP)
-        // =========================================================================
         const WIDGET_SIZE_SPECS = {
-            small: {
-                label: 'SMALL (1 COL · 7 LINES)',
-                columns: 1,
-                linesPerCol: 7,
-                maxWidthClass: 'max-w-[310px]',
-                gridClass: 'grid-cols-1 gap-3'
-            },
-            medium: {
-                label: 'MEDIUM (2 COL · 14 LINES)',
-                columns: 2,
-                linesPerCol: 7,
-                maxWidthClass: 'max-w-xl',
-                gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5'
-            },
-            large: {
-                label: 'LARGE (2 COL · 30 LINES)',
-                columns: 2,
-                linesPerCol: 15,
-                maxWidthClass: 'max-w-2xl',
-                gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5'
-            },
-            xl: {
-                label: 'XL (4 COL · 60 LINES)',
-                columns: 4,
-                linesPerCol: 15,
-                maxWidthClass: 'max-w-5xl',
-                gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5'
-            }
+            small: { label: 'SMALL (1 COL · 7 LINES)', columns: 1, linesPerCol: 7, maxWidthClass: 'max-w-[310px]', gridClass: 'grid-cols-1 gap-3' },
+            medium: { label: 'MEDIUM (2 COL · 14 LINES)', columns: 2, linesPerCol: 7, maxWidthClass: 'max-w-xl', gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5' },
+            large: { label: 'LARGE (2 COL · 30 LINES)', columns: 2, linesPerCol: 15, maxWidthClass: 'max-w-2xl', gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5' },
+            xl: { label: 'XL (4 COL · 60 LINES)', columns: 4, linesPerCol: 15, maxWidthClass: 'max-w-5xl', gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5' }
         };
 
         function escapeHtml(str) {
@@ -2656,11 +2447,8 @@
             return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
-        // Collect all distinct topics for a specific date (Widget ALWAYS uses TODAY's date!)
         function getAllTopicCards(targetDateKey = getTodayDateKey()) {
-            const targetData = (targetDateKey === selectedDateKey)
-                ? plannerState
-                : getPlannerDataForDate(targetDateKey);
+            const targetData = (targetDateKey === selectedDateKey) ? plannerState : getPlannerDataForDate(targetDateKey);
             const topicGroups = [];
 
             ['left', 'right'].forEach(colKey => {
@@ -2668,22 +2456,14 @@
                 targetData.columns[colKey].forEach((item, rowIdx) => {
                     if (item.rowType === 'topic') {
                         if (item.text.trim()) {
-                            currentTopic = {
-                                topicName: item.text.trim(),
-                                colKey,
-                                tasks: []
-                            };
+                            currentTopic = { topicName: item.text.trim(), colKey, tasks: [] };
                             topicGroups.push(currentTopic);
                         } else {
                             currentTopic = null;
                         }
                     } else if (item.text.trim()) {
                         if (!currentTopic) {
-                            currentTopic = {
-                                topicName: colKey === 'left' ? 'MAIN' : 'ETC',
-                                colKey,
-                                tasks: []
-                            };
+                            currentTopic = { topicName: colKey === 'left' ? 'MAIN' : 'ETC', colKey, tasks: [] };
                             topicGroups.push(currentTopic);
                         }
                         currentTopic.tasks.push({ item, rowIdx, colKey });
@@ -2700,59 +2480,40 @@
             renderWidgetTopicsGrid();
         }
 
-        // Dynamic Space Allocation: Distributes topics & all their tasks into available widget columns/lines
         function allocateTopicsToWidgetColumns(topicGroups, numCols, linesPerCol) {
             const cols = Array.from({ length: numCols }, () => ({ usedLines: 0, cards: [] }));
             let hiddenTopicsCount = 0;
             let hiddenTasksCount = 0;
 
-            // Special Case: If user has fewer topics than columns and a topic has many tasks that exceed 1 column,
-            // allow a single long topic to flow into the next empty column seamlessly!
             topicGroups.forEach(group => {
                 let remainingTasks = [...group.tasks];
                 let isContinuation = false;
 
                 while (remainingTasks.length > 0) {
-                    // Find column with minimum used lines (or first column with at least 2 lines free: 1 header + 1 task)
                     let targetCol = cols.find(c => (linesPerCol - c.usedLines) >= 2);
                     if (!targetCol) {
-                        // All columns are full
                         if (!isContinuation) hiddenTopicsCount++;
                         hiddenTasksCount += remainingTasks.length;
                         break;
                     }
 
-                    const freeTaskLines = (linesPerCol - targetCol.usedLines) - 1; // 1 line used by topic header
+                    const freeTaskLines = (linesPerCol - targetCol.usedLines) - 1;
                     const canSplitAcrossCols = topicGroups.length < numCols && cols.some(c => c !== targetCol && c.usedLines === 0);
 
                     if (remainingTasks.length <= freeTaskLines) {
-                        targetCol.cards.push({
-                            topicName: isContinuation ? `${group.topicName} ···` : group.topicName,
-                            visibleTasks: remainingTasks,
-                            overflowCount: 0
-                        });
+                        targetCol.cards.push({ topicName: isContinuation ? `${group.topicName} ···` : group.topicName, visibleTasks: remainingTasks, overflowCount: 0 });
                         targetCol.usedLines += 1 + remainingTasks.length;
                         remainingTasks = [];
                     } else if (canSplitAcrossCols) {
-                        // Flow remaining tasks of this large topic into the next empty column instead of cutting off
                         const chunk = remainingTasks.slice(0, freeTaskLines);
-                        targetCol.cards.push({
-                            topicName: isContinuation ? `${group.topicName} ···` : group.topicName,
-                            visibleTasks: chunk,
-                            overflowCount: 0
-                        });
+                        targetCol.cards.push({ topicName: isContinuation ? `${group.topicName} ···` : group.topicName, visibleTasks: chunk, overflowCount: 0 });
                         targetCol.usedLines += 1 + chunk.length;
                         remainingTasks = remainingTasks.slice(freeTaskLines);
                         isContinuation = true;
                     } else {
-                        // Fit as many as this column's remaining budget allows, mark rest as overflow
                         const visible = remainingTasks.slice(0, freeTaskLines);
                         const overflow = remainingTasks.length - visible.length;
-                        targetCol.cards.push({
-                            topicName: isContinuation ? `${group.topicName} ···` : group.topicName,
-                            visibleTasks: visible,
-                            overflowCount: overflow
-                        });
+                        targetCol.cards.push({ topicName: isContinuation ? `${group.topicName} ···` : group.topicName, visibleTasks: visible, overflowCount: overflow });
                         targetCol.usedLines += 1 + visible.length;
                         remainingTasks = [];
                     }
@@ -2770,7 +2531,6 @@
 
             const spec = WIDGET_SIZE_SPECS[activeWidgetSize] || WIDGET_SIZE_SPECS.large;
 
-            // Update size buttons
             ['small', 'medium', 'large', 'xl'].forEach(k => {
                 const btn = document.getElementById(`widgetSizeBtn-${k}`);
                 if (!btn) return;
@@ -2798,12 +2558,7 @@
                 return;
             }
 
-            const { cols, hiddenTopicsCount, hiddenTasksCount } = allocateTopicsToWidgetColumns(
-                topicGroups,
-                spec.columns,
-                spec.linesPerCol
-            );
-
+            const { cols, hiddenTopicsCount, hiddenTasksCount } = allocateTopicsToWidgetColumns(topicGroups, spec.columns, spec.linesPerCol);
             const activeCols = cols.filter(c => c.cards.length > 0);
 
             container.innerHTML = activeCols.map((col, colIdx) => `
@@ -2811,26 +2566,16 @@
                     ${col.cards.map(card => `
                         <div class="liquid-glass-subcard rounded-2xl p-3.5 flex flex-col gap-2">
                             <div class="flex items-center justify-between select-none">
-                                <span class="text-[13px] sm:text-[13.5px] font-bold text-slate-900 tracking-tight uppercase">
-                                    ${escapeHtml(card.topicName)}
-                                </span>
-                                ${card.overflowCount > 0 ? `
-                                    <span class="text-[10px] font-semibold text-slate-500 bg-white/60 px-2 py-0.5 rounded-full border border-white/80">
-                                        +${card.overflowCount} MORE
-                                    </span>
-                                ` : ''}
+                                <span class="text-[13px] sm:text-[13.5px] font-bold text-slate-900 tracking-tight uppercase">${escapeHtml(card.topicName)}</span>
+                                ${card.overflowCount > 0 ? `<span class="text-[10px] font-semibold text-slate-500 bg-white/60 px-2 py-0.5 rounded-full border border-white/80">+${card.overflowCount} MORE</span>` : ''}
                             </div>
-
                             <div class="space-y-1">
                                 ${card.visibleTasks.map(({ item, rowIdx, colKey }) => `
-                                    <div onclick="triggerWidgetDeepLinkToTask('${colKey}', ${rowIdx})"
-                                         class="group flex items-center gap-2.5 px-2 py-1 rounded-xl cursor-pointer hover:bg-white/60 transition">
+                                    <div onclick="triggerWidgetDeepLinkToTask('${colKey}', ${rowIdx})" class="group flex items-center gap-2.5 px-2 py-1 rounded-xl cursor-pointer hover:bg-white/60 transition">
                                         <span class="w-[15px] h-[15px] rounded-[3px] border-[1.5px] border-slate-700 bg-transparent flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
                                             ${item.done ? '<svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6.2L4.8 9L10.2 2.8" stroke="#111111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
                                         </span>
-                                        <span class="text-[12.5px] font-medium leading-none text-slate-800 truncate select-none ${item.done ? 'line-through text-slate-400' : ''}">
-                                            ${escapeHtml(item.text)}
-                                        </span>
+                                        <span class="text-[12.5px] font-medium leading-none text-slate-800 truncate select-none ${item.done ? 'line-through text-slate-400' : ''}">${escapeHtml(item.text)}</span>
                                     </div>
                                 `).join('')}
                             </div>
@@ -2838,9 +2583,7 @@
                     `).join('')}
                     ${(colIdx === activeCols.length - 1 && hiddenTopicsCount > 0) ? `
                         <div class="text-right pr-1">
-                            <span class="text-[10px] font-bold tracking-wider uppercase text-slate-500 bg-white/50 px-2.5 py-1 rounded-full border border-white/70">
-                                +${hiddenTopicsCount} TOPICS (${hiddenTasksCount} TO-DOS)
-                            </span>
+                            <span class="text-[10px] font-bold tracking-wider uppercase text-slate-500 bg-white/50 px-2.5 py-1 rounded-full border border-white/70">+${hiddenTopicsCount} TOPICS (${hiddenTasksCount} TO-DOS)</span>
                         </div>
                     ` : ''}
                 </div>
@@ -2859,9 +2602,7 @@
         function triggerWidgetDeepLinkToTask(colKey, rowIdx) {
             closeWidgetSimulator();
             const todayKey = getTodayDateKey();
-            if (selectedDateKey !== todayKey) {
-                switchSelectedDate(todayKey);
-            }
+            if (selectedDateKey !== todayKey) switchSelectedDate(todayKey);
             const rowEl = document.getElementById(`planner-row-${colKey}-${rowIdx}`);
             if (rowEl) {
                 rowEl.classList.remove('deeplink-flash');
@@ -2871,31 +2612,18 @@
             setTimeout(() => openTaskModal(colKey, rowIdx), 180);
         }
 
-        // =========================================================================
-        // OPTION 2: SCRIPTABLE FREE iOS HOME SCREEN WIDGET INTEGRATION (TODAY-BASED)
-        // =========================================================================
         function buildWidgetSyncPayload() {
             const todayKey = getTodayDateKey();
             const topicGroups = getAllTopicCards(todayKey).map(g => ({
                 topic: g.topicName,
-                tasks: g.tasks.map(t => ({
-                    text: t.item.text,
-                    done: !!t.item.done,
-                    id: `${t.colKey}-${t.rowIdx}`
-                }))
+                tasks: g.tasks.map(t => ({ text: t.item.text, done: !!t.item.done, id: `${t.colKey}-${t.rowIdx}` }))
             }));
-            return {
-                dateKey: todayKey,
-                updatedAt: new Date().toISOString(),
-                appUrl: window.location.href.split('?')[0],
-                topics: topicGroups
-            };
+            return { dateKey: todayKey, updatedAt: new Date().toISOString(), appUrl: window.location.href.split('?')[0], topics: topicGroups };
         }
 
         function toggleScriptableGuide() {
             const box = document.getElementById('scriptableSetupBox');
-            if (!box) return;
-            box.classList.toggle('hidden');
+            if (box) box.classList.toggle('hidden');
         }
 
         function copyTextFallback(text) {
@@ -2912,22 +2640,17 @@
         function syncToScriptableApp() {
             const payloadStr = JSON.stringify(buildWidgetSyncPayload());
             copyTextFallback(payloadStr);
-            const encoded = encodeURIComponent(payloadStr);
-            window.location.href = `scriptable:///run/DailyPlanner?payload=${encoded}`;
+            window.location.href = `scriptable:///run/DailyPlanner?payload=${encodeURIComponent(payloadStr)}`;
         }
 
         function copyWidgetJsonData() {
-            const payloadStr = JSON.stringify(buildWidgetSyncPayload(), null, 2);
-            copyTextFallback(payloadStr);
+            copyTextFallback(JSON.stringify(buildWidgetSyncPayload(), null, 2));
         }
 
         function getScriptableWidgetSourceCode() {
             const initialData = JSON.stringify(buildWidgetSyncPayload());
-            const cloudEndpoint = activeFirebaseProjectId
-                ? `https://firestore.googleapis.com/v1/projects/${activeFirebaseProjectId}/databases/(default)/documents/artifacts/${appId}/public/data/planner_days/`
-                : '';
+            const cloudEndpoint = activeFirebaseProjectId ? `https://firestore.googleapis.com/v1/projects/${activeFirebaseProjectId}/databases/(default)/documents/artifacts/${appId}/public/data/planner_days/` : '';
             return `// Variables used by Scriptable.
-// Name this script: DailyPlanner
 const fm = FileManager.local();
 const filePath = fm.joinPath(fm.documentsDirectory(), "daily_planner_widget.json");
 const CLOUD_BASE = ${JSON.stringify(cloudEndpoint)};
@@ -2935,13 +2658,9 @@ const SYNC_KEY = ${JSON.stringify(syncWorkspaceKey)};
 
 function getTodayKey() {
   const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return y + "-" + m + "-" + d;
+  return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
 }
 
-// 1. Save incoming manual sync data OR auto-fetch latest Today data from Firestore Cloud
 if (args.queryParameters && args.queryParameters.payload) {
   fm.writeString(filePath, args.queryParameters.payload);
 } else if (!fm.fileExists(filePath)) {
@@ -2949,14 +2668,11 @@ if (args.queryParameters && args.queryParameters.payload) {
 }
 
 let data = { topics: [], appUrl: ${JSON.stringify(window.location.href.split('?')[0])} };
-try {
-  data = JSON.parse(fm.readString(filePath));
-} catch (e) {}
+try { data = JSON.parse(fm.readString(filePath)); } catch (e) {}
 
 if (CLOUD_BASE) {
   try {
-    const docUrl = CLOUD_BASE + SYNC_KEY + "_" + getTodayKey();
-    const req = new Request(docUrl);
+    const req = new Request(CLOUD_BASE + SYNC_KEY + "_" + getTodayKey());
     req.timeoutInterval = 4;
     const res = await req.loadJSON();
     if (res && res.fields && res.fields.payloadJson && res.fields.payloadJson.stringValue) {
@@ -2969,10 +2685,7 @@ if (CLOUD_BASE) {
             cur = (it.text && it.text.trim()) ? { topic: it.text.trim(), tasks: [] } : null;
             if (cur) groups.push(cur);
           } else if (it.text && it.text.trim()) {
-            if (!cur) {
-              cur = { topic: colKey === "left" ? "MAIN" : "ETC", tasks: [] };
-              groups.push(cur);
-            }
+            if (!cur) { cur = { topic: colKey === "left" ? "MAIN" : "ETC", tasks: [] }; groups.push(cur); }
             cur.tasks.push({ text: it.text, done: !!it.done, id: colKey + "-" + idx });
           }
         });
@@ -2982,152 +2695,26 @@ if (CLOUD_BASE) {
     }
   } catch (e) {}
 }
-
-const family = config.widgetFamily || "large";
-const spec = {
-  small: { cols: 1, lines: 7 },
-  medium: { cols: 2, lines: 7 },
-  large: { cols: 2, lines: 15 },
-  extraLarge: { cols: 4, lines: 15 }
-}[family] || { cols: 2, lines: 15 };
-
-const w = new ListWidget();
-w.backgroundColor = new Color("#EEF2F6");
-w.setPadding(14, 14, 14, 14);
-if (data.appUrl) w.url = data.appUrl;
-
-const cols = Array.from({ length: spec.cols }, () => ({ used: 0, cards: [] }));
-(data.topics || []).forEach(g => {
-  let rem = [...(g.tasks || [])];
-  let cont = false;
-  while (rem.length > 0) {
-    let target = cols.find(c => (spec.lines - c.used) >= 2);
-    if (!target) break;
-    let free = (spec.lines - target.used) - 1;
-    let canSplit = data.topics.length < spec.cols && cols.some(c => c !== target && c.used === 0);
-    if (rem.length <= free) {
-      target.cards.push({ title: cont ? g.topic + " ···" : g.topic, tasks: rem, more: 0 });
-      target.used += 1 + rem.length;
-      rem = [];
-    } else if (canSplit) {
-      let chunk = rem.slice(0, free);
-      target.cards.push({ title: cont ? g.topic + " ···" : g.topic, tasks: chunk, more: 0 });
-      target.used += 1 + chunk.length;
-      rem = rem.slice(free);
-      cont = true;
-    } else {
-      let vis = rem.slice(0, free);
-      target.cards.push({ title: cont ? g.topic + " ···" : g.topic, tasks: vis, more: rem.length - vis.length });
-      target.used += 1 + vis.length;
-      rem = [];
-    }
-  }
-});
-
-const mainRow = w.addStack();
-mainRow.layoutHorizontally();
-mainRow.spacing = 10;
-
-cols.filter(c => c.cards.length > 0).forEach(col => {
-  const colStack = mainRow.addStack();
-  colStack.layoutVertically();
-  colStack.spacing = 8;
-
-  col.cards.forEach(card => {
-    const box = colStack.addStack();
-    box.layoutVertically();
-    box.backgroundColor = new Color("#FFFFFF", 0.72);
-    box.cornerRadius = 14;
-    box.setPadding(10, 12, 10, 12);
-    box.spacing = 4;
-
-    const head = box.addStack();
-    head.layoutHorizontally();
-    const titleTxt = head.addText(card.title.toUpperCase());
-    titleTxt.font = Font.boldSystemFont(12);
-    titleTxt.textColor = new Color("#0F172A");
-    if (card.more > 0) {
-      head.addSpacer();
-      const moreTxt = head.addText("+" + card.more + " MORE");
-      moreTxt.font = Font.semiboldSystemFont(9);
-      moreTxt.textColor = new Color("#64748B");
-    }
-
-    card.tasks.forEach(t => {
-      const r = box.addStack();
-      r.layoutHorizontally();
-      r.centerAlignContent();
-      r.spacing = 6;
-      if (data.appUrl && t.id) r.url = data.appUrl + "?taskId=" + t.id;
-      const chk = r.addText(t.done ? "☑" : "☐");
-      chk.font = Font.mediumSystemFont(12);
-      chk.textColor = new Color("#1E293B");
-      const lbl = r.addText(t.text);
-      lbl.font = Font.mediumSystemFont(11.5);
-      lbl.textColor = t.done ? new Color("#94A3B8") : new Color("#1E293B");
-      lbl.lineLimit = 1;
-    });
-  });
-});
-
-if (config.runsInWidget) {
-  Script.setWidget(w);
-} else {
-  await w.presentLarge();
-}
 Script.complete();`;
         }
 
         function copyScriptableWidgetCode() {
-            const code = getScriptableWidgetSourceCode();
-            copyTextFallback(code);
+            copyTextFallback(getScriptableWidgetSourceCode());
             const btn = document.getElementById('copyScriptableBtn');
             if (btn) {
-                const orig = btn.textContent;
                 btn.textContent = 'COPIED!';
-                setTimeout(() => { btn.textContent = orig; }, 1400);
+                setTimeout(() => { btn.textContent = 'COPY WIDGET SCRIPT'; }, 1400);
             }
         }
 
-        // Expose UI handlers to global window scope for inline HTML onclick attributes
         Object.assign(window, {
-            openDatePickerModal,
-            closeDatePickerModal,
-            changeCalendarMonth,
-            selectDateFromPicker,
-            resetCurrentDatePage,
-            getTodayDateKey,
-            openCloudSyncModal,
-            closeCloudSyncModal,
-            applySyncKeyInput,
-            connectRuntimeFirebaseConfig,
-            openWidgetSimulator,
-            closeWidgetSimulator,
-            setWidgetPreviewSize,
-            syncToScriptableApp,
-            toggleScriptableGuide,
-            copyScriptableWidgetCode,
-            copyWidgetJsonData,
-            triggerWidgetDeepLinkToTask,
-            cancelTwoTapSelection,
-            handleGoalChange,
-            handleReviewChange,
-            openTaskModal,
-            closeTaskModal,
-            setModalRowType,
-            setModalTaskDone,
-            setModalTaskHighlight,
-            saveTaskModal,
-            clearModalTask,
-            handleTbStartSlotChange,
-            handleTbEndSlotChange,
-            setModalTimeBlockColor,
-            saveTimeBlockModal,
-            deleteCurrentTimeBlock,
-            closeTimeBlockModal,
-            triggerNativePicker,
-            closeSpectrumPicker,
-            handlePickerHexTyping
+            openDatePickerModal, closeDatePickerModal, changeCalendarMonth, selectDateFromPicker, resetCurrentDatePage,
+            getTodayDateKey, openCloudSyncModal, closeCloudSyncModal, applySyncKeyInput, openWidgetSimulator, closeWidgetSimulator,
+            setWidgetPreviewSize, syncToScriptableApp, toggleScriptableGuide, copyScriptableWidgetCode, copyWidgetJsonData,
+            triggerWidgetDeepLinkToTask, cancelTwoTapSelection, handleGoalChange, handleReviewChange, openTaskModal, closeTaskModal,
+            setModalRowType, setModalTaskDone, setModalTaskHighlight, saveTaskModal, clearModalTask, handleTbStartSlotChange,
+            handleTbEndSlotChange, setModalTimeBlockColor, saveTimeBlockModal, deleteCurrentTimeBlock, closeTimeBlockModal,
+            triggerNativePicker, closeSpectrumPicker, handlePickerHexTyping
         });
 
         window.addEventListener('DOMContentLoaded', async () => {
