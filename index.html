@@ -428,6 +428,7 @@
             html.layout-portrait #middleRowsContainer {
                 grid-template-columns: 1fr !important;
                 grid-template-rows: auto !important;
+                grid-auto-flow: row !important;
                 grid-auto-rows: 38px !important;
             }
             html.layout-portrait #middleRowsContainer > div {
@@ -520,7 +521,7 @@
                     </div>
 
                     <!-- 2. MIDDLE 18 FREE-FORM ROWS -->
-                    <div id="middleRowsContainer" style="grid-column: 1; grid-row: 3 / span 18;" class="b-right-strong grid grid-cols-2 grid-rows-[repeat(18,minmax(0,1fr))] min-h-0">
+                    <div id="middleRowsContainer" style="grid-column: 1; grid-row: 3 / span 18;" class="b-right-strong grid grid-cols-2 grid-rows-[repeat(18,minmax(0,1fr))] grid-flow-col min-h-0">
                     </div>
 
                     <!-- 3. DAILY REVIEW SECTION -->
@@ -1691,8 +1692,8 @@
             if (!container) return;
             container.innerHTML = '';
 
-            for (let rowIdx = 0; rowIdx < MIDDLE_ROW_COUNT; rowIdx++) {
-                ['left', 'right'].forEach((colKey, colIdx) => {
+            ['left', 'right'].forEach((colKey, colIdx) => {
+                for (let rowIdx = 0; rowIdx < MIDDLE_ROW_COUNT; rowIdx++) {
                     const item = plannerState.columns[colKey][rowIdx];
                     const isTopic = item.rowType === 'topic';
                     const hlColor = normalizeColorHex(item.hl);
@@ -1744,27 +1745,28 @@
                         rowEl.classList.add('todo-draggable-row', 'group');
                         rowEl.setAttribute('draggable', 'true');
 
-                        const actionsWrap = document.createElement('div');
-                        actionsWrap.className = 'ml-auto flex items-center gap-0.5 flex-shrink-0';
+                        const actionWrap = document.createElement('div');
+                        actionWrap.className = 'ml-auto flex items-center gap-0.5 pl-1 flex-shrink-0';
 
-                        // Quick 1-Tap Send to Timetable button (especially convenient on iPhone Portrait mode)
+                        // One-tap button to copy/send this TO-DO to the Timetable (especially convenient on iPhone Portrait)
                         const sendTimeBtn = document.createElement('button');
                         sendTimeBtn.type = 'button';
-                        sendTimeBtn.className = 'px-1.5 py-1 text-[11px] text-slate-400 hover:text-slate-800 opacity-65 group-hover:opacity-100 transition-opacity select-none';
-                        sendTimeBtn.title = 'TIMETABLE에 추가';
-                        sendTimeBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+                        sendTimeBtn.className = 'px-1.5 py-0.5 rounded text-[10px] font-bold text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 opacity-65 group-hover:opacity-100 transition select-none';
+                        sendTimeBtn.textContent = '🕒';
+                        sendTimeBtn.title = 'ADD TO TIMETABLE';
                         sendTimeBtn.onclick = (e) => {
                             e.stopPropagation();
                             quickScheduleTodoToTimetable(item.text.trim(), normalizeColorHex(item.hl));
                         };
-                        actionsWrap.appendChild(sendTimeBtn);
+                        actionWrap.appendChild(sendTimeBtn);
 
                         const dragHint = document.createElement('span');
-                        dragHint.className = 'pl-1 pr-1 py-1 text-[11px] text-slate-400 opacity-50 group-hover:opacity-100 transition-opacity select-none cursor-grab';
+                        dragHint.className = 'px-1 py-1 text-[11px] text-slate-400 opacity-50 group-hover:opacity-100 transition-opacity select-none cursor-grab';
                         dragHint.textContent = '⋮⋮';
-                        actionsWrap.appendChild(dragHint);
+                        dragHint.title = 'DRAG TO TIMETABLE';
+                        actionWrap.appendChild(dragHint);
 
-                        rowEl.appendChild(actionsWrap);
+                        rowEl.appendChild(actionWrap);
 
                         const createPayload = () => ({
                             colKey,
@@ -1804,7 +1806,7 @@
 
                         rowEl.addEventListener('touchstart', (e) => {
                             if (e.touches.length !== 1) return;
-                            if (e.target && (e.target.closest('.task-checkbox') || e.target.closest('button'))) return;
+                            if (e.target && (e.target.closest('.task-checkbox') || e.target === sendTimeBtn)) return;
 
                             const touch = e.touches[0];
                             touchStartX = touch.clientX;
@@ -1839,11 +1841,10 @@
                             e.preventDefault();
                             moveTouchDragGhost(touch.clientX, touch.clientY);
 
-                            // Auto-scroll page when dragging near bottom or top of screen on iPhone
-                            const edgeThreshold = 75;
-                            if (touch.clientY > window.innerHeight - edgeThreshold) {
+                            // Auto-scroll page when dragging near bottom/top of iPhone screen
+                            if (touch.clientY > window.innerHeight - 75) {
                                 window.scrollBy(0, 14);
-                            } else if (touch.clientY < edgeThreshold) {
+                            } else if (touch.clientY < 75) {
                                 window.scrollBy(0, -14);
                             }
 
@@ -1889,7 +1890,9 @@
                                 cancelTwoTapSelection();
                                 const startSlot = droppedSlot;
                                 const endSlot = clampSlotRangeToEmpty(startSlot, Math.min(TOTAL_SLOTS - 1, startSlot + 5));
-                                const dropColor = (todoPayload.hl && todoPayload.hl !== 'none') ? todoPayload.hl : (pinnedColors[0] || '#93D5F6');
+                                const dropColor = (todoPayload.hl && todoPayload.hl !== 'none')
+                                    ? todoPayload.hl
+                                    : (pinnedColors[0] || '#93D5F6');
                                 openTimeBlockModalForRange(startSlot, endSlot, todoPayload.text, dropColor);
                             }
 
@@ -1912,8 +1915,8 @@
                     }
 
                     container.appendChild(rowEl);
-                });
-            }
+                }
+            });
         }
 
         function showTouchDragGhost(payload, x, y) {
@@ -2589,20 +2592,19 @@
         function getAllTopicCards(targetDateKey = getTodayDateKey()) {
             const targetData = (targetDateKey === selectedDateKey) ? plannerState : getPlannerDataForDate(targetDateKey);
             const topicGroups = [];
+            let currentTopic = null;
 
             ['left', 'right'].forEach(colKey => {
-                let currentTopic = null;
                 targetData.columns[colKey].forEach((item, rowIdx) => {
+                    const textTrimmed = (item.text || '').trim();
                     if (item.rowType === 'topic') {
-                        if (item.text.trim()) {
-                            currentTopic = { topicName: item.text.trim(), colKey, tasks: [] };
+                        if (textTrimmed) {
+                            currentTopic = { topicName: textTrimmed, colKey, tasks: [] };
                             topicGroups.push(currentTopic);
-                        } else {
-                            currentTopic = null;
                         }
-                    } else if (item.text.trim()) {
+                    } else if (textTrimmed) {
                         if (!currentTopic) {
-                            currentTopic = { topicName: colKey === 'left' ? 'MAIN' : 'ETC', colKey, tasks: [] };
+                            currentTopic = { topicName: '', colKey, tasks: [] };
                             topicGroups.push(currentTopic);
                         }
                         currentTopic.tasks.push({ item, rowIdx, colKey });
@@ -2627,33 +2629,36 @@
             topicGroups.forEach(group => {
                 let remainingTasks = [...group.tasks];
                 let isContinuation = false;
+                const hasTitle = Boolean(group.topicName && group.topicName.trim());
+                const headerCost = hasTitle ? 1 : 0;
 
                 while (remainingTasks.length > 0) {
-                    let targetCol = cols.find(c => (linesPerCol - c.usedLines) >= 2);
+                    let targetCol = cols.find(c => (linesPerCol - c.usedLines) >= (headerCost + 1));
                     if (!targetCol) {
                         if (!isContinuation) hiddenTopicsCount++;
                         hiddenTasksCount += remainingTasks.length;
                         break;
                     }
 
-                    const freeTaskLines = (linesPerCol - targetCol.usedLines) - 1;
+                    const freeTaskLines = (linesPerCol - targetCol.usedLines) - headerCost;
                     const canSplitAcrossCols = topicGroups.length < numCols && cols.some(c => c !== targetCol && c.usedLines === 0);
+                    const displayTitle = hasTitle ? (isContinuation ? `${group.topicName} ···` : group.topicName) : '';
 
                     if (remainingTasks.length <= freeTaskLines) {
-                        targetCol.cards.push({ topicName: isContinuation ? `${group.topicName} ···` : group.topicName, visibleTasks: remainingTasks, overflowCount: 0 });
-                        targetCol.usedLines += 1 + remainingTasks.length;
+                        targetCol.cards.push({ topicName: displayTitle, visibleTasks: remainingTasks, overflowCount: 0 });
+                        targetCol.usedLines += headerCost + remainingTasks.length;
                         remainingTasks = [];
                     } else if (canSplitAcrossCols) {
                         const chunk = remainingTasks.slice(0, freeTaskLines);
-                        targetCol.cards.push({ topicName: isContinuation ? `${group.topicName} ···` : group.topicName, visibleTasks: chunk, overflowCount: 0 });
-                        targetCol.usedLines += 1 + chunk.length;
+                        targetCol.cards.push({ topicName: displayTitle, visibleTasks: chunk, overflowCount: 0 });
+                        targetCol.usedLines += headerCost + chunk.length;
                         remainingTasks = remainingTasks.slice(freeTaskLines);
                         isContinuation = true;
                     } else {
                         const visible = remainingTasks.slice(0, freeTaskLines);
                         const overflow = remainingTasks.length - visible.length;
-                        targetCol.cards.push({ topicName: isContinuation ? `${group.topicName} ···` : group.topicName, visibleTasks: visible, overflowCount: overflow });
-                        targetCol.usedLines += 1 + visible.length;
+                        targetCol.cards.push({ topicName: displayTitle, visibleTasks: visible, overflowCount: overflow });
+                        targetCol.usedLines += headerCost + visible.length;
                         remainingTasks = [];
                     }
                 }
@@ -2681,7 +2686,6 @@
             });
 
             outer.className = `liquid-glass-widget rounded-[32px] w-full p-5 sm:p-6 transition-all duration-200 ${spec.maxWidthClass}`;
-            container.className = `grid ${spec.gridClass}`;
             const todayKey = getTodayDateKey();
             const todayParts = parseDateKeyToParts(todayKey);
             if (badge) badge.textContent = `TODAY ${todayParts.yyyy}.${todayParts.mm}.${todayParts.dd} (${todayParts.dow}) · ${spec.label}`;
@@ -2689,6 +2693,7 @@
             const topicGroups = getAllTopicCards(todayKey);
 
             if (topicGroups.length === 0) {
+                container.className = `grid ${spec.gridClass}`;
                 container.innerHTML = `
                     <div class="col-span-full py-12 text-center text-xs font-semibold tracking-widest text-slate-400 uppercase">
                         NO ACTIVE TASKS FOR TODAY (${todayParts.yyyy}.${todayParts.mm}.${todayParts.dd})
@@ -2699,15 +2704,18 @@
 
             const { cols, hiddenTopicsCount, hiddenTasksCount } = allocateTopicsToWidgetColumns(topicGroups, spec.columns, spec.linesPerCol);
             const activeCols = cols.filter(c => c.cards.length > 0);
+            container.className = activeCols.length === 1 ? 'grid grid-cols-1 gap-3.5' : `grid ${spec.gridClass}`;
 
             container.innerHTML = activeCols.map((col, colIdx) => `
                 <div class="flex flex-col gap-3">
                     ${col.cards.map(card => `
                         <div class="liquid-glass-subcard rounded-2xl p-3.5 flex flex-col gap-2">
-                            <div class="flex items-center justify-between select-none">
-                                <span class="text-[13px] sm:text-[13.5px] font-bold text-slate-900 tracking-tight uppercase">${escapeHtml(card.topicName)}</span>
-                                ${card.overflowCount > 0 ? `<span class="text-[10px] font-semibold text-slate-500 bg-white/60 px-2 py-0.5 rounded-full border border-white/80">+${card.overflowCount} MORE</span>` : ''}
-                            </div>
+                            ${(card.topicName || card.overflowCount > 0) ? `
+                                <div class="flex items-center justify-between select-none">
+                                    <span class="text-[13px] sm:text-[13.5px] font-bold text-slate-900 tracking-tight uppercase">${escapeHtml(card.topicName)}</span>
+                                    ${card.overflowCount > 0 ? `<span class="text-[10px] font-semibold text-slate-500 bg-white/60 px-2 py-0.5 rounded-full border border-white/80">+${card.overflowCount} MORE</span>` : ''}
+                                </div>
+                            ` : ''}
                             <div class="space-y-1">
                                 ${card.visibleTasks.map(({ item, rowIdx, colKey }) => `
                                     <div onclick="triggerWidgetDeepLinkToTask('${colKey}', ${rowIdx})" class="group flex items-center gap-2.5 px-2 py-1 rounded-xl cursor-pointer hover:bg-white/60 transition">
@@ -2796,6 +2804,7 @@
 
         function getScriptableWidgetSourceCode() {
             const initialData = JSON.stringify(buildWidgetSyncPayload());
+            const defaultAppUrl = window.location.href.split('?')[0] || 'https://jinnni91.github.io/';
             const apiKey = (USER_FIREBASE_CONFIG && USER_FIREBASE_CONFIG.apiKey) ? USER_FIREBASE_CONFIG.apiKey : '';
             const projId = activeFirebaseProjectId || (USER_FIREBASE_CONFIG && USER_FIREBASE_CONFIG.projectId) || '';
             const cloudEndpoint = projId ? `https://firestore.googleapis.com/v1/projects/${projId}/databases/(default)/documents/artifacts/${appId}/public/data/planner_days/` : '';
@@ -2808,6 +2817,7 @@ const tokenPath = fm.joinPath(fm.documentsDirectory(), "daily_planner_firebase_t
 const FIREBASE_API_KEY = ${JSON.stringify(apiKey)};
 const CLOUD_BASE = ${JSON.stringify(cloudEndpoint)};
 const SYNC_KEY = ${JSON.stringify(syncWorkspaceKey)};
+const DEFAULT_APP_URL = ${JSON.stringify(defaultAppUrl)};
 
 function getTodayKey() {
   const now = new Date();
@@ -2838,15 +2848,20 @@ async function getFirebaseIdToken() {
 }
 
 let data = ${initialData};
+if (!data.appUrl) data.appUrl = DEFAULT_APP_URL;
 if (args.queryParameters && args.queryParameters.payload) {
   try {
     data = JSON.parse(args.queryParameters.payload);
-    fm.writeString(filePath, args.queryParameters.payload);
+    if (!data.appUrl) data.appUrl = DEFAULT_APP_URL;
+    fm.writeString(filePath, JSON.stringify(data));
   } catch(e) {}
 } else if (fm.fileExists(filePath)) {
   try {
     const saved = JSON.parse(fm.readString(filePath));
-    if (saved && saved.dateKey === getTodayKey()) data = saved;
+    if (saved && saved.dateKey === getTodayKey()) {
+      data = saved;
+      if (!data.appUrl) data.appUrl = DEFAULT_APP_URL;
+    }
   } catch (e) {}
 }
 
@@ -2860,19 +2875,20 @@ if (CLOUD_BASE) {
     if (res && res.fields && res.fields.payloadJson && res.fields.payloadJson.stringValue) {
       const rawState = JSON.parse(res.fields.payloadJson.stringValue);
       const groups = [];
+      let cur = null;
       ["left", "right"].forEach(colKey => {
-        let cur = null;
         ((rawState.columns && rawState.columns[colKey]) || []).forEach((it, idx) => {
+          const txt = (it.text || "").trim();
           if (it.rowType === "topic") {
-            cur = (it.text && it.text.trim()) ? { topic: it.text.trim(), tasks: [] } : null;
-            if (cur) groups.push(cur);
-          } else if (it.text && it.text.trim()) {
-            if (!cur) { cur = { topic: colKey === "left" ? "MAIN" : "ETC", tasks: [] }; groups.push(cur); }
-            cur.tasks.push({ text: it.text.trim(), done: !!it.done, id: colKey + "-" + idx });
+            if (txt) { cur = { topic: txt, tasks: [] }; groups.push(cur); }
+          } else if (txt) {
+            if (!cur) { cur = { topic: "", tasks: [] }; groups.push(cur); }
+            cur.tasks.push({ text: txt, done: !!it.done, id: colKey + "-" + idx });
           }
         });
       });
       data.dateKey = getTodayKey();
+      data.appUrl = data.appUrl || DEFAULT_APP_URL;
       data.topics = groups.filter(g => g.tasks.length > 0);
       fm.writeString(filePath, JSON.stringify(data));
     } else if (res && res.error && res.error.code === 404) {
@@ -2882,6 +2898,7 @@ if (CLOUD_BASE) {
   } catch (e) {}
 }
 
+const targetAppUrl = data.appUrl || DEFAULT_APP_URL;
 const family = config.widgetFamily || "large";
 const spec = {
   small: { cols: 1, lines: 7 },
@@ -2892,97 +2909,116 @@ const spec = {
 
 const w = new ListWidget();
 w.backgroundColor = new Color("#EEF2F6");
-w.setPadding(12, 12, 12, 12);
+w.setPadding(14, 14, 14, 14);
 w.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000);
-if (data.appUrl) w.url = data.appUrl;
+w.url = targetAppUrl;
 
 const cols = Array.from({ length: spec.cols }, () => ({ used: 0, cards: [] }));
 (data.topics || []).forEach(g => {
   let rem = [...(g.tasks || [])];
   let cont = false;
+  const hasTitle = Boolean(g.topic && g.topic.trim());
+  const headerCost = hasTitle ? 1 : 0;
   while (rem.length > 0) {
-    let target = cols.find(c => (spec.lines - c.used) >= 2);
+    let target = cols.find(c => (spec.lines - c.used) >= (headerCost + 1));
     if (!target) break;
-    let free = (spec.lines - target.used) - 1;
+    let free = (spec.lines - target.used) - headerCost;
     let canSplit = data.topics.length < spec.cols && cols.some(c => c !== target && c.used === 0);
+    let cardTitle = hasTitle ? (cont ? g.topic + " ···" : g.topic) : "";
     if (rem.length <= free) {
-      target.cards.push({ title: cont ? g.topic + " ···" : g.topic, tasks: rem, more: 0 });
-      target.used += 1 + rem.length;
+      target.cards.push({ title: cardTitle, tasks: rem, more: 0 });
+      target.used += headerCost + rem.length;
       rem = [];
     } else if (canSplit) {
       let chunk = rem.slice(0, free);
-      target.cards.push({ title: cont ? g.topic + " ···" : g.topic, tasks: chunk, more: 0 });
-      target.used += 1 + chunk.length;
+      target.cards.push({ title: cardTitle, tasks: chunk, more: 0 });
+      target.used += headerCost + chunk.length;
       rem = rem.slice(free);
       cont = true;
     } else {
       let vis = rem.slice(0, free);
-      target.cards.push({ title: cont ? g.topic + " ···" : g.topic, tasks: vis, more: rem.length - vis.length });
-      target.used += 1 + vis.length;
+      target.cards.push({ title: cardTitle, tasks: vis, more: rem.length - vis.length });
+      target.used += headerCost + vis.length;
       rem = [];
     }
   }
 });
 
-const mainRow = w.addStack();
-mainRow.layoutHorizontally();
-mainRow.spacing = 8;
-mainRow.topAlignContent();
-
 const activeCols = cols.filter(c => c.cards.length > 0);
 if (activeCols.length === 0) {
-  const emptyTxt = w.addText("NO TASKS FOR TODAY");
-  emptyTxt.font = Font.boldSystemFont(11);
-  emptyTxt.textColor = new Color("#64748B");
+  w.addSpacer();
+  const emptyRow = w.addStack();
+  emptyRow.layoutHorizontally();
+  emptyRow.addSpacer();
+  const emptyTxt = emptyRow.addText("NO TASKS FOR TODAY");
+  emptyTxt.font = Font.boldSystemFont(12);
+  emptyTxt.textColor = new Color("#94A3B8");
+  emptyRow.addSpacer();
+  w.addSpacer();
 } else {
+  const mainRow = w.addStack();
+  mainRow.layoutHorizontally();
+  mainRow.spacing = 10;
+  mainRow.topAlignContent();
+
   activeCols.forEach(col => {
     const colStack = mainRow.addStack();
     colStack.layoutVertically();
-    colStack.spacing = 8;
+    colStack.spacing = 10;
     colStack.topAlignContent();
 
     col.cards.forEach(card => {
       const box = colStack.addStack();
       box.layoutVertically();
-      box.backgroundColor = new Color("#FFFFFF", 0.85);
-      box.cornerRadius = 12;
-      box.setPadding(8, 10, 8, 10);
-      box.spacing = 4;
+      box.backgroundColor = new Color("#FFFFFF", 0.9);
+      box.cornerRadius = 16;
+      box.setPadding(12, 14, 12, 14);
+      box.spacing = 6;
       box.topAlignContent();
 
-      const head = box.addStack();
-      head.layoutHorizontally();
-      const titleTxt = head.addText(card.title.toUpperCase());
-      titleTxt.font = Font.boldSystemFont(11);
-      titleTxt.textColor = new Color("#0F172A");
-      if (card.more > 0) {
+      if (card.title || card.more > 0) {
+        const head = box.addStack();
+        head.layoutHorizontally();
+        head.centerAlignContent();
+        if (card.title) {
+          const titleTxt = head.addText(card.title.toUpperCase());
+          titleTxt.font = Font.boldSystemFont(13);
+          titleTxt.textColor = new Color("#0F172A");
+        }
         head.addSpacer();
-        const moreTxt = head.addText("+" + card.more + " MORE");
-        moreTxt.font = Font.semiboldSystemFont(8.5);
-        moreTxt.textColor = new Color("#64748B");
+        if (card.more > 0) {
+          const moreTxt = head.addText("+" + card.more + " MORE");
+          moreTxt.font = Font.semiboldSystemFont(9.5);
+          moreTxt.textColor = new Color("#64748B");
+        }
       }
 
       card.tasks.forEach(t => {
         const r = box.addStack();
         r.layoutHorizontally();
         r.centerAlignContent();
-        r.spacing = 5;
-        if (data.appUrl && t.id) r.url = data.appUrl + "?taskId=" + t.id;
-        const chk = r.addText(t.done ? "☑" : "☐");
-        chk.font = Font.mediumSystemFont(11);
-        chk.textColor = new Color("#1E293B");
+        r.spacing = 8;
+        if (t.id) r.url = targetAppUrl + (targetAppUrl.includes("?") ? "&" : "?") + "taskId=" + t.id;
+        const sym = SFSymbol.named(t.done ? "checkmark.square.fill" : "square");
+        if (sym) {
+          const img = r.addImage(sym.image);
+          img.imageSize = new Size(15, 15);
+          img.tintColor = t.done ? new Color("#64748B") : new Color("#1E293B");
+        }
         const lbl = r.addText(t.text);
-        lbl.font = Font.mediumSystemFont(11);
+        lbl.font = Font.mediumSystemFont(13);
         lbl.textColor = t.done ? new Color("#94A3B8") : new Color("#1E293B");
         lbl.lineLimit = 1;
+        r.addSpacer();
       });
     });
   });
+  w.addSpacer();
 }
 
 Script.setWidget(w);
 if (!config.runsInWidget) {
-  await w.presentLarge();
+  Safari.open(targetAppUrl);
 }
 Script.complete();`;
         }
