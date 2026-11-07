@@ -1,0 +1,2594 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Daily Planner">
+    <title>DAILY PLANNER</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --paper-bg: #ffffff;
+            --line-light: #d4d4d8;
+            --line-cat: #a1a1aa;
+            --line-strong: #9ca3af;
+            --ink-primary: #334155;
+            --ink-muted: #71717a;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+            background: radial-gradient(circle at 18% 12%, rgba(215, 235, 255, 0.7) 0%, transparent 45%),
+                        radial-gradient(circle at 82% 88%, rgba(255, 226, 240, 0.65) 0%, transparent 45%),
+                        #eaeef3;
+            color: var(--ink-primary);
+            overflow: hidden;
+        }
+
+        .app-viewport {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Apple Liquid Glass Design Tokens: High-transparency, strong specular highlights & refractive blur */
+        .liquid-glass-modal {
+            background: rgba(255, 255, 255, 0.52);
+            backdrop-filter: blur(40px) saturate(220%) brightness(1.04);
+            -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(1.04);
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            box-shadow: 0 32px 80px -15px rgba(15, 23, 42, 0.28),
+                        inset 0 1.5px 2px rgba(255, 255, 255, 0.95),
+                        inset 0 -1.5px 2px rgba(0, 0, 0, 0.04);
+        }
+
+        .liquid-glass-widget {
+            background: rgba(255, 255, 255, 0.50);
+            backdrop-filter: blur(48px) saturate(230%) brightness(1.05);
+            -webkit-backdrop-filter: blur(48px) saturate(230%) brightness(1.05);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            box-shadow: 0 36px 90px -16px rgba(15, 23, 42, 0.26),
+                        inset 0 1.5px 2px rgba(255, 255, 255, 0.95),
+                        inset 0 -1px 2px rgba(0, 0, 0, 0.03);
+        }
+
+        .liquid-glass-subcard {
+            background: rgba(255, 255, 255, 0.42);
+            backdrop-filter: blur(20px) saturate(190%);
+            -webkit-backdrop-filter: blur(20px) saturate(190%);
+            border: 1px solid rgba(255, 255, 255, 0.72);
+            box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.92),
+                        0 4px 14px -3px rgba(15, 23, 42, 0.06);
+        }
+
+        /* Translucent Liquid Glass Buttons & Inputs */
+        .liquid-btn-active {
+            background: rgba(15, 23, 42, 0.78) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.25) !important;
+            box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.4),
+                        0 4px 12px rgba(15, 23, 42, 0.2) !important;
+        }
+
+        .liquid-btn-inactive {
+            background: rgba(255, 255, 255, 0.38) !important;
+            backdrop-filter: blur(14px) !important;
+            -webkit-backdrop-filter: blur(14px) !important;
+            color: #475569 !important;
+            border: 1px solid rgba(255, 255, 255, 0.65) !important;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.85) !important;
+        }
+        .liquid-btn-inactive:hover {
+            background: rgba(255, 255, 255, 0.55) !important;
+            color: #1e293b !important;
+        }
+
+        .liquid-input {
+            background: rgba(255, 255, 255, 0.45) !important;
+            backdrop-filter: blur(16px) !important;
+            -webkit-backdrop-filter: blur(16px) !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.75) !important;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04),
+                        0 1px 2px rgba(255, 255, 255, 0.8) !important;
+        }
+        .liquid-input:focus {
+            background: rgba(255, 255, 255, 0.68) !important;
+            border-color: rgba(15, 23, 42, 0.6) !important;
+        }
+
+        .workspace-area {
+            flex: 1 1 0;
+            min-height: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 14px;
+            overflow: hidden;
+        }
+
+        .planner-sheet {
+            width: 100%;
+            max-width: 1380px;
+            height: 100%;
+            max-height: 920px;
+            background-color: var(--paper-bg);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            box-shadow: 0 16px 44px -10px rgba(15, 23, 42, 0.1),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.9);
+            padding: 8px 18px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 24-ROW x 2-COLUMN MASTER GRID (Strict 1:1 Horizontal Alignment: Hours 0..23) */
+        .planner-master-grid {
+            flex: 1 1 0;
+            min-height: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 72% 28%;
+            grid-template-rows: repeat(24, minmax(0, 1fr));
+            border-top: 1.2px solid var(--line-strong);
+            border-bottom: 1.2px solid var(--line-strong);
+        }
+
+        .b-bottom-light { border-bottom: 1px solid var(--line-light); }
+        .b-bottom-cat { border-bottom: 1.1px solid var(--line-cat); }
+        .b-bottom-strong { border-bottom: 1.2px solid var(--line-strong); }
+        .b-right-strong { border-right: 1px solid var(--line-strong); }
+
+        .field-label {
+            font-size: 10.5px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            color: var(--ink-muted);
+            line-height: 1;
+            text-transform: uppercase;
+            user-select: none;
+        }
+
+        .planner-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--ink-primary);
+            font-family: inherit;
+            padding: 0;
+            margin: 0;
+        }
+        .planner-input::placeholder {
+            color: #c4c4cc;
+            font-weight: 400;
+        }
+
+        /* Square Checkbox: Transparent background + Crisp Black Checkmark */
+        .task-checkbox {
+            width: 15px;
+            height: 15px;
+            border: 1.5px solid #1e293b;
+            border-radius: 2.5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background-color: transparent;
+            color: #111111;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            position: relative;
+            z-index: 2;
+        }
+        .task-checkbox:hover {
+            border-color: #000000;
+        }
+
+        /* Clean, Natural Highlighter & Colored Pencil Style (Zero Rounding Rectangular Band) */
+        .shade-pill,
+        .shade-highlight {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding-left: 14px;
+            padding-right: 14px;
+            height: 20px;
+            border-radius: 0px;
+            max-width: calc(100% - 4px);
+            transition: background-color 0.15s ease;
+            position: relative;
+        }
+
+        /* Sleek iOS/macOS Native-Style Spectrum Color Picker Popover */
+        .liquid-glass-picker {
+            background: rgba(255, 255, 255, 0.78);
+            backdrop-filter: blur(44px) saturate(230%) brightness(1.05);
+            -webkit-backdrop-filter: blur(44px) saturate(230%) brightness(1.05);
+            border: 1px solid rgba(255, 255, 255, 0.92);
+            box-shadow: 0 24px 60px -10px rgba(15, 23, 42, 0.35),
+                        0 0 0 1px rgba(15, 23, 42, 0.06),
+                        inset 0 1.5px 2px rgba(255, 255, 255, 0.98);
+        }
+
+        .sv-spectrum-box {
+            position: relative;
+            width: 100%;
+            height: 132px;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: crosshair;
+            touch-action: none;
+            user-select: none;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+        }
+        .sv-spectrum-white {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to right, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
+        }
+        .sv-spectrum-black {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #000000 100%);
+        }
+        .sv-spectrum-thumb {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 9999px;
+            border: 2.5px solid #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.38), inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .hue-slider-track {
+            position: relative;
+            width: 100%;
+            height: 14px;
+            border-radius: 9999px;
+            background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+            cursor: pointer;
+            touch-action: none;
+            user-select: none;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.18);
+        }
+        .hue-slider-thumb {
+            position: absolute;
+            top: 50%;
+            width: 18px;
+            height: 18px;
+            border-radius: 9999px;
+            background: #ffffff;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        /* "No Color" Circle with Diagonal Red Slash */
+        .no-color-slash {
+            position: relative;
+            background-color: rgba(255, 255, 255, 0.85);
+            overflow: hidden;
+        }
+        .no-color-slash::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: -20%;
+            width: 140%;
+            height: 1.8px;
+            background-color: #ef4444;
+            transform: translateY(-50%) rotate(-45deg);
+            pointer-events: none;
+        }
+
+        /* Timetable 10-minute vertical subdivision lines */
+        .tt-slot {
+            border-right: 1px dashed rgba(161, 161, 170, 0.28);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            transition: background-color 0.06s ease;
+        }
+        .tt-slot:nth-child(3) {
+            border-right: 1px dotted rgba(161, 161, 170, 0.55);
+        }
+        .tt-slot:last-child {
+            border-right: none;
+        }
+        .tt-slot-selecting {
+            background-color: rgba(59, 130, 246, 0.28) !important;
+            box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.65);
+        }
+        .tt-slot-drop-preview {
+            background-color: rgba(16, 185, 129, 0.28) !important;
+            box-shadow: inset 0 0 0 1px rgba(5, 150, 105, 0.7);
+        }
+        .tt-slot-occupied {
+            cursor: pointer;
+        }
+        .todo-draggable-row[draggable="true"] {
+            cursor: grab;
+        }
+        .todo-draggable-row[draggable="true"]:active {
+            cursor: grabbing;
+        }
+
+        /* Floating Ghost Pill for iPhone/iPad Touch Drag-and-Drop */
+        .touch-drag-ghost {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            transform: translate(-50%, -135%);
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(16px) saturate(190%);
+            -webkit-backdrop-filter: blur(16px) saturate(190%);
+            border: 1px solid rgba(15, 23, 42, 0.18);
+            box-shadow: 0 14px 32px -6px rgba(15, 23, 42, 0.25);
+            font-size: 12px;
+            font-weight: 600;
+            color: #1e293b;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @keyframes deepLinkPulse {
+            0%, 100% { background-color: transparent; }
+            30%, 70% { background-color: rgba(251, 191, 36, 0.35); }
+        }
+        .deeplink-flash {
+            animation: deepLinkPulse 1.6s ease-in-out;
+        }
+
+        /* Portrait Mode (iPhone default, iPad vertical) */
+        body.layout-portrait,
+        body.layout-portrait .app-viewport,
+        body.layout-portrait .workspace-area {
+            height: auto;
+            overflow-y: auto;
+        }
+        body.layout-portrait .planner-sheet {
+            max-width: 520px;
+            height: auto;
+            max-height: none;
+            margin: 0 auto;
+            padding: 10px 12px;
+        }
+        body.layout-portrait .planner-master-grid {
+            display: flex;
+            flex-direction: column;
+            height: auto;
+        }
+        body.layout-portrait .portrait-row-h {
+            min-height: 36px;
+        }
+
+        @media print {
+            @page { size: 297mm 210mm; margin: 0; }
+            html, body { background: #fff !important; overflow: hidden !important; }
+            .no-print { display: none !important; }
+            .workspace-area { padding: 0 !important; }
+            .planner-sheet {
+                width: 297mm !important;
+                height: 210mm !important;
+                max-width: none !important;
+                max-height: none !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 10mm 16mm 8mm 16mm !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-viewport">
+        <!-- Minimalist All-Caps Top Bar with Frosted Glass -->
+        <header class="no-print h-10 flex-shrink-0 bg-white/70 backdrop-blur-xl border-b border-zinc-200/80 px-3 sm:px-5 flex items-center justify-between gap-2 text-[11px] tracking-wider uppercase">
+            <!-- Left: Brand, SHADE 5 Pinned Circles & Two-Tap Indicator -->
+            <div class="flex items-center gap-3">
+                <span class="font-bold text-slate-800 tracking-widest">DAILY PLANNER</span>
+                <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-md border border-white/80 shadow-sm rounded-md px-2.5 py-1">
+                    <span class="text-[10px] font-semibold text-zinc-400 mr-1">SHADE</span>
+                    <div id="toolbarPinnedColors" class="flex items-center gap-1.5"></div>
+                    <button type="button" onclick="triggerNativePicker({ type: 'toolbarRainbow' })" class="w-4 h-4 rounded-full flex items-center justify-center border border-white/90 shadow-xs transition hover:scale-110 ml-0.5" style="background: conic-gradient(#f87171, #fbbf24, #34d399, #60a5fa, #a78bfa, #f472b6, #f87171);" title="CHOOSE COLOR (NATIVE PICKER)"></button>
+                </div>
+                <span id="twoTapIndicator" class="hidden items-center gap-1.5 text-[10px] font-semibold text-blue-700 bg-blue-50/90 px-2 py-0.5 rounded-full border border-blue-200">
+                    <span id="twoTapText">SELECT END</span>
+                    <button onclick="cancelTwoTapSelection()" class="underline ml-1">✕</button>
+                </span>
+            </div>
+
+            <!-- Right: Actions -->
+            <div class="flex items-center gap-1.5">
+                <button onclick="openWidgetSimulator()" class="px-2.5 py-1 rounded-md font-semibold bg-slate-800/90 hover:bg-slate-800 text-white shadow-sm transition text-[10px] tracking-wider">
+                    WIDGET
+                </button>
+                <button onclick="loadSampleData()" class="px-2.5 py-1 rounded-md bg-white/80 hover:bg-white border border-zinc-300 text-slate-700 font-semibold text-[10px] tracking-wider transition">
+                    SAMPLE
+                </button>
+                <button onclick="resetToBlank()" class="px-2.5 py-1 rounded-md bg-white/80 hover:bg-rose-50 hover:text-rose-700 border border-zinc-300 text-slate-700 font-semibold text-[10px] tracking-wider transition">
+                    CLEAR ALL
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Single-Page Landscape Sheet Area -->
+        <main class="workspace-area">
+            <section class="planner-sheet" aria-label="Landscape Daily Planner">
+                <div class="planner-master-grid">
+
+                    <!-- 1. TOP HEADER: DATE & GOAL (Column 1, Rows 1..2 = Hours 0..1) -->
+                    <div style="grid-column: 1; grid-row: 1 / span 2;" class="b-right-strong b-bottom-strong flex min-h-[50px]">
+                        <!-- DATE CELL (27% width, vertically centered input row below DATE label) -->
+                        <div class="w-[27%] min-w-[180px] b-right-strong px-3 pt-1.5 pb-1 flex flex-col overflow-hidden">
+                            <span class="field-label flex-shrink-0">DATE</span>
+                            <div class="flex-1 flex items-center">
+                                <div class="flex items-baseline whitespace-nowrap flex-nowrap text-slate-700">
+                                    <input id="dateYYYY" type="text" maxlength="4" placeholder="YYYY"
+                                        style="width: 4.2ch;"
+                                        class="planner-input text-center text-[13px] font-medium uppercase"
+                                        oninput="handleDateFieldChange()">
+                                    <span class="font-bold text-slate-500 px-1 select-none">.</span>
+                                    <input id="dateMM" type="text" maxlength="2" placeholder="MM"
+                                        style="width: 2.2ch;"
+                                        class="planner-input text-center text-[13px] font-medium uppercase"
+                                        oninput="handleDateFieldChange()">
+                                    <span class="font-bold text-slate-500 px-1 select-none">.</span>
+                                    <input id="dateDD" type="text" maxlength="2" placeholder="DD"
+                                        style="width: 2.2ch;"
+                                        class="planner-input text-center text-[13px] font-medium uppercase"
+                                        oninput="handleDateFieldChange()">
+                                    <span class="inline-flex items-baseline ml-1.5 text-slate-400 text-[13px] flex-shrink-0">
+                                        <span class="select-none">(</span>
+                                        <input id="dateDOW" type="text" maxlength="3" placeholder="DAY"
+                                            style="width: 2.6ch;"
+                                            class="planner-input mx-0.5 text-center text-[12px] font-medium text-slate-700 uppercase"
+                                            oninput="handleDateFieldChange()">
+                                        <span class="select-none">)</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- GOAL CELL (73% width, vertically centered input row below GOAL label) -->
+                        <div class="w-[73%] px-3.5 pt-1.5 pb-1 flex flex-col overflow-hidden">
+                            <span class="field-label flex-shrink-0">GOAL</span>
+                            <div class="flex-1 flex items-center w-full">
+                                <input id="goalInput" type="text" placeholder=""
+                                    class="planner-input w-full text-[13.5px] font-medium text-slate-800"
+                                    oninput="handleGoalChange(this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. MIDDLE 18 FREE-FORM ROWS (Column 1, Rows 3..20 = Hours 2..19) -->
+                    <div id="middleRowsContainer" style="grid-column: 1; grid-row: 3 / span 18;" class="b-right-strong grid grid-cols-2 grid-rows-[repeat(18,minmax(0,1fr))] min-h-0">
+                    </div>
+
+                    <!-- 3. DAILY REVIEW SECTION (Column 1, Rows 21..24 = Hours 20..23) -->
+                    <div style="grid-column: 1; grid-row: 21;" class="portrait-row-h b-right-strong b-bottom-light px-3 flex items-center">
+                        <span class="field-label">DAILY REVIEW</span>
+                    </div>
+
+                    <!-- Row 22 (Hour 21): • KEEP : -->
+                    <div style="grid-column: 1; grid-row: 22;" class="portrait-row-h b-right-strong b-bottom-light px-3.5 flex items-center">
+                        <div class="inline-flex items-center text-[12px] font-normal text-[#475569] select-none flex-shrink-0 mr-2.5">
+                            <span class="inline-flex items-center w-[82px] tracking-[0.03em]">
+                                <span class="text-[#64748b] mr-1.5">•</span>KEEP
+                            </span>
+                            <span class="text-[#475569]">:</span>
+                        </div>
+                        <input id="reviewKeep" type="text"
+                            class="planner-input flex-1 text-[13px] text-slate-800"
+                            oninput="handleReviewChange('keep', this.value)">
+                    </div>
+
+                    <!-- Row 23 (Hour 22): • PROBLEM : -->
+                    <div style="grid-column: 1; grid-row: 23;" class="portrait-row-h b-right-strong b-bottom-light px-3.5 flex items-center">
+                        <div class="inline-flex items-center text-[12px] font-normal text-[#475569] select-none flex-shrink-0 mr-2.5">
+                            <span class="inline-flex items-center w-[82px] tracking-[0.03em]">
+                                <span class="text-[#64748b] mr-1.5">•</span>PROBLEM
+                            </span>
+                            <span class="text-[#475569]">:</span>
+                        </div>
+                        <input id="reviewProblem" type="text"
+                            class="planner-input flex-1 text-[13px] text-slate-800"
+                            oninput="handleReviewChange('problem', this.value)">
+                    </div>
+
+                    <!-- Row 24 (Hour 23): • TRY : -->
+                    <div style="grid-column: 1; grid-row: 24;" class="portrait-row-h b-right-strong px-3.5 flex items-center">
+                        <div class="inline-flex items-center text-[12px] font-normal text-[#475569] select-none flex-shrink-0 mr-2.5">
+                            <span class="inline-flex items-center w-[82px] tracking-[0.03em]">
+                                <span class="text-[#64748b] mr-1.5">•</span>TRY
+                            </span>
+                            <span class="text-[#475569]">:</span>
+                        </div>
+                        <input id="reviewTry" type="text"
+                            class="planner-input flex-1 text-[13px] text-slate-800"
+                            oninput="handleReviewChange('try', this.value)">
+                    </div>
+
+                    <!-- 4. RIGHT TIMETABLE (Column 2, Rows 1..24 = Hours 0..23, 10-min 6-grid) -->
+                    <div id="timetableColumnContainer" style="grid-column: 2; grid-row: 1 / span 24;" class="grid grid-rows-[repeat(24,minmax(0,1fr))] min-h-0 relative">
+                    </div>
+
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Floating Touch Drag Ghost (iPhone / iPad Touch Drag-and-Drop) -->
+    <div id="touchDragGhost" class="touch-drag-ghost hidden"></div>
+
+    <!-- ============================================================================ -->
+    <!-- MODAL 1: ROW SETTING MODAL (TOPIC / TO-DO, DONE / UNDONE, SHADE, CLEAR/SAVE) -->
+    <!-- ============================================================================ -->
+    <div id="taskModalBackdrop" onclick="if(event.target===this) closeTaskModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4">
+        <div id="taskModalDialog" class="liquid-glass-modal relative rounded-3xl max-w-sm w-full p-5 space-y-3.5">
+            <!-- 1. Row Type Toggle: TOPIC vs TO-DO (Uniform 44px height) -->
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" id="btnRowTypeTopic" onclick="setModalRowType('topic')"
+                    class="liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition">
+                    TOPIC
+                </button>
+                <button type="button" id="btnRowTypeTask" onclick="setModalRowType('task')"
+                    class="liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition">
+                    TO-DO
+                </button>
+            </div>
+
+            <!-- 2. Completion Toggle: DONE vs UNDONE (Uniform 44px height, hidden when TOPIC) -->
+            <div id="modalCompletionSection" class="grid grid-cols-2 gap-2">
+                <button type="button" id="btnMarkDone" onclick="setModalTaskDone(true)"
+                    class="liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition">
+                    DONE
+                </button>
+                <button type="button" id="btnMarkUndone" onclick="setModalTaskDone(false)"
+                    class="liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition">
+                    UNDONE
+                </button>
+            </div>
+
+            <!-- 3. Text Input (Uniform 44px height) -->
+            <div>
+                <input id="modalTaskTextInput" type="text" placeholder="ENTER TEXT..."
+                    class="liquid-input w-full h-11 px-3.5 rounded-[12px] text-[13.5px] font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                    onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveTaskModal(); }">
+            </div>
+
+            <!-- 4. Shade Palette: Diagonal Red Slash (None) + 5 Pinned Colors + Rainbow Picker -->
+            <div class="flex items-center justify-between pt-1">
+                <div class="flex items-center gap-2">
+                    <button type="button" id="taskHlNoneBtn" onclick="setModalTaskHighlight('none')"
+                        class="no-color-slash w-8 h-8 rounded-full border border-slate-300 shadow-xs transition hover:scale-105"
+                        title="NO SHADE"></button>
+                    <div id="taskModalPinnedColors" class="flex items-center gap-2"></div>
+                    <button type="button" onclick="triggerNativePicker({ type: 'taskModalRainbow' })"
+                        class="w-8 h-8 rounded-full border border-white/90 shadow-sm transition hover:scale-105"
+                        style="background: conic-gradient(#f87171, #fbbf24, #34d399, #60a5fa, #a78bfa, #f472b6, #f87171);"
+                        title="COLOR PICKER"></button>
+                </div>
+                <button type="button" onclick="clearModalTask()"
+                    class="text-[11px] font-bold tracking-widest uppercase text-slate-500 hover:text-rose-600 px-1.5 py-1 transition">
+                    CLEAR
+                </button>
+            </div>
+
+            <!-- 5. Bottom Actions: CANCEL & SAVE -->
+            <div class="grid grid-cols-2 gap-2 pt-1">
+                <button type="button" onclick="closeTaskModal()"
+                    class="liquid-btn-inactive h-11 rounded-[12px] font-semibold text-xs tracking-wider uppercase transition">
+                    CANCEL
+                </button>
+                <button type="button" onclick="saveTaskModal()"
+                    class="liquid-btn-active h-11 rounded-[12px] font-semibold text-xs tracking-wider uppercase transition">
+                    SAVE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================ -->
+    <!-- MODAL 2: TIMETABLE BLOCK MODAL (EDITABLE START/END TIME, TEXT, SHADE)        -->
+    <!-- ============================================================================ -->
+    <div id="timeBlockModalBackdrop" onclick="if(event.target===this) closeTimeBlockModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4">
+        <div id="timeBlockModalDialog" class="liquid-glass-modal relative rounded-3xl max-w-sm w-full p-5 space-y-3.5">
+            <!-- 1. Editable Time Range Dropdowns (10-min intervals, prevents overlap) -->
+            <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                <select id="tbStartSlotSelect" onchange="handleTbStartSlotChange(this.value)"
+                    class="liquid-input h-11 px-3 rounded-[12px] text-[14px] font-bold text-slate-800 text-center tracking-wider uppercase focus:outline-none cursor-pointer">
+                </select>
+                <span class="text-slate-500 font-bold text-sm select-none">-</span>
+                <select id="tbEndSlotSelect" onchange="handleTbEndSlotChange(this.value)"
+                    class="liquid-input h-11 px-3 rounded-[12px] text-[14px] font-bold text-slate-800 text-center tracking-wider uppercase focus:outline-none cursor-pointer">
+                </select>
+            </div>
+
+            <!-- 2. Single-Line Activity Text Input (44px height) -->
+            <div>
+                <input id="tbTextInput" type="text" placeholder="ENTER SCHEDULE..."
+                    class="liquid-input w-full h-11 px-3.5 rounded-[12px] text-[13.5px] font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                    onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveTimeBlockModal(); }">
+            </div>
+
+            <!-- 3. Shade Palette + Text CLEAR Action -->
+            <div class="flex items-center justify-between pt-1">
+                <div class="flex items-center gap-2">
+                    <button type="button" id="tbHlNoneBtn" onclick="setModalTimeBlockColor('none')"
+                        class="no-color-slash w-8 h-8 rounded-full border border-slate-300 shadow-xs transition hover:scale-105"
+                        title="NO SHADE"></button>
+                    <div id="tbModalPinnedColors" class="flex items-center gap-2"></div>
+                    <button type="button" onclick="triggerNativePicker({ type: 'tbModalRainbow' })"
+                        class="w-8 h-8 rounded-full border border-white/90 shadow-sm transition hover:scale-105"
+                        style="background: conic-gradient(#f87171, #fbbf24, #34d399, #60a5fa, #a78bfa, #f472b6, #f87171);"
+                        title="COLOR PICKER"></button>
+                </div>
+                <button type="button" onclick="deleteCurrentTimeBlock()"
+                    class="text-[11px] font-bold tracking-widest uppercase text-slate-500 hover:text-rose-600 px-1.5 py-1 transition">
+                    CLEAR
+                </button>
+            </div>
+
+            <!-- 4. Bottom Actions: CANCEL & SAVE -->
+            <div class="grid grid-cols-2 gap-2 pt-1">
+                <button type="button" onclick="closeTimeBlockModal()"
+                    class="liquid-btn-inactive h-11 rounded-[12px] font-semibold text-xs tracking-wider uppercase transition">
+                    CANCEL
+                </button>
+                <button type="button" onclick="saveTimeBlockModal()"
+                    class="liquid-btn-active h-11 rounded-[12px] font-semibold text-xs tracking-wider uppercase transition">
+                    SAVE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================ -->
+    <!-- MODAL 3: iOS LIQUID GLASS WIDGET PREVIEW (ADAPTIVE SIZE & SCRIPTABLE SYNC)   -->
+    <!-- ============================================================================ -->
+    <div id="widgetSimModalBackdrop" onclick="if(event.target===this) closeWidgetSimulator()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/25 backdrop-blur-md flex items-center justify-center p-4">
+        <div id="widgetOuterContainer" class="liquid-glass-widget rounded-[32px] max-w-2xl w-full p-5 sm:p-6 transition-all duration-200 max-h-[92vh] overflow-y-auto">
+            <!-- Sleek Top Header Bar + Size Switcher + Scriptable Sync -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3.5 border-b border-white/60">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-slate-800 shadow-sm"></span>
+                    <span class="text-[11px] font-bold tracking-widest uppercase text-slate-800">iOS WIDGET</span>
+                    <span id="widgetCapacityBadge" class="text-[10px] font-semibold text-slate-500 bg-white/50 px-2 py-0.5 rounded-full border border-white/70"></span>
+                </div>
+
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <button type="button" onclick="syncToScriptableApp()"
+                        class="liquid-btn-active px-2.5 py-1 rounded-xl text-[10px] font-bold tracking-wider uppercase transition"
+                        title="SEND CURRENT TO-DOS TO SCRIPTABLE APP ON iOS">
+                        SYNC iOS
+                    </button>
+                    <button type="button" onclick="toggleScriptableGuide()"
+                        class="liquid-btn-inactive px-2.5 py-1 rounded-xl text-[10px] font-bold tracking-wider uppercase transition">
+                        SCRIPTABLE CODE
+                    </button>
+                    <div class="inline-flex items-center bg-white/40 border border-white/70 rounded-xl p-0.5 gap-0.5">
+                        <button type="button" id="widgetSizeBtn-small" onclick="setWidgetPreviewSize('small')"
+                            class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">
+                            S
+                        </button>
+                        <button type="button" id="widgetSizeBtn-medium" onclick="setWidgetPreviewSize('medium')"
+                            class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">
+                            M
+                        </button>
+                        <button type="button" id="widgetSizeBtn-large" onclick="setWidgetPreviewSize('large')"
+                            class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">
+                            L
+                        </button>
+                        <button type="button" id="widgetSizeBtn-xl" onclick="setWidgetPreviewSize('xl')"
+                            class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">
+                            XL
+                        </button>
+                    </div>
+                    <button onclick="closeWidgetSimulator()" class="w-7 h-7 rounded-full bg-white/40 hover:bg-white/60 border border-white/70 flex items-center justify-center text-slate-700 text-xs transition ml-1">✕</button>
+                </div>
+            </div>
+
+            <!-- Collapsible Scriptable Free iOS Widget Setup Box -->
+            <div id="scriptableSetupBox" class="hidden liquid-glass-subcard rounded-2xl p-4 mb-4 space-y-2.5 text-[11.5px] text-slate-700">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="font-bold text-slate-900 tracking-wider uppercase text-[11px]">FREE iOS WIDGET SETUP (SCRIPTABLE)</span>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" id="copyScriptableBtn" onclick="copyScriptableWidgetCode()"
+                            class="liquid-btn-active px-3 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase transition">
+                            COPY WIDGET SCRIPT
+                        </button>
+                        <button type="button" onclick="copyWidgetJsonData()"
+                            class="liquid-btn-inactive px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase transition">
+                            COPY JSON
+                        </button>
+                    </div>
+                </div>
+                <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-600 leading-relaxed">
+                    <li>App Store에서 무료 앱 <strong>Scriptable</strong> 설치 후 우측 상단 <strong>+</strong> 버튼을 눌러 새 스크립트를 만듭니다.</li>
+                    <li>스크립트 이름을 <strong>DailyPlanner</strong>로 지정하고, 위 <strong>COPY WIDGET SCRIPT</strong> 버튼을 눌러 복사한 코드를 붙여넣고 저장합니다.</li>
+                    <li>아이폰·아이패드 홈 화면에 Scriptable 위젯(S/M/L/XL)을 추가하고 <strong>Script: DailyPlanner</strong>로 설정합니다.</li>
+                    <li>플래너 작성 후 상단 <strong>SYNC iOS</strong> 버튼을 누르면 현재 할 일 목록이 실제 iOS 위젯에 즉시 반영됩니다.</li>
+                </ol>
+            </div>
+
+            <!-- Adaptive Columns Grid (Dynamic Space Allocation per Size, No Fixed 5-Cap) -->
+            <div id="widgetTopicsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================ -->
+    <!-- SLEEK NATIVE-STYLE SPECTRUM COLOR PICKER POPOVER (CENTERED IN ACTIVE MODAL)  -->
+    <!-- ============================================================================ -->
+    <div id="spectrumPickerOverlay" onclick="if(event.target===this) closeSpectrumPicker()" class="no-print hidden inset-0 z-[70]">
+        <div id="spectrumPickerCard" onclick="event.stopPropagation()"
+             style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 256px;"
+             class="liquid-glass-picker rounded-2xl p-3.5 space-y-3">
+            <!-- 2D Saturation / Brightness Spectrum Area -->
+            <div id="svSpectrumBox" class="sv-spectrum-box" style="background-color: hsl(200, 100%, 50%);">
+                <div class="sv-spectrum-white"></div>
+                <div class="sv-spectrum-black"></div>
+                <div id="svSpectrumThumb" class="sv-spectrum-thumb" style="left: 40%; top: 10%;"></div>
+            </div>
+
+            <!-- Smooth Rainbow Hue Slider -->
+            <div class="px-0.5">
+                <div id="hueSliderTrack" class="hue-slider-track">
+                    <div id="hueSliderThumb" class="hue-slider-thumb" style="left: 55%;"></div>
+                </div>
+            </div>
+
+            <!-- Live Preview Swatch + Editable HEX + OK Button -->
+            <div class="flex items-center justify-between gap-2 pt-0.5">
+                <div class="flex items-center gap-2 flex-1 min-w-0">
+                    <span id="pickerLiveSwatch" class="w-7 h-7 rounded-full border border-white/90 shadow-sm flex-shrink-0" style="background-color: #93D5F6;"></span>
+                    <input id="pickerHexInput" type="text" maxlength="7" value="#93D5F6"
+                        class="liquid-input w-full h-7 px-2 rounded-lg text-[11px] font-mono font-semibold uppercase text-slate-800 text-center focus:outline-none"
+                        oninput="handlePickerHexTyping(this.value)"
+                        onkeydown="if(event.key==='Enter'){ event.preventDefault(); closeSpectrumPicker(); }">
+                </div>
+                <button type="button" onclick="closeSpectrumPicker()"
+                    class="liquid-btn-active h-7 px-3.5 rounded-lg text-[11px] font-bold tracking-wider uppercase transition flex-shrink-0">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'daily_planner_landscape_v7_24h';
+        const PINNED_COLORS_KEY = 'daily_planner_pinned_5_colors_v2';
+        const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0 to 23 (24 hours)
+        const MIDDLE_ROW_COUNT = 18; // 18 rows per column (Hours 2..19)
+        const TOTAL_SLOTS = HOURS.length * 6; // 144 ten-minute slots (00:00 to 24:00)
+
+        // Default 5 Pinned Shade Colors
+        const DEFAULT_PINNED_COLORS = ['#93D5F6', '#F9A8C9', '#FDE072', '#99E6C3', '#D1B3FC'];
+
+        const LEGACY_COLOR_MAP = {
+            blue: '#93D5F6',
+            pink: '#F9A8C9',
+            yellow: '#FDE072',
+            green: '#99E6C3',
+            purple: '#D1B3FC',
+            orange: '#FDBA8C'
+        };
+
+        let pinnedColors = loadPinnedColors();
+        let activeModalTaskRef = null;
+        let activeModalRowType = 'task';
+        let activeModalTaskDone = false;
+        let activeModalTaskHl = 'none';
+
+        let isDraggingTimetable = false;
+        let dragStartSlot = null;
+        let dragCurrentSlot = null;
+        let twoTapStartSlot = null;
+        let editingTimeBlockId = null;
+        let activeTbStartSlot = 12;
+        let activeTbEndSlot = 17;
+        let modalTimeBlockColor = '#F9A8C9';
+
+        // Drag-and-Drop TO-DO to Timetable State
+        let draggedTodoData = null;
+        let dropPreviewSlots = [];
+
+        // Direct Native Color Picker Handler State
+        let activePickerTarget = null;
+
+        // Widget Preview Size: 'small' | 'medium' | 'large' | 'xl'
+        let activeWidgetSize = 'large';
+
+        // Layout Mode: 'auto' | 'landscape' | 'portrait'
+        let currentLayoutMode = 'auto';
+
+        function normalizeColorHex(colorVal) {
+            if (!colorVal || colorVal === 'none') return 'none';
+            if (LEGACY_COLOR_MAP[colorVal]) return LEGACY_COLOR_MAP[colorVal];
+            return colorVal;
+        }
+
+        function hexToRgba(hex, alpha = 0.42) {
+            const normalized = normalizeColorHex(hex);
+            if (!normalized || normalized === 'none') return 'transparent';
+            let c = normalized.replace('#', '');
+            if (c.length === 3) c = c.split('').map(x => x + x).join('');
+            const num = parseInt(c, 16);
+            if (isNaN(num)) return `rgba(147, 213, 246, ${alpha})`;
+            const r = (num >> 16) & 255;
+            const g = (num >> 8) & 255;
+            const b = num & 255;
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // Clean, Natural Highlighter / Colored Pencil styling (No glossy reflections)
+        function applyNaturalShadeStyle(element, hex) {
+            const normalized = normalizeColorHex(hex);
+            if (!normalized || normalized === 'none') {
+                element.style.backgroundColor = 'transparent';
+                element.style.boxShadow = 'none';
+                element.style.border = 'none';
+                element.style.backdropFilter = 'none';
+                element.style.webkitBackdropFilter = 'none';
+                return;
+            }
+            element.style.backgroundColor = hexToRgba(normalized, 0.42);
+            element.style.boxShadow = 'none';
+            element.style.border = 'none';
+            element.style.backdropFilter = 'none';
+            element.style.webkitBackdropFilter = 'none';
+        }
+
+        function loadPinnedColors() {
+            try {
+                const raw = localStorage.getItem(PINNED_COLORS_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed) && parsed.length === 5) return parsed;
+                }
+            } catch (e) {}
+            return [...DEFAULT_PINNED_COLORS];
+        }
+
+        function savePinnedColors() {
+            try {
+                localStorage.setItem(PINNED_COLORS_KEY, JSON.stringify(pinnedColors));
+            } catch (e) {}
+        }
+
+        // =========================================================================
+        // SLEEK NATIVE-STYLE SPECTRUM COLOR PICKER (CENTERED INSIDE ACTIVE MODAL)
+        // =========================================================================
+        let pickerHue = 200; // 0..360
+        let pickerSat = 40;  // 0..100
+        let pickerVal = 96;  // 0..100
+        let isDraggingSV = false;
+        let isDraggingHue = false;
+
+        function hexToHsv(hex) {
+            let c = normalizeColorHex(hex);
+            if (!c || c === 'none') c = '#93D5F6';
+            c = c.replace('#', '');
+            if (c.length === 3) c = c.split('').map(x => x + x).join('');
+            const num = parseInt(c, 16);
+            if (isNaN(num)) return { h: 200, s: 40, v: 96 };
+            const r = ((num >> 16) & 255) / 255;
+            const g = ((num >> 8) & 255) / 255;
+            const b = (num & 255) / 255;
+
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            const d = max - min;
+            let h = 0;
+            const s = max === 0 ? 0 : d / max;
+            const v = max;
+
+            if (max !== min) {
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return {
+                h: Math.round(h * 360),
+                s: Math.round(s * 100),
+                v: Math.round(v * 100)
+            };
+        }
+
+        function hsvToHex(h, s, v) {
+            const sNorm = s / 100;
+            const vNorm = v / 100;
+            const c = vNorm * sNorm;
+            const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+            const m = vNorm - c;
+            let rPrime = 0, gPrime = 0, bPrime = 0;
+
+            if (h >= 0 && h < 60) { rPrime = c; gPrime = x; bPrime = 0; }
+            else if (h >= 60 && h < 120) { rPrime = x; gPrime = c; bPrime = 0; }
+            else if (h >= 120 && h < 180) { rPrime = 0; gPrime = c; bPrime = x; }
+            else if (h >= 180 && h < 240) { rPrime = 0; gPrime = x; bPrime = c; }
+            else if (h >= 240 && h < 300) { rPrime = x; gPrime = 0; bPrime = c; }
+            else { rPrime = c; gPrime = 0; bPrime = x; }
+
+            const toHex = (n) => Math.round((n + m) * 255).toString(16).padStart(2, '0').toUpperCase();
+            return `#${toHex(rPrime)}${toHex(gPrime)}${toHex(bPrime)}`;
+        }
+
+        function updateSpectrumPickerUI(skipHexInput = false) {
+            const svBox = document.getElementById('svSpectrumBox');
+            const svThumb = document.getElementById('svSpectrumThumb');
+            const hueThumb = document.getElementById('hueSliderThumb');
+            const liveSwatch = document.getElementById('pickerLiveSwatch');
+            const hexInput = document.getElementById('pickerHexInput');
+
+            const currentHex = hsvToHex(pickerHue, pickerSat, pickerVal);
+
+            if (svBox) svBox.style.backgroundColor = `hsl(${pickerHue}, 100%, 50%)`;
+            if (svThumb) {
+                svThumb.style.left = `${pickerSat}%`;
+                svThumb.style.top = `${100 - pickerVal}%`;
+                svThumb.style.backgroundColor = currentHex;
+            }
+            if (hueThumb) {
+                hueThumb.style.left = `${(pickerHue / 360) * 100}%`;
+                hueThumb.style.backgroundColor = `hsl(${pickerHue}, 100%, 50%)`;
+            }
+            if (liveSwatch) liveSwatch.style.backgroundColor = currentHex;
+            if (hexInput && !skipHexInput) hexInput.value = currentHex;
+        }
+
+        function triggerNativePicker(target, currentColor) {
+            activePickerTarget = target;
+
+            let initialColor = '#93D5F6';
+            if (currentColor && currentColor !== 'none') {
+                initialColor = normalizeColorHex(currentColor);
+            } else if (target.slotIndex !== undefined && pinnedColors[target.slotIndex]) {
+                initialColor = pinnedColors[target.slotIndex];
+            } else if (target.type === 'taskModalRainbow' && activeModalTaskHl && activeModalTaskHl !== 'none') {
+                initialColor = normalizeColorHex(activeModalTaskHl);
+            } else if (target.type === 'tbModalRainbow' && modalTimeBlockColor && modalTimeBlockColor !== 'none') {
+                initialColor = normalizeColorHex(modalTimeBlockColor);
+            } else if (pinnedColors[4]) {
+                initialColor = pinnedColors[4];
+            }
+
+            const hsv = hexToHsv(initialColor);
+            pickerHue = hsv.h;
+            pickerSat = hsv.s;
+            pickerVal = hsv.v;
+            updateSpectrumPickerUI();
+
+            const overlay = document.getElementById('spectrumPickerOverlay');
+            const taskBackdrop = document.getElementById('taskModalBackdrop');
+            const tbBackdrop = document.getElementById('timeBlockModalBackdrop');
+            const taskDialog = document.getElementById('taskModalDialog');
+            const tbDialog = document.getElementById('timeBlockModalDialog');
+
+            if (!overlay) return;
+
+            // Mount inside the active modal so top:50%/left:50% centers right inside the modal window
+            if (taskDialog && taskBackdrop && !taskBackdrop.classList.contains('hidden')) {
+                taskDialog.appendChild(overlay);
+                overlay.className = 'no-print absolute inset-0 z-[70] rounded-3xl';
+            } else if (tbDialog && tbBackdrop && !tbBackdrop.classList.contains('hidden')) {
+                tbDialog.appendChild(overlay);
+                overlay.className = 'no-print absolute inset-0 z-[70] rounded-3xl';
+            } else {
+                document.body.appendChild(overlay);
+                overlay.className = 'no-print fixed inset-0 z-[70] bg-slate-900/10 backdrop-blur-[2px]';
+            }
+
+            // Apply the initial color right away when opening
+            handleNativePickerValueChange(hsvToHex(pickerHue, pickerSat, pickerVal));
+        }
+
+        function closeSpectrumPicker() {
+            const overlay = document.getElementById('spectrumPickerOverlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+            }
+            activePickerTarget = null;
+        }
+
+        function handlePickerHexTyping(val) {
+            const cleaned = val.trim();
+            if (/^#[0-9A-Fa-f]{6}$/.test(cleaned)) {
+                const hsv = hexToHsv(cleaned);
+                pickerHue = hsv.h;
+                pickerSat = hsv.s;
+                pickerVal = hsv.v;
+                updateSpectrumPickerUI(true);
+                handleNativePickerValueChange(cleaned.toUpperCase());
+            }
+        }
+
+        function initSpectrumPickerEvents() {
+            const svBox = document.getElementById('svSpectrumBox');
+            const hueTrack = document.getElementById('hueSliderTrack');
+
+            const updateSVFromEvent = (e) => {
+                if (!svBox) return;
+                const rect = svBox.getBoundingClientRect();
+                const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+                const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+                pickerSat = Math.round((x / rect.width) * 100);
+                pickerVal = Math.round(100 - (y / rect.height) * 100);
+                updateSpectrumPickerUI();
+                handleNativePickerValueChange(hsvToHex(pickerHue, pickerSat, pickerVal));
+            };
+
+            const updateHueFromEvent = (e) => {
+                if (!hueTrack) return;
+                const rect = hueTrack.getBoundingClientRect();
+                const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+                pickerHue = Math.round((x / rect.width) * 360);
+                updateSpectrumPickerUI();
+                handleNativePickerValueChange(hsvToHex(pickerHue, pickerSat, pickerVal));
+            };
+
+            if (svBox) {
+                svBox.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    isDraggingSV = true;
+                    svBox.setPointerCapture(e.pointerId);
+                    updateSVFromEvent(e);
+                });
+                svBox.addEventListener('pointermove', (e) => {
+                    if (!isDraggingSV) return;
+                    updateSVFromEvent(e);
+                });
+                svBox.addEventListener('pointerup', () => { isDraggingSV = false; });
+            }
+
+            if (hueTrack) {
+                hueTrack.addEventListener('pointerdown', (e) => {
+                    e.stopPropagation();
+                    isDraggingHue = true;
+                    hueTrack.setPointerCapture(e.pointerId);
+                    updateHueFromEvent(e);
+                });
+                hueTrack.addEventListener('pointermove', (e) => {
+                    if (!isDraggingHue) return;
+                    updateHueFromEvent(e);
+                });
+                hueTrack.addEventListener('pointerup', () => { isDraggingHue = false; });
+            }
+        }
+
+        function handleNativePickerValueChange(hexVal) {
+            if (!activePickerTarget) return;
+            const newHex = hexVal.toUpperCase();
+
+            if (activePickerTarget.type === 'pinnedSlot') {
+                const idx = activePickerTarget.slotIndex;
+                pinnedColors[idx] = newHex;
+                savePinnedColors();
+                if (activePickerTarget.context === 'taskModal') {
+                    setModalTaskHighlight(newHex);
+                } else if (activePickerTarget.context === 'tbModal') {
+                    setModalTimeBlockColor(newHex);
+                }
+                renderAllPinnedColorBars();
+                renderMiddleRows();
+                renderTimetable();
+            } else if (activePickerTarget.type === 'toolbarRainbow') {
+                pinnedColors[4] = newHex;
+                savePinnedColors();
+                renderAllPinnedColorBars();
+            } else if (activePickerTarget.type === 'taskModalRainbow') {
+                setModalTaskHighlight(newHex);
+            } else if (activePickerTarget.type === 'tbModalRainbow') {
+                setModalTimeBlockColor(newHex);
+            }
+        }
+
+        function renderAllPinnedColorBars() {
+            const toolbarWrap = document.getElementById('toolbarPinnedColors');
+            if (toolbarWrap) {
+                toolbarWrap.innerHTML = '';
+                pinnedColors.forEach((hex, idx) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.style.backgroundColor = hex;
+                    btn.title = `SLOT ${idx + 1}: CLICK TO CHANGE COLOR`;
+                    btn.className = 'w-4 h-4 rounded-full border border-black/15 transition hover:scale-110';
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        triggerNativePicker({ type: 'pinnedSlot', slotIndex: idx, context: 'toolbar' }, hex);
+                    };
+                    toolbarWrap.appendChild(btn);
+                });
+            }
+
+            const taskWrap = document.getElementById('taskModalPinnedColors');
+            if (taskWrap) {
+                taskWrap.innerHTML = '';
+                pinnedColors.forEach((hex, idx) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.style.backgroundColor = hex;
+                    const isSelected = normalizeColorHex(activeModalTaskHl).toUpperCase() === hex.toUpperCase();
+                    btn.title = `SLOT ${idx + 1}`;
+                    btn.className = `w-8 h-8 rounded-full border border-white/80 shadow-sm transition ${
+                        isSelected ? 'ring-2 ring-offset-2 ring-slate-800 scale-105' : 'hover:scale-105'
+                    }`;
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        setModalTaskHighlight(hex);
+                        triggerNativePicker({ type: 'pinnedSlot', slotIndex: idx, context: 'taskModal' }, hex);
+                    };
+                    taskWrap.appendChild(btn);
+                });
+            }
+
+            const tbWrap = document.getElementById('tbModalPinnedColors');
+            if (tbWrap) {
+                tbWrap.innerHTML = '';
+                pinnedColors.forEach((hex, idx) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.style.backgroundColor = hex;
+                    const isSelected = normalizeColorHex(modalTimeBlockColor).toUpperCase() === hex.toUpperCase();
+                    btn.title = `SLOT ${idx + 1}`;
+                    btn.className = `w-8 h-8 rounded-full border border-white/80 shadow-sm transition ${
+                        isSelected ? 'ring-2 ring-offset-2 ring-slate-800 scale-105' : 'hover:scale-105'
+                    }`;
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        setModalTimeBlockColor(hex);
+                        triggerNativePicker({ type: 'pinnedSlot', slotIndex: idx, context: 'tbModal' }, hex);
+                    };
+                    tbWrap.appendChild(btn);
+                });
+            }
+        }
+
+        function getSamplePlannerData() {
+            return {
+                date: { yyyy: '2026', mm: '10', dd: '30', dow: 'FRI' },
+                goal: '이번주 분석결과 최종공유 + Youtube 기획 마무리.',
+                columns: {
+                    left: [
+                        { rowType: 'topic', text: '회사', done: false, hl: 'none' },
+                        { rowType: 'task', text: 'launch failure 메일 확인 후 회신', done: true, hl: '#93D5F6' },
+                        { rowType: 'task', text: '↳ 추가 분석해서 내부 공유', done: true, hl: '#F9A8C9' },
+                        { rowType: 'task', text: 'rlimit 적용 PR 코멘트 확인', done: true, hl: '#93D5F6' },
+                        { rowType: 'task', text: 'rlimit document 추가하기', done: false, hl: '#F9A8C9' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'topic', text: '루틴', done: false, hl: 'none' },
+                        { rowType: 'task', text: '아침 루틴 : 책 30분 읽기', done: true, hl: 'none' },
+                        { rowType: 'task', text: '점심 헬스장', done: true, hl: 'none' },
+                        { rowType: 'task', text: '영어공부 20분 하기', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' }
+                    ],
+                    right: [
+                        { rowType: 'topic', text: 'YT', done: false, hl: 'none' },
+                        { rowType: 'task', text: '롱폼 기획안 작성', done: true, hl: '#F9A8C9' },
+                        { rowType: 'task', text: '롱폼 스크립트 작성', done: true, hl: '#F9A8C9' },
+                        { rowType: 'task', text: '메일 확인 후 회신하기', done: true, hl: '#93D5F6' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'topic', text: 'etc.', done: false, hl: 'none' },
+                        { rowType: 'task', text: '주말 일정 미리 정리하기', done: false, hl: '#93D5F6' },
+                        { rowType: 'task', text: '편지지 · 포장 상자 주문', done: true, hl: '#93D5F6' },
+                        { rowType: 'task', text: '다음주 약속 케이크 주문', done: true, hl: '#93D5F6' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' },
+                        { rowType: 'task', text: '', done: false, hl: 'none' }
+                    ]
+                },
+                review: {
+                    keep: '드디어 원인 파악하고 root cause 근접한 하루.',
+                    problem: '분석이 늦어진 것에 대한 개인 피드백 정리',
+                    try: ''
+                },
+                timeBlocks: [
+                    { id: 'tb-1', startSlot: 5 * 6 + 3, endSlot: 6 * 6 + 2, text: '책 30분 읽기', color: '#F9A8C9' },
+                    { id: 'tb-2', startSlot: 7 * 6 + 0, endSlot: 7 * 6 + 5, text: '집 → 회사 출근', color: '#F9A8C9' },
+                    { id: 'tb-3', startSlot: 8 * 6 + 0, endSlot: 9 * 6 + 5, text: 'launch failure 확인', color: '#F9A8C9' },
+                    { id: 'tb-4', startSlot: 10 * 6 + 0, endSlot: 11 * 6 + 5, text: '이슈 관련 미팅', color: '#F9A8C9' },
+                    { id: 'tb-5', startSlot: 12 * 6 + 0, endSlot: 13 * 6 + 2, text: '점심시간 → 헬스장', color: '#F9A8C9' },
+                    { id: 'tb-6', startSlot: 14 * 6 + 0, endSlot: 14 * 6 + 3, text: '데일리 스크럼', color: '#F9A8C9' },
+                    { id: 'tb-7', startSlot: 15 * 6 + 0, endSlot: 17 * 6 + 5, text: 'rlimit PR 반영', color: '#F9A8C9' },
+                    { id: 'tb-8', startSlot: 18 * 6 + 0, endSlot: 18 * 6 + 5, text: '회사 → 집 퇴근', color: '#F9A8C9' },
+                    { id: 'tb-9', startSlot: 19 * 6 + 0, endSlot: 19 * 6 + 5, text: '저녁먹고 휴식!', color: '#F9A8C9' },
+                    { id: 'tb-10', startSlot: 20 * 6 + 0, endSlot: 22 * 6 + 2, text: '롱폼 기획안 작성', color: '#F9A8C9' }
+                ]
+            };
+        }
+
+        function getBlankPlannerData() {
+            const makeEmptyCol = () => Array.from({ length: MIDDLE_ROW_COUNT }, (_, idx) => ({
+                rowType: (idx === 0 || idx === 9) ? 'topic' : 'task',
+                text: '',
+                done: false,
+                hl: 'none'
+            }));
+            return {
+                date: { yyyy: '', mm: '', dd: '', dow: '' },
+                goal: '',
+                columns: {
+                    left: makeEmptyCol(),
+                    right: makeEmptyCol()
+                },
+                review: { keep: '', problem: '', try: '' },
+                timeBlocks: []
+            };
+        }
+
+        let plannerState = loadStateFromStorage();
+
+        function normalizeColumnLength(colArr) {
+            if (!Array.isArray(colArr)) {
+                return Array.from({ length: MIDDLE_ROW_COUNT }, (_, idx) => ({
+                    rowType: (idx === 0 || idx === 9) ? 'topic' : 'task',
+                    text: '',
+                    done: false,
+                    hl: 'none'
+                }));
+            }
+            if (colArr.length === MIDDLE_ROW_COUNT) return colArr;
+            if (colArr.length < MIDDLE_ROW_COUNT) {
+                const padded = [...colArr];
+                while (padded.length < MIDDLE_ROW_COUNT) {
+                    padded.push({ rowType: 'task', text: '', done: false, hl: 'none' });
+                }
+                return padded;
+            }
+            return colArr.slice(0, MIDDLE_ROW_COUNT);
+        }
+
+        function loadStateFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed.columns) {
+                        parsed.columns.left = normalizeColumnLength(parsed.columns.left);
+                        parsed.columns.right = normalizeColumnLength(parsed.columns.right);
+                        return parsed;
+                    }
+                }
+            } catch (e) {}
+            return getSamplePlannerData();
+        }
+
+        function saveStateToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(plannerState));
+            } catch (e) {}
+        }
+
+        function detectShouldUsePortrait() {
+            if (currentLayoutMode === 'landscape') return false;
+            if (currentLayoutMode === 'portrait') return true;
+
+            const isTouchDevice = window.matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window);
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const isPortraitOrientation = h > w;
+
+            if (!isTouchDevice) return false;
+            if (w < 768) return true;
+            return isPortraitOrientation;
+        }
+
+        function applyResponsiveLayoutMode() {
+            const usePortrait = detectShouldUsePortrait();
+            document.body.classList.toggle('layout-portrait', usePortrait);
+        }
+
+        window.addEventListener('resize', applyResponsiveLayoutMode);
+
+        function renderMiddleRows() {
+            const container = document.getElementById('middleRowsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            for (let rowIdx = 0; rowIdx < MIDDLE_ROW_COUNT; rowIdx++) {
+                ['left', 'right'].forEach((colKey, colIdx) => {
+                    const item = plannerState.columns[colKey][rowIdx];
+                    const isTopic = item.rowType === 'topic';
+                    const hlColor = normalizeColorHex(item.hl);
+                    const hasHl = hlColor && hlColor !== 'none';
+
+                    let borderBottom = 'b-bottom-light';
+                    if (rowIdx === 8 || rowIdx === 17) {
+                        borderBottom = 'b-bottom-strong';
+                    } else if (isTopic) {
+                        borderBottom = 'b-bottom-cat';
+                    }
+
+                    const rowEl = document.createElement('div');
+                    rowEl.id = `planner-row-${colKey}-${rowIdx}`;
+                    rowEl.className = `portrait-row-h ${borderBottom} ${colIdx === 0 ? 'b-right-strong' : ''} relative flex items-center pl-2 pr-2 min-w-0 overflow-hidden cursor-pointer hover:bg-zinc-50/70 transition-colors`;
+
+                    const pill = document.createElement('div');
+                    pill.className = 'shade-pill';
+                    if (hasHl && (item.text.trim() || !isTopic)) {
+                        applyNaturalShadeStyle(pill, hlColor);
+                    }
+
+                    if (!isTopic) {
+                        const checkBtn = document.createElement('button');
+                        checkBtn.type = 'button';
+                        checkBtn.className = 'task-checkbox';
+                        checkBtn.innerHTML = item.done
+                            ? `<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6.2L4.8 9L10.2 2.8" stroke="#111111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+                            : '';
+                        checkBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            item.done = !item.done;
+                            saveStateToStorage();
+                            renderMiddleRows();
+                        };
+                        pill.appendChild(checkBtn);
+                    }
+
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = item.text || '';
+                    textSpan.className = isTopic
+                        ? 'text-[13.5px] font-semibold text-slate-800 whitespace-pre select-none leading-none'
+                        : `text-[12.5px] font-medium whitespace-pre select-none leading-none ${item.done ? 'line-through text-slate-400 opacity-75' : 'text-slate-800'}`;
+
+                    pill.appendChild(textSpan);
+                    rowEl.appendChild(pill);
+
+                    // Enable dragging filled TO-DO items to the Timetable (Mouse Drag & iPhone/iPad Touch Drag)
+                    if (!isTopic && item.text && item.text.trim().length > 0) {
+                        rowEl.classList.add('todo-draggable-row', 'group');
+                        rowEl.setAttribute('draggable', 'true');
+
+                        const dragHint = document.createElement('span');
+                        dragHint.className = 'ml-auto pl-1.5 pr-1 py-1 text-[11px] text-slate-400 opacity-50 group-hover:opacity-100 transition-opacity select-none cursor-grab';
+                        dragHint.textContent = '⋮⋮';
+                        dragHint.title = 'DRAG TO TIMETABLE';
+                        rowEl.appendChild(dragHint);
+
+                        const createPayload = () => ({
+                            colKey,
+                            rowIdx,
+                            text: item.text.trim(),
+                            hl: normalizeColorHex(item.hl)
+                        });
+
+                        // 1. Desktop HTML5 Drag and Drop
+                        rowEl.addEventListener('dragstart', (e) => {
+                            draggedTodoData = createPayload();
+                            if (e.dataTransfer) {
+                                e.dataTransfer.effectAllowed = 'copy';
+                                e.dataTransfer.setData('text/plain', item.text.trim());
+                            }
+                            rowEl.classList.add('opacity-60');
+                        });
+
+                        rowEl.addEventListener('dragend', () => {
+                            rowEl.classList.remove('opacity-60');
+                            draggedTodoData = null;
+                            clearTodoDropPreview();
+                        });
+
+                        // 2. iPhone / iPad Touch Drag-and-Drop (Immediate on '⋮⋮' handle, or 240ms long-press on row)
+                        let touchLongPressTimer = null;
+                        let isTouchDraggingTodo = false;
+                        let touchStartX = 0;
+                        let touchStartY = 0;
+                        let suppressNextClick = false;
+
+                        const beginTouchDrag = (touch) => {
+                            isTouchDraggingTodo = true;
+                            suppressNextClick = true;
+                            draggedTodoData = createPayload();
+                            rowEl.classList.add('opacity-60');
+                            showTouchDragGhost(draggedTodoData, touch.clientX, touch.clientY);
+                        };
+
+                        rowEl.addEventListener('touchstart', (e) => {
+                            if (e.touches.length !== 1) return;
+                            if (e.target && e.target.closest('.task-checkbox')) return;
+
+                            const touch = e.touches[0];
+                            touchStartX = touch.clientX;
+                            touchStartY = touch.clientY;
+                            isTouchDraggingTodo = false;
+
+                            const touchedHandle = e.target === dragHint || dragHint.contains(e.target);
+                            if (touchedHandle) {
+                                e.preventDefault();
+                                beginTouchDrag(touch);
+                            } else {
+                                touchLongPressTimer = setTimeout(() => {
+                                    beginTouchDrag(touch);
+                                }, 240);
+                            }
+                        }, { passive: false });
+
+                        rowEl.addEventListener('touchmove', (e) => {
+                            if (e.touches.length !== 1) return;
+                            const touch = e.touches[0];
+                            const dx = Math.abs(touch.clientX - touchStartX);
+                            const dy = Math.abs(touch.clientY - touchStartY);
+
+                            if (!isTouchDraggingTodo) {
+                                if (dx > 8 || dy > 8) {
+                                    clearTimeout(touchLongPressTimer);
+                                    touchLongPressTimer = null;
+                                }
+                                return;
+                            }
+
+                            e.preventDefault();
+                            moveTouchDragGhost(touch.clientX, touch.clientY);
+
+                            const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+                            const slotEl = targetEl ? targetEl.closest('[data-slot]') : null;
+                            if (slotEl && slotEl.dataset.slot !== undefined) {
+                                const slotIndex = Number(slotEl.dataset.slot);
+                                if (!isSlotOccupied(slotIndex)) {
+                                    updateTodoDropPreview(slotIndex);
+                                } else {
+                                    clearTodoDropPreview();
+                                }
+                            } else {
+                                clearTodoDropPreview();
+                            }
+                        }, { passive: false });
+
+                        const finishTouchDrag = (e) => {
+                            clearTimeout(touchLongPressTimer);
+                            touchLongPressTimer = null;
+
+                            if (!isTouchDraggingTodo) return;
+                            isTouchDraggingTodo = false;
+                            rowEl.classList.remove('opacity-60');
+                            hideTouchDragGhost();
+
+                            const touch = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
+                            const todoPayload = draggedTodoData ? { ...draggedTodoData } : null;
+                            draggedTodoData = null;
+
+                            let droppedSlot = null;
+                            if (touch) {
+                                const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+                                const slotEl = targetEl ? targetEl.closest('[data-slot]') : null;
+                                if (slotEl && slotEl.dataset.slot !== undefined) {
+                                    droppedSlot = Number(slotEl.dataset.slot);
+                                }
+                            }
+
+                            clearTodoDropPreview();
+
+                            if (todoPayload && droppedSlot !== null && !isSlotOccupied(droppedSlot)) {
+                                cancelTwoTapSelection();
+                                const startSlot = droppedSlot;
+                                const endSlot = clampSlotRangeToEmpty(startSlot, Math.min(TOTAL_SLOTS - 1, startSlot + 5));
+                                const dropColor = (todoPayload.hl && todoPayload.hl !== 'none')
+                                    ? todoPayload.hl
+                                    : (pinnedColors[0] || '#93D5F6');
+                                openTimeBlockModalForRange(startSlot, endSlot, todoPayload.text, dropColor);
+                            }
+
+                            setTimeout(() => { suppressNextClick = false; }, 80);
+                        };
+
+                        rowEl.addEventListener('touchend', finishTouchDrag);
+                        rowEl.addEventListener('touchcancel', finishTouchDrag);
+
+                        rowEl.onclick = (e) => {
+                            if (suppressNextClick) {
+                                e.stopPropagation();
+                                suppressNextClick = false;
+                                return;
+                            }
+                            openTaskModal(colKey, rowIdx);
+                        };
+                    } else {
+                        rowEl.onclick = () => {
+                            openTaskModal(colKey, rowIdx);
+                        };
+                    }
+
+                    container.appendChild(rowEl);
+                });
+            }
+        }
+
+        function showTouchDragGhost(payload, x, y) {
+            const ghost = document.getElementById('touchDragGhost');
+            if (!ghost || !payload) return;
+            const hlColor = normalizeColorHex(payload.hl);
+            ghost.textContent = payload.text;
+            ghost.style.backgroundColor = (hlColor && hlColor !== 'none')
+                ? hexToRgba(hlColor, 0.78)
+                : 'rgba(255, 255, 255, 0.92)';
+            ghost.style.left = `${x}px`;
+            ghost.style.top = `${y}px`;
+            ghost.classList.remove('hidden');
+        }
+
+        function moveTouchDragGhost(x, y) {
+            const ghost = document.getElementById('touchDragGhost');
+            if (!ghost) return;
+            ghost.style.left = `${x}px`;
+            ghost.style.top = `${y}px`;
+        }
+
+        function hideTouchDragGhost() {
+            const ghost = document.getElementById('touchDragGhost');
+            if (!ghost) return;
+            ghost.classList.add('hidden');
+        }
+
+        function renderLeftPanel() {
+            document.getElementById('dateYYYY').value = plannerState.date.yyyy || '';
+            document.getElementById('dateMM').value = plannerState.date.mm || '';
+            document.getElementById('dateDD').value = plannerState.date.dd || '';
+            document.getElementById('dateDOW').value = plannerState.date.dow || '';
+            document.getElementById('goalInput').value = plannerState.goal || '';
+
+            document.getElementById('reviewKeep').value = plannerState.review.keep || '';
+            document.getElementById('reviewProblem').value = plannerState.review.problem || '';
+            document.getElementById('reviewTry').value = plannerState.review.try || '';
+
+            renderMiddleRows();
+        }
+
+        function handleDateFieldChange() {
+            plannerState.date.yyyy = document.getElementById('dateYYYY').value;
+            plannerState.date.mm = document.getElementById('dateMM').value;
+            plannerState.date.dd = document.getElementById('dateDD').value;
+            plannerState.date.dow = document.getElementById('dateDOW').value;
+            saveStateToStorage();
+        }
+
+        function handleGoalChange(val) {
+            plannerState.goal = val;
+            saveStateToStorage();
+        }
+
+        function handleReviewChange(key, val) {
+            plannerState.review[key] = val;
+            saveStateToStorage();
+        }
+
+        function slotToTimeStr(slotIndex, isEnd = false) {
+            const totalMinutesFromMidnight = (isEnd ? slotIndex + 1 : slotIndex) * 10;
+            const hour = Math.floor(totalMinutesFromMidnight / 60);
+            const min = totalMinutesFromMidnight % 60;
+            return `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+        }
+
+        function getBlockAtSlot(slotIndex, ignoreBlockId = null) {
+            return plannerState.timeBlocks.find(b => {
+                if (ignoreBlockId && b.id === ignoreBlockId) return false;
+                return slotIndex >= b.startSlot && slotIndex <= b.endSlot;
+            });
+        }
+
+        function isSlotOccupied(slotIndex, ignoreBlockId = null) {
+            return !!getBlockAtSlot(slotIndex, ignoreBlockId);
+        }
+
+        function isRangeOverlapping(startS, endS, ignoreBlockId = null) {
+            const minS = Math.min(startS, endS);
+            const maxS = Math.max(startS, endS);
+            return plannerState.timeBlocks.some(b => {
+                if (ignoreBlockId && b.id === ignoreBlockId) return false;
+                return !(b.endSlot < minS || b.startSlot > maxS);
+            });
+        }
+
+        // Clamp a target slot so the range from anchorSlot to targetSlot never crosses an occupied block
+        function clampSlotRangeToEmpty(anchorSlot, targetSlot, ignoreBlockId = null) {
+            const clampedTarget = Math.max(0, Math.min(TOTAL_SLOTS - 1, targetSlot));
+            if (isSlotOccupied(anchorSlot, ignoreBlockId)) return anchorSlot;
+            const step = clampedTarget >= anchorSlot ? 1 : -1;
+            let lastValid = anchorSlot;
+            for (let s = anchorSlot + step; step > 0 ? s <= clampedTarget : s >= clampedTarget; s += step) {
+                if (isSlotOccupied(s, ignoreBlockId)) {
+                    break;
+                }
+                lastValid = s;
+            }
+            return lastValid;
+        }
+
+        function updateTodoDropPreview(startSlot) {
+            clearTodoDropPreview();
+            if (startSlot === null || startSlot === undefined || isSlotOccupied(startSlot)) return;
+            const endSlot = clampSlotRangeToEmpty(startSlot, Math.min(TOTAL_SLOTS - 1, startSlot + 5));
+            dropPreviewSlots = [startSlot, endSlot];
+            document.querySelectorAll('.tt-slot').forEach(el => {
+                const s = Number(el.dataset.slot);
+                if (s >= startSlot && s <= endSlot) {
+                    el.classList.add('tt-slot-drop-preview');
+                }
+            });
+        }
+
+        function clearTodoDropPreview() {
+            dropPreviewSlots = [];
+            document.querySelectorAll('.tt-slot-drop-preview').forEach(el => {
+                el.classList.remove('tt-slot-drop-preview');
+            });
+        }
+
+        function renderTimetable() {
+            const container = document.getElementById('timetableColumnContainer');
+            container.innerHTML = '';
+
+            HOURS.forEach((hour, rowIdx) => {
+                let borderBottom = 'b-bottom-light';
+                if (hour === 1 || hour === 10 || hour === 19) {
+                    borderBottom = 'b-bottom-strong';
+                } else if (hour === 23) {
+                    borderBottom = '';
+                }
+
+                const rowEl = document.createElement('div');
+                rowEl.className = `portrait-row-h ${borderBottom} flex items-stretch relative min-h-0 overflow-hidden`;
+
+                const hourCol = document.createElement('div');
+                hourCol.className = 'w-6 flex-shrink-0 flex items-center pl-1.5 text-[11px] font-medium text-[#71717a] select-none';
+                hourCol.textContent = hour;
+                rowEl.appendChild(hourCol);
+
+                const slotsWrap = document.createElement('div');
+                slotsWrap.className = 'flex-1 grid grid-cols-6 relative min-w-0';
+
+                for (let s = 0; s < 6; s++) {
+                    const globalSlot = rowIdx * 6 + s;
+                    const block = getBlockAtSlot(globalSlot);
+
+                    const slotEl = document.createElement('div');
+                    slotEl.dataset.slot = globalSlot;
+                    slotEl.className = `tt-slot relative h-full cursor-pointer hover:bg-black/[0.03] ${block ? 'tt-slot-occupied' : ''}`;
+                    if (block && block.color && block.color !== 'none') {
+                        const baseColor = normalizeColorHex(block.color);
+                        slotEl.style.backgroundColor = hexToRgba(baseColor, 0.42);
+                        slotEl.style.boxShadow = 'none';
+                    }
+
+                    if (isDraggingTimetable && dragStartSlot !== null && dragCurrentSlot !== null) {
+                        const minS = Math.min(dragStartSlot, dragCurrentSlot);
+                        const maxS = Math.max(dragStartSlot, dragCurrentSlot);
+                        if (globalSlot >= minS && globalSlot <= maxS) {
+                            slotEl.classList.add('tt-slot-selecting');
+                        }
+                    } else if (twoTapStartSlot === globalSlot) {
+                        slotEl.classList.add('tt-slot-selecting');
+                    }
+
+                    slotEl.addEventListener('pointerdown', (e) => handleSlotPointerDown(e, globalSlot));
+                    slotEl.addEventListener('pointerenter', (e) => handleSlotPointerEnter(e, globalSlot));
+
+                    // HTML5 Drag & Drop handlers for copying TO-DO to Timetable
+                    slotEl.addEventListener('dragover', (e) => {
+                        if (!draggedTodoData) return;
+                        if (isSlotOccupied(globalSlot)) {
+                            if (e.dataTransfer) e.dataTransfer.dropEffect = 'none';
+                            clearTodoDropPreview();
+                            return;
+                        }
+                        e.preventDefault();
+                        if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+                        updateTodoDropPreview(globalSlot);
+                    });
+
+                    slotEl.addEventListener('dragleave', () => {
+                        if (!draggedTodoData) return;
+                    });
+
+                    slotEl.addEventListener('drop', (e) => {
+                        if (!draggedTodoData) return;
+                        e.preventDefault();
+                        const todoPayload = { ...draggedTodoData };
+                        draggedTodoData = null;
+                        clearTodoDropPreview();
+
+                        if (isSlotOccupied(globalSlot)) return;
+
+                        cancelTwoTapSelection();
+                        const startSlot = globalSlot;
+                        // Default to +60 minutes (6 slots: startSlot .. startSlot + 5), clamped before any occupied slot
+                        const endSlot = clampSlotRangeToEmpty(startSlot, Math.min(TOTAL_SLOTS - 1, startSlot + 5));
+                        const dropColor = (todoPayload.hl && todoPayload.hl !== 'none')
+                            ? todoPayload.hl
+                            : (pinnedColors[0] || '#93D5F6');
+
+                        openTimeBlockModalForRange(startSlot, endSlot, todoPayload.text, dropColor);
+                    });
+
+                    slotsWrap.appendChild(slotEl);
+                }
+
+                plannerState.timeBlocks.forEach(block => {
+                    const rowStartSlot = rowIdx * 6;
+                    const rowEndSlot = rowStartSlot + 5;
+                    if (block.endSlot < rowStartSlot || block.startSlot > rowEndSlot) return;
+
+                    const isFirstRow = block.startSlot >= rowStartSlot && block.startSlot <= rowEndSlot;
+                    if (!isFirstRow || !block.text) return;
+
+                    const segStartCol = Math.max(0, block.startSlot - rowStartSlot);
+                    const segEndCol = Math.min(5, block.endSlot - rowStartSlot);
+                    const leftPct = (segStartCol / 6) * 100;
+                    const widthPct = ((segEndCol - segStartCol + 1) / 6) * 100;
+
+                    const overlay = document.createElement('div');
+                    overlay.id = `tt-block-el-${block.id}`;
+                    overlay.style.left = `${leftPct}%`;
+                    overlay.style.width = `${widthPct}%`;
+                    overlay.className = 'absolute inset-y-0 z-10 flex items-center px-1.5 pointer-events-none overflow-hidden';
+
+                    const span = document.createElement('span');
+                    span.className = 'text-[11.5px] font-medium text-slate-800 whitespace-nowrap overflow-visible';
+                    span.textContent = block.text;
+
+                    overlay.appendChild(span);
+                    slotsWrap.appendChild(overlay);
+                });
+
+                rowEl.appendChild(slotsWrap);
+                container.appendChild(rowEl);
+            });
+        }
+
+        let pointerMovedDuringDrag = false;
+        let pointerDownOccupiedBlockId = null;
+
+        function handleSlotPointerDown(e, slotIndex) {
+            if (e.button !== undefined && e.button !== 0) return;
+            pointerMovedDuringDrag = false;
+            pointerDownOccupiedBlockId = null;
+
+            const existingBlock = getBlockAtSlot(slotIndex);
+
+            // If user is not in Two-Tap mode and clicks an already occupied slot, open its edit modal on pointerup
+            if (existingBlock && twoTapStartSlot === null) {
+                pointerDownOccupiedBlockId = existingBlock.id;
+                isDraggingTimetable = false;
+                return;
+            }
+
+            // If user is in Two-Tap mode and taps an occupied slot, clamp the second tap before the occupied slot
+            if (existingBlock && twoTapStartSlot !== null) {
+                const clampedEnd = clampSlotRangeToEmpty(twoTapStartSlot, slotIndex);
+                const rangeStart = Math.min(twoTapStartSlot, clampedEnd);
+                const rangeEnd = Math.max(twoTapStartSlot, clampedEnd);
+                cancelTwoTapSelection();
+                openTimeBlockModalForRange(rangeStart, rangeEnd);
+                return;
+            }
+
+            isDraggingTimetable = true;
+            dragStartSlot = slotIndex;
+            dragCurrentSlot = slotIndex;
+            updateDragVisuals();
+        }
+
+        function handleSlotPointerEnter(e, slotIndex) {
+            if (!isDraggingTimetable || dragStartSlot === null) return;
+            const clampedSlot = clampSlotRangeToEmpty(dragStartSlot, slotIndex);
+            if (slotIndex !== dragStartSlot) {
+                pointerMovedDuringDrag = true;
+            }
+            if (clampedSlot !== dragCurrentSlot) {
+                dragCurrentSlot = clampedSlot;
+                updateDragVisuals();
+            }
+        }
+
+        window.addEventListener('pointermove', (e) => {
+            if (!isDraggingTimetable || dragStartSlot === null) return;
+            const el = document.elementFromPoint(e.clientX, e.clientY);
+            if (el && el.dataset && el.dataset.slot !== undefined) {
+                const slotIdx = Number(el.dataset.slot);
+                const clampedSlot = clampSlotRangeToEmpty(dragStartSlot, slotIdx);
+                if (slotIdx !== dragStartSlot) {
+                    pointerMovedDuringDrag = true;
+                }
+                if (clampedSlot !== dragCurrentSlot) {
+                    dragCurrentSlot = clampedSlot;
+                    updateDragVisuals();
+                }
+            }
+        });
+
+        window.addEventListener('pointerup', () => {
+            if (pointerDownOccupiedBlockId) {
+                const blockId = pointerDownOccupiedBlockId;
+                pointerDownOccupiedBlockId = null;
+                openTimeBlockModalForExisting(blockId);
+                return;
+            }
+
+            if (!isDraggingTimetable) return;
+            isDraggingTimetable = false;
+
+            const startS = Math.min(dragStartSlot, dragCurrentSlot);
+            const endS = Math.max(dragStartSlot, dragCurrentSlot);
+
+            if (pointerMovedDuringDrag && startS !== endS) {
+                cancelTwoTapSelection();
+                openTimeBlockModalForRange(startS, endS);
+            } else {
+                const clickedSlot = dragStartSlot;
+                const existingBlock = getBlockAtSlot(clickedSlot);
+
+                if (twoTapStartSlot !== null) {
+                    const clampedEnd = clampSlotRangeToEmpty(twoTapStartSlot, clickedSlot);
+                    const rangeStart = Math.min(twoTapStartSlot, clampedEnd);
+                    const rangeEnd = Math.max(twoTapStartSlot, clampedEnd);
+                    cancelTwoTapSelection();
+                    openTimeBlockModalForRange(rangeStart, rangeEnd);
+                } else if (existingBlock) {
+                    openTimeBlockModalForExisting(existingBlock.id);
+                } else {
+                    twoTapStartSlot = clickedSlot;
+                    const indicator = document.getElementById('twoTapIndicator');
+                    const textEl = document.getElementById('twoTapText');
+                    indicator.classList.remove('hidden');
+                    indicator.classList.add('inline-flex');
+                    textEl.textContent = `${slotToTimeStr(clickedSlot)} - SELECT END`;
+                    renderTimetable();
+                }
+            }
+
+            dragStartSlot = null;
+            dragCurrentSlot = null;
+        });
+
+        function updateDragVisuals() {
+            const minS = Math.min(dragStartSlot, dragCurrentSlot);
+            const maxS = Math.max(dragStartSlot, dragCurrentSlot);
+            document.querySelectorAll('.tt-slot').forEach(el => {
+                const s = Number(el.dataset.slot);
+                if (s >= minS && s <= maxS) {
+                    el.classList.add('tt-slot-selecting');
+                } else {
+                    el.classList.remove('tt-slot-selecting');
+                }
+            });
+        }
+
+        function cancelTwoTapSelection() {
+            twoTapStartSlot = null;
+            const indicator = document.getElementById('twoTapIndicator');
+            if (indicator) {
+                indicator.classList.add('hidden');
+                indicator.classList.remove('inline-flex');
+            }
+            renderTimetable();
+        }
+
+        function populateTimeBlockSelects() {
+            const startSelect = document.getElementById('tbStartSlotSelect');
+            const endSelect = document.getElementById('tbEndSlotSelect');
+            if (!startSelect || !endSelect) return;
+
+            startSelect.innerHTML = '';
+            for (let s = 0; s < TOTAL_SLOTS; s++) {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = slotToTimeStr(s, false);
+                if (isSlotOccupied(s, editingTimeBlockId)) {
+                    opt.disabled = true;
+                }
+                if (s === activeTbStartSlot) {
+                    opt.selected = true;
+                }
+                startSelect.appendChild(opt);
+            }
+
+            // Ensure activeTbEndSlot is valid and does not overlap another block
+            if (activeTbEndSlot < activeTbStartSlot) {
+                activeTbEndSlot = activeTbStartSlot;
+            }
+            activeTbEndSlot = clampSlotRangeToEmpty(activeTbStartSlot, activeTbEndSlot, editingTimeBlockId);
+
+            endSelect.innerHTML = '';
+            for (let e = activeTbStartSlot; e < TOTAL_SLOTS; e++) {
+                const opt = document.createElement('option');
+                opt.value = e;
+                opt.textContent = slotToTimeStr(e, true);
+                if (isRangeOverlapping(activeTbStartSlot, e, editingTimeBlockId)) {
+                    opt.disabled = true;
+                }
+                if (e === activeTbEndSlot) {
+                    opt.selected = true;
+                }
+                endSelect.appendChild(opt);
+            }
+        }
+
+        function handleTbStartSlotChange(val) {
+            const newStart = Number(val);
+            if (isNaN(newStart) || isSlotOccupied(newStart, editingTimeBlockId)) return;
+            const currentDuration = Math.max(0, activeTbEndSlot - activeTbStartSlot);
+            activeTbStartSlot = newStart;
+            const desiredEnd = Math.min(TOTAL_SLOTS - 1, newStart + currentDuration);
+            activeTbEndSlot = clampSlotRangeToEmpty(activeTbStartSlot, desiredEnd, editingTimeBlockId);
+            populateTimeBlockSelects();
+        }
+
+        function handleTbEndSlotChange(val) {
+            const newEnd = Number(val);
+            if (isNaN(newEnd) || newEnd < activeTbStartSlot) return;
+            activeTbEndSlot = clampSlotRangeToEmpty(activeTbStartSlot, newEnd, editingTimeBlockId);
+            populateTimeBlockSelects();
+        }
+
+        function openTimeBlockModalForRange(startSlot, endSlot, prefillText = '', prefillColor = null) {
+            editingTimeBlockId = null;
+            const rawStart = Math.min(startSlot, endSlot);
+            const rawEnd = Math.max(startSlot, endSlot);
+            if (isSlotOccupied(rawStart, null)) return;
+
+            activeTbStartSlot = rawStart;
+            activeTbEndSlot = clampSlotRangeToEmpty(rawStart, rawEnd, null);
+
+            populateTimeBlockSelects();
+            document.getElementById('tbTextInput').value = prefillText || '';
+            setModalTimeBlockColor(prefillColor !== null ? prefillColor : (pinnedColors[1] || '#F9A8C9'));
+
+            document.getElementById('timeBlockModalBackdrop').classList.remove('hidden');
+            setTimeout(() => document.getElementById('tbTextInput').focus(), 40);
+        }
+
+        function openTimeBlockModalForExisting(blockId) {
+            const block = plannerState.timeBlocks.find(b => b.id === blockId);
+            if (!block) return;
+
+            editingTimeBlockId = block.id;
+            activeTbStartSlot = block.startSlot;
+            activeTbEndSlot = block.endSlot;
+
+            populateTimeBlockSelects();
+            document.getElementById('tbTextInput').value = block.text || '';
+            setModalTimeBlockColor(normalizeColorHex(block.color) || 'none');
+
+            document.getElementById('timeBlockModalBackdrop').classList.remove('hidden');
+            setTimeout(() => document.getElementById('tbTextInput').focus(), 40);
+        }
+
+        function setModalTimeBlockColor(color) {
+            modalTimeBlockColor = normalizeColorHex(color);
+            const noneBtn = document.getElementById('tbHlNoneBtn');
+            if (noneBtn) {
+                if (modalTimeBlockColor === 'none') {
+                    noneBtn.classList.add('ring-2', 'ring-offset-2', 'ring-slate-800');
+                } else {
+                    noneBtn.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-800');
+                }
+            }
+            renderAllPinnedColorBars();
+        }
+
+        function saveTimeBlockModal() {
+            const rawStart = Math.min(activeTbStartSlot, activeTbEndSlot);
+            const rawEnd = Math.max(activeTbStartSlot, activeTbEndSlot);
+            if (isSlotOccupied(rawStart, editingTimeBlockId)) return;
+
+            const startSlot = rawStart;
+            const endSlot = clampSlotRangeToEmpty(startSlot, rawEnd, editingTimeBlockId);
+            const text = document.getElementById('tbTextInput').value.trim();
+
+            if (editingTimeBlockId) {
+                plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== editingTimeBlockId);
+            }
+
+            if (text || modalTimeBlockColor !== 'none') {
+                plannerState.timeBlocks.push({
+                    id: editingTimeBlockId || ('tb-' + Date.now()),
+                    startSlot,
+                    endSlot,
+                    text,
+                    color: modalTimeBlockColor
+                });
+            }
+
+            saveStateToStorage();
+            closeTimeBlockModal();
+            renderTimetable();
+        }
+
+        function deleteCurrentTimeBlock() {
+            const startSlot = Math.min(activeTbStartSlot, activeTbEndSlot);
+            const endSlot = Math.max(activeTbStartSlot, activeTbEndSlot);
+            plannerState.timeBlocks = plannerState.timeBlocks.filter(b => {
+                if (editingTimeBlockId && b.id === editingTimeBlockId) return false;
+                return b.endSlot < startSlot || b.startSlot > endSlot;
+            });
+            saveStateToStorage();
+            closeTimeBlockModal();
+            renderTimetable();
+        }
+
+        function closeTimeBlockModal() {
+            closeSpectrumPicker();
+            document.getElementById('timeBlockModalBackdrop').classList.add('hidden');
+            renderTimetable();
+        }
+
+        function openTaskModal(colKey, rowIdx) {
+            const item = plannerState.columns[colKey][rowIdx];
+            activeModalTaskRef = { colKey, rowIdx };
+
+            document.getElementById('modalTaskTextInput').value = item.text || '';
+            setModalRowType(item.rowType || 'task');
+            setModalTaskDone(!!item.done);
+            setModalTaskHighlight(normalizeColorHex(item.hl) || 'none');
+
+            document.getElementById('taskModalBackdrop').classList.remove('hidden');
+            setTimeout(() => {
+                const input = document.getElementById('modalTaskTextInput');
+                if (input) input.focus();
+            }, 40);
+        }
+
+        function setModalRowType(rowType) {
+            activeModalRowType = rowType === 'topic' ? 'topic' : 'task';
+            const btnTopic = document.getElementById('btnRowTypeTopic');
+            const btnTask = document.getElementById('btnRowTypeTask');
+            const completionSec = document.getElementById('modalCompletionSection');
+
+            if (activeModalRowType === 'topic') {
+                btnTopic.className = 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
+                btnTask.className = 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
+                if (completionSec) completionSec.classList.add('hidden');
+            } else {
+                btnTopic.className = 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
+                btnTask.className = 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
+                if (completionSec) completionSec.classList.remove('hidden');
+            }
+        }
+
+        function setModalTaskDone(done) {
+            activeModalTaskDone = done;
+            const btnDone = document.getElementById('btnMarkDone');
+            const btnUndone = document.getElementById('btnMarkUndone');
+            if (done) {
+                btnDone.className = 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition';
+                btnUndone.className = 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition';
+            } else {
+                btnDone.className = 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition';
+                btnUndone.className = 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition';
+            }
+        }
+
+        function setModalTaskHighlight(hl) {
+            activeModalTaskHl = normalizeColorHex(hl);
+            const noneBtn = document.getElementById('taskHlNoneBtn');
+            if (noneBtn) {
+                if (activeModalTaskHl === 'none') {
+                    noneBtn.classList.add('ring-2', 'ring-offset-2', 'ring-slate-800');
+                } else {
+                    noneBtn.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-800');
+                }
+            }
+            renderAllPinnedColorBars();
+        }
+
+        function saveTaskModal() {
+            if (!activeModalTaskRef) return;
+            const { colKey, rowIdx } = activeModalTaskRef;
+            const item = plannerState.columns[colKey][rowIdx];
+            item.rowType = activeModalRowType;
+            item.text = document.getElementById('modalTaskTextInput').value;
+            item.done = activeModalRowType === 'task' ? activeModalTaskDone : false;
+            item.hl = activeModalTaskHl;
+
+            saveStateToStorage();
+            closeTaskModal();
+            renderMiddleRows();
+        }
+
+        function clearModalTask() {
+            if (!activeModalTaskRef) return;
+            const { colKey, rowIdx } = activeModalTaskRef;
+            plannerState.columns[colKey][rowIdx] = {
+                rowType: activeModalRowType,
+                text: '',
+                done: false,
+                hl: 'none'
+            };
+            saveStateToStorage();
+            closeTaskModal();
+            renderMiddleRows();
+        }
+
+        function closeTaskModal() {
+            closeSpectrumPicker();
+            document.getElementById('taskModalBackdrop').classList.add('hidden');
+            activeModalTaskRef = null;
+        }
+
+        // =========================================================================
+        // iOS WIDGET PREVIEW: ADAPTIVE SIZE & DYNAMIC BUDGET (NO FIXED 5-CAP)
+        // =========================================================================
+        const WIDGET_SIZE_SPECS = {
+            small: {
+                label: 'SMALL (1 COL · 7 LINES)',
+                columns: 1,
+                linesPerCol: 7,
+                maxWidthClass: 'max-w-[310px]',
+                gridClass: 'grid-cols-1 gap-3'
+            },
+            medium: {
+                label: 'MEDIUM (2 COL · 14 LINES)',
+                columns: 2,
+                linesPerCol: 7,
+                maxWidthClass: 'max-w-xl',
+                gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5'
+            },
+            large: {
+                label: 'LARGE (2 COL · 30 LINES)',
+                columns: 2,
+                linesPerCol: 15,
+                maxWidthClass: 'max-w-2xl',
+                gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5'
+            },
+            xl: {
+                label: 'XL (4 COL · 60 LINES)',
+                columns: 4,
+                linesPerCol: 15,
+                maxWidthClass: 'max-w-5xl',
+                gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5'
+            }
+        };
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Collect all distinct topics across columns and bundle their respective to-do items
+        function getAllTopicCards() {
+            const topicGroups = [];
+
+            ['left', 'right'].forEach(colKey => {
+                let currentTopic = null;
+                plannerState.columns[colKey].forEach((item, rowIdx) => {
+                    if (item.rowType === 'topic') {
+                        if (item.text.trim()) {
+                            currentTopic = {
+                                topicName: item.text.trim(),
+                                colKey,
+                                tasks: []
+                            };
+                            topicGroups.push(currentTopic);
+                        } else {
+                            currentTopic = null;
+                        }
+                    } else if (item.text.trim()) {
+                        if (!currentTopic) {
+                            currentTopic = {
+                                topicName: colKey === 'left' ? 'MAIN' : 'ETC',
+                                colKey,
+                                tasks: []
+                            };
+                            topicGroups.push(currentTopic);
+                        }
+                        currentTopic.tasks.push({ item, rowIdx, colKey });
+                    }
+                });
+            });
+
+            return topicGroups.filter(g => g.tasks.length > 0);
+        }
+
+        function setWidgetPreviewSize(sizeKey) {
+            if (!WIDGET_SIZE_SPECS[sizeKey]) return;
+            activeWidgetSize = sizeKey;
+            renderWidgetTopicsGrid();
+        }
+
+        // Dynamic Space Allocation: Distributes topics & all their tasks into available widget columns/lines
+        function allocateTopicsToWidgetColumns(topicGroups, numCols, linesPerCol) {
+            const cols = Array.from({ length: numCols }, () => ({ usedLines: 0, cards: [] }));
+            let hiddenTopicsCount = 0;
+            let hiddenTasksCount = 0;
+
+            // Special Case: If user has fewer topics than columns and a topic has many tasks that exceed 1 column,
+            // allow a single long topic to flow into the next empty column seamlessly!
+            topicGroups.forEach(group => {
+                let remainingTasks = [...group.tasks];
+                let isContinuation = false;
+
+                while (remainingTasks.length > 0) {
+                    // Find column with minimum used lines (or first column with at least 2 lines free: 1 header + 1 task)
+                    let targetCol = cols.find(c => (linesPerCol - c.usedLines) >= 2);
+                    if (!targetCol) {
+                        // All columns are full
+                        if (!isContinuation) hiddenTopicsCount++;
+                        hiddenTasksCount += remainingTasks.length;
+                        break;
+                    }
+
+                    const freeTaskLines = (linesPerCol - targetCol.usedLines) - 1; // 1 line used by topic header
+                    const canSplitAcrossCols = topicGroups.length < numCols && cols.some(c => c !== targetCol && c.usedLines === 0);
+
+                    if (remainingTasks.length <= freeTaskLines) {
+                        targetCol.cards.push({
+                            topicName: isContinuation ? `${group.topicName} ···` : group.topicName,
+                            visibleTasks: remainingTasks,
+                            overflowCount: 0
+                        });
+                        targetCol.usedLines += 1 + remainingTasks.length;
+                        remainingTasks = [];
+                    } else if (canSplitAcrossCols) {
+                        // Flow remaining tasks of this large topic into the next empty column instead of cutting off
+                        const chunk = remainingTasks.slice(0, freeTaskLines);
+                        targetCol.cards.push({
+                            topicName: isContinuation ? `${group.topicName} ···` : group.topicName,
+                            visibleTasks: chunk,
+                            overflowCount: 0
+                        });
+                        targetCol.usedLines += 1 + chunk.length;
+                        remainingTasks = remainingTasks.slice(freeTaskLines);
+                        isContinuation = true;
+                    } else {
+                        // Fit as many as this column's remaining budget allows, mark rest as overflow
+                        const visible = remainingTasks.slice(0, freeTaskLines);
+                        const overflow = remainingTasks.length - visible.length;
+                        targetCol.cards.push({
+                            topicName: isContinuation ? `${group.topicName} ···` : group.topicName,
+                            visibleTasks: visible,
+                            overflowCount: overflow
+                        });
+                        targetCol.usedLines += 1 + visible.length;
+                        remainingTasks = [];
+                    }
+                }
+            });
+
+            return { cols, hiddenTopicsCount, hiddenTasksCount };
+        }
+
+        function renderWidgetTopicsGrid() {
+            const container = document.getElementById('widgetTopicsGrid');
+            const outer = document.getElementById('widgetOuterContainer');
+            const badge = document.getElementById('widgetCapacityBadge');
+            if (!container || !outer) return;
+
+            const spec = WIDGET_SIZE_SPECS[activeWidgetSize] || WIDGET_SIZE_SPECS.large;
+
+            // Update size buttons
+            ['small', 'medium', 'large', 'xl'].forEach(k => {
+                const btn = document.getElementById(`widgetSizeBtn-${k}`);
+                if (!btn) return;
+                if (k === activeWidgetSize) {
+                    btn.className = 'liquid-btn-active px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition';
+                } else {
+                    btn.className = 'px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase text-slate-600 hover:text-slate-900 transition';
+                }
+            });
+
+            outer.className = `liquid-glass-widget rounded-[32px] w-full p-5 sm:p-6 transition-all duration-200 ${spec.maxWidthClass}`;
+            container.className = `grid ${spec.gridClass}`;
+            if (badge) badge.textContent = spec.label;
+
+            const topicGroups = getAllTopicCards();
+
+            if (topicGroups.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-xs font-semibold tracking-widest text-slate-400 uppercase">
+                        NO ACTIVE TASKS
+                    </div>
+                `;
+                return;
+            }
+
+            const { cols, hiddenTopicsCount, hiddenTasksCount } = allocateTopicsToWidgetColumns(
+                topicGroups,
+                spec.columns,
+                spec.linesPerCol
+            );
+
+            const activeCols = cols.filter(c => c.cards.length > 0);
+
+            container.innerHTML = activeCols.map((col, colIdx) => `
+                <div class="flex flex-col gap-3">
+                    ${col.cards.map(card => `
+                        <div class="liquid-glass-subcard rounded-2xl p-3.5 flex flex-col gap-2">
+                            <div class="flex items-center justify-between select-none">
+                                <span class="text-[13px] sm:text-[13.5px] font-bold text-slate-900 tracking-tight uppercase">
+                                    ${escapeHtml(card.topicName)}
+                                </span>
+                                ${card.overflowCount > 0 ? `
+                                    <span class="text-[10px] font-semibold text-slate-500 bg-white/60 px-2 py-0.5 rounded-full border border-white/80">
+                                        +${card.overflowCount} MORE
+                                    </span>
+                                ` : ''}
+                            </div>
+
+                            <div class="space-y-1">
+                                ${card.visibleTasks.map(({ item, rowIdx, colKey }) => `
+                                    <div onclick="triggerWidgetDeepLinkToTask('${colKey}', ${rowIdx})"
+                                         class="group flex items-center gap-2.5 px-2 py-1 rounded-xl cursor-pointer hover:bg-white/60 transition">
+                                        <span class="w-[15px] h-[15px] rounded-[3px] border-[1.5px] border-slate-700 bg-transparent flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
+                                            ${item.done ? '<svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6.2L4.8 9L10.2 2.8" stroke="#111111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
+                                        </span>
+                                        <span class="text-[12.5px] font-medium leading-none text-slate-800 truncate select-none ${item.done ? 'line-through text-slate-400' : ''}">
+                                            ${escapeHtml(item.text)}
+                                        </span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                    ${(colIdx === activeCols.length - 1 && hiddenTopicsCount > 0) ? `
+                        <div class="text-right pr-1">
+                            <span class="text-[10px] font-bold tracking-wider uppercase text-slate-500 bg-white/50 px-2.5 py-1 rounded-full border border-white/70">
+                                +${hiddenTopicsCount} TOPICS (${hiddenTasksCount} TO-DOS)
+                            </span>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function openWidgetSimulator() {
+            renderWidgetTopicsGrid();
+            document.getElementById('widgetSimModalBackdrop').classList.remove('hidden');
+        }
+
+        function closeWidgetSimulator() {
+            document.getElementById('widgetSimModalBackdrop').classList.add('hidden');
+        }
+
+        function triggerWidgetDeepLinkToTask(colKey, rowIdx) {
+            closeWidgetSimulator();
+            const rowEl = document.getElementById(`planner-row-${colKey}-${rowIdx}`);
+            if (rowEl) {
+                rowEl.classList.remove('deeplink-flash');
+                void rowEl.offsetWidth;
+                rowEl.classList.add('deeplink-flash');
+            }
+            setTimeout(() => openTaskModal(colKey, rowIdx), 180);
+        }
+
+        // =========================================================================
+        // OPTION 2: SCRIPTABLE FREE iOS HOME SCREEN WIDGET INTEGRATION
+        // =========================================================================
+        function buildWidgetSyncPayload() {
+            const topicGroups = getAllTopicCards().map(g => ({
+                topic: g.topicName,
+                tasks: g.tasks.map(t => ({
+                    text: t.item.text,
+                    done: !!t.item.done,
+                    id: `${t.colKey}-${t.rowIdx}`
+                }))
+            }));
+            return {
+                updatedAt: new Date().toISOString(),
+                appUrl: window.location.href.split('?')[0],
+                topics: topicGroups
+            };
+        }
+
+        function toggleScriptableGuide() {
+            const box = document.getElementById('scriptableSetupBox');
+            if (!box) return;
+            box.classList.toggle('hidden');
+        }
+
+        function copyTextFallback(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(ta);
+        }
+
+        function syncToScriptableApp() {
+            const payloadStr = JSON.stringify(buildWidgetSyncPayload());
+            copyTextFallback(payloadStr);
+            const encoded = encodeURIComponent(payloadStr);
+            window.location.href = `scriptable:///run/DailyPlanner?payload=${encoded}`;
+        }
+
+        function copyWidgetJsonData() {
+            const payloadStr = JSON.stringify(buildWidgetSyncPayload(), null, 2);
+            copyTextFallback(payloadStr);
+        }
+
+        function getScriptableWidgetSourceCode() {
+            const initialData = JSON.stringify(buildWidgetSyncPayload());
+            return `// Variables used by Scriptable.
+// Name this script: DailyPlanner
+const fm = FileManager.local();
+const filePath = fm.joinPath(fm.documentsDirectory(), "daily_planner_widget.json");
+
+// 1. Save incoming sync data from Web App URL Scheme or Clipboard
+if (args.queryParameters && args.queryParameters.payload) {
+  fm.writeString(filePath, args.queryParameters.payload);
+} else if (!fm.fileExists(filePath)) {
+  fm.writeString(filePath, ${JSON.stringify(initialData)});
+}
+
+let data = { topics: [], appUrl: "" };
+try {
+  data = JSON.parse(fm.readString(filePath));
+} catch (e) {}
+
+const family = config.widgetFamily || "large";
+const spec = {
+  small: { cols: 1, lines: 7 },
+  medium: { cols: 2, lines: 7 },
+  large: { cols: 2, lines: 15 },
+  extraLarge: { cols: 4, lines: 15 }
+}[family] || { cols: 2, lines: 15 };
+
+const w = new ListWidget();
+w.backgroundColor = new Color("#EEF2F6");
+w.setPadding(14, 14, 14, 14);
+if (data.appUrl) w.url = data.appUrl;
+
+const cols = Array.from({ length: spec.cols }, () => ({ used: 0, cards: [] }));
+(data.topics || []).forEach(g => {
+  let rem = [...(g.tasks || [])];
+  let cont = false;
+  while (rem.length > 0) {
+    let target = cols.find(c => (spec.lines - c.used) >= 2);
+    if (!target) break;
+    let free = (spec.lines - target.used) - 1;
+    let canSplit = data.topics.length < spec.cols && cols.some(c => c !== target && c.used === 0);
+    if (rem.length <= free) {
+      target.cards.push({ title: cont ? g.topic + " ···" : g.topic, tasks: rem, more: 0 });
+      target.used += 1 + rem.length;
+      rem = [];
+    } else if (canSplit) {
+      let chunk = rem.slice(0, free);
+      target.cards.push({ title: cont ? g.topic + " ···" : g.topic, tasks: chunk, more: 0 });
+      target.used += 1 + chunk.length;
+      rem = rem.slice(free);
+      cont = true;
+    } else {
+      let vis = rem.slice(0, free);
+      target.cards.push({ title: cont ? g.topic + " ···" : g.topic, tasks: vis, more: rem.length - vis.length });
+      target.used += 1 + vis.length;
+      rem = [];
+    }
+  }
+});
+
+const mainRow = w.addStack();
+mainRow.layoutHorizontally();
+mainRow.spacing = 10;
+
+cols.filter(c => c.cards.length > 0).forEach(col => {
+  const colStack = mainRow.addStack();
+  colStack.layoutVertically();
+  colStack.spacing = 8;
+
+  col.cards.forEach(card => {
+    const box = colStack.addStack();
+    box.layoutVertically();
+    box.backgroundColor = new Color("#FFFFFF", 0.72);
+    box.cornerRadius = 14;
+    box.setPadding(10, 12, 10, 12);
+    box.spacing = 4;
+
+    const head = box.addStack();
+    head.layoutHorizontally();
+    const titleTxt = head.addText(card.title.toUpperCase());
+    titleTxt.font = Font.boldSystemFont(12);
+    titleTxt.textColor = new Color("#0F172A");
+    if (card.more > 0) {
+      head.addSpacer();
+      const moreTxt = head.addText("+" + card.more + " MORE");
+      moreTxt.font = Font.semiboldSystemFont(9);
+      moreTxt.textColor = new Color("#64748B");
+    }
+
+    card.tasks.forEach(t => {
+      const r = box.addStack();
+      r.layoutHorizontally();
+      r.centerAlignContent();
+      r.spacing = 6;
+      if (data.appUrl && t.id) r.url = data.appUrl + "?taskId=" + t.id;
+      const chk = r.addText(t.done ? "☑" : "☐");
+      chk.font = Font.mediumSystemFont(12);
+      chk.textColor = new Color("#1E293B");
+      const lbl = r.addText(t.text);
+      lbl.font = Font.mediumSystemFont(11.5);
+      lbl.textColor = t.done ? new Color("#94A3B8") : new Color("#1E293B");
+      lbl.lineLimit = 1;
+    });
+  });
+});
+
+if (config.runsInWidget) {
+  Script.setWidget(w);
+} else {
+  await w.presentLarge();
+}
+Script.complete();`;
+        }
+
+        function copyScriptableWidgetCode() {
+            const code = getScriptableWidgetSourceCode();
+            copyTextFallback(code);
+            const btn = document.getElementById('copyScriptableBtn');
+            if (btn) {
+                const orig = btn.textContent;
+                btn.textContent = 'COPIED!';
+                setTimeout(() => { btn.textContent = orig; }, 1400);
+            }
+        }
+
+        function loadSampleData() {
+            plannerState = getSamplePlannerData();
+            saveStateToStorage();
+            renderLeftPanel();
+            renderTimetable();
+        }
+
+        function resetToBlank() {
+            plannerState = getBlankPlannerData();
+            saveStateToStorage();
+            renderLeftPanel();
+            renderTimetable();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initSpectrumPickerEvents();
+            applyResponsiveLayoutMode();
+            renderAllPinnedColorBars();
+            renderLeftPanel();
+            renderTimetable();
+            const params = new URLSearchParams(window.location.search);
+            const taskId = params.get('taskId');
+            if (taskId && /^(left|right)-([0-9]|1[0-7])$/.test(taskId)) {
+                const [col, r] = taskId.split('-');
+                triggerWidgetDeepLinkToTask(col, Number(r));
+            }
+        });
+    </script>
+</body>
+</html>
