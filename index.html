@@ -364,26 +364,89 @@
             animation: deepLinkPulse 1.6s ease-in-out;
         }
 
-        /* Portrait Mode (iPhone default, iPad vertical) */
-        body.layout-portrait,
-        body.layout-portrait .app-viewport,
-        body.layout-portrait .workspace-area {
-            height: auto;
-            overflow-y: auto;
+        /* Portrait Mode (iPhone default, iPad vertical) - Fixed Height & Smooth Native Scroll */
+        html.layout-portrait,
+        html.layout-portrait body {
+            height: auto !important;
+            min-height: 100dvh !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            -webkit-overflow-scrolling: touch;
         }
-        body.layout-portrait .planner-sheet {
-            max-width: 520px;
-            height: auto;
-            max-height: none;
+        html.layout-portrait .app-viewport {
+            height: auto !important;
+            min-height: 100dvh !important;
+            overflow: visible !important;
+            display: block !important;
+        }
+        html.layout-portrait .workspace-area {
+            height: auto !important;
+            min-height: 100dvh !important;
+            overflow: visible !important;
+            display: block !important;
+            padding: 10px 10px 36px 10px !important;
+        }
+        html.layout-portrait .planner-sheet {
+            max-width: 560px;
+            width: 100%;
+            height: auto !important;
+            max-height: none !important;
             margin: 0 auto;
-            padding: 10px 12px;
+            padding: 10px 12px 14px 12px;
+            overflow: visible !important;
         }
-        body.layout-portrait .planner-master-grid {
-            display: flex;
-            flex-direction: column;
-            height: auto;
+        html.layout-portrait .planner-master-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            flex: none !important;
+            height: auto !important;
+            overflow: visible !important;
         }
-        body.layout-portrait .portrait-row-h {
+        html.layout-portrait .top-date-goal-row {
+            flex-direction: column !important;
+            border-right: none !important;
+        }
+        html.layout-portrait .top-date-cell {
+            width: 100% !important;
+            border-right: none !important;
+            border-bottom: 1px solid var(--line-light);
+            min-height: 54px;
+            padding-bottom: 6px;
+        }
+        html.layout-portrait .top-goal-cell {
+            width: 100% !important;
+            min-height: 54px;
+            padding-bottom: 6px;
+        }
+        html.layout-portrait #middleRowsContainer {
+            grid-template-rows: repeat(18, 38px) !important;
+            height: auto !important;
+            flex: none !important;
+            border-right: none !important;
+        }
+        @media (max-width: 520px) {
+            html.layout-portrait #middleRowsContainer {
+                grid-template-columns: 1fr !important;
+                grid-template-rows: auto !important;
+                grid-auto-rows: 38px !important;
+            }
+            html.layout-portrait #middleRowsContainer > div {
+                border-right: none !important;
+            }
+        }
+        html.layout-portrait .portrait-review-row {
+            min-height: 38px !important;
+            height: 38px !important;
+            flex: none !important;
+            border-right: none !important;
+        }
+        html.layout-portrait #timetableColumnContainer {
+            grid-template-rows: repeat(24, 36px) !important;
+            height: auto !important;
+            flex: none !important;
+            border-top: 1.2px solid var(--line-strong);
+        }
+        html.layout-portrait .portrait-row-h {
             min-height: 36px;
         }
 
@@ -406,77 +469,45 @@
 </head>
 <body>
     <div class="app-viewport">
-        <!-- Minimalist All-Caps Top Bar with Frosted Glass -->
-        <header class="no-print h-10 flex-shrink-0 bg-white/70 backdrop-blur-xl border-b border-zinc-200/80 px-3 sm:px-5 flex items-center justify-between gap-2 text-[11px] tracking-wider uppercase">
-            <!-- Left: Brand, SHADE 5 Pinned Circles & Two-Tap Indicator -->
-            <div class="flex items-center gap-3">
-                <span class="font-bold text-slate-800 tracking-widest">DAILY PLANNER</span>
-                <div class="flex items-center gap-1.5 bg-white/80 backdrop-blur-md border border-white/80 shadow-sm rounded-md px-2.5 py-1">
-                    <span class="text-[10px] font-semibold text-zinc-400 mr-1">SHADE</span>
-                    <div id="toolbarPinnedColors" class="flex items-center gap-1.5"></div>
-                    <button type="button" onclick="triggerNativePicker({ type: 'toolbarRainbow' })" class="w-4 h-4 rounded-full flex items-center justify-center border border-white/90 shadow-xs transition hover:scale-110 ml-0.5" style="background: conic-gradient(#f87171, #fbbf24, #34d399, #60a5fa, #a78bfa, #f472b6, #f87171);" title="CHOOSE COLOR (NATIVE PICKER)"></button>
-                </div>
-                <span id="twoTapIndicator" class="hidden items-center gap-1.5 text-[10px] font-semibold text-blue-700 bg-blue-50/90 px-2 py-0.5 rounded-full border border-blue-200">
-                    <span id="twoTapText">SELECT END</span>
-                    <button onclick="cancelTwoTapSelection()" class="underline ml-1">✕</button>
-                </span>
-            </div>
-
-            <!-- Right: Actions -->
-            <div class="flex items-center gap-1.5">
-                <button onclick="openWidgetSimulator()" class="px-2.5 py-1 rounded-md font-semibold bg-slate-800/90 hover:bg-slate-800 text-white shadow-sm transition text-[10px] tracking-wider">
-                    WIDGET
-                </button>
-                <button onclick="loadSampleData()" class="px-2.5 py-1 rounded-md bg-white/80 hover:bg-white border border-zinc-300 text-slate-700 font-semibold text-[10px] tracking-wider transition">
-                    SAMPLE
-                </button>
-                <button onclick="resetToBlank()" class="px-2.5 py-1 rounded-md bg-white/80 hover:bg-rose-50 hover:text-rose-700 border border-zinc-300 text-slate-700 font-semibold text-[10px] tracking-wider transition">
-                    CLEAR ALL
-                </button>
-            </div>
-        </header>
-
-        <!-- Main Single-Page Landscape Sheet Area -->
+        <!-- Main Single-Page Landscape Sheet Area (No Cluttered Demo Header) -->
         <main class="workspace-area">
             <section class="planner-sheet" aria-label="Landscape Daily Planner">
                 <div class="planner-master-grid">
 
                     <!-- 1. TOP HEADER: DATE & GOAL (Column 1, Rows 1..2 = Hours 0..1) -->
-                    <div style="grid-column: 1; grid-row: 1 / span 2;" class="b-right-strong b-bottom-strong flex min-h-[50px]">
-                        <!-- DATE CELL (27% width, vertically centered input row below DATE label) -->
-                        <div class="w-[27%] min-w-[180px] b-right-strong px-3 pt-1.5 pb-1 flex flex-col overflow-hidden">
-                            <span class="field-label flex-shrink-0">DATE</span>
+                    <div style="grid-column: 1; grid-row: 1 / span 2;" class="top-date-goal-row b-right-strong b-bottom-strong flex min-h-[52px]">
+                        <!-- DATE CELL (27% width, Clickable Date Picker) -->
+                        <div onclick="openDatePickerModal()" class="top-date-cell w-[27%] min-w-[190px] b-right-strong px-3 pt-1.5 pb-1 flex flex-col overflow-hidden cursor-pointer hover:bg-zinc-50/60 transition-colors" title="CLICK TO SELECT DATE">
+                            <div class="flex items-center justify-between flex-shrink-0">
+                                <span class="field-label">DATE</span>
+                            </div>
                             <div class="flex-1 flex items-center">
-                                <div class="flex items-baseline whitespace-nowrap flex-nowrap text-slate-700">
-                                    <input id="dateYYYY" type="text" maxlength="4" placeholder="YYYY"
-                                        style="width: 4.2ch;"
-                                        class="planner-input text-center text-[13px] font-medium uppercase"
-                                        oninput="handleDateFieldChange()">
-                                    <span class="font-bold text-slate-500 px-1 select-none">.</span>
-                                    <input id="dateMM" type="text" maxlength="2" placeholder="MM"
-                                        style="width: 2.2ch;"
-                                        class="planner-input text-center text-[13px] font-medium uppercase"
-                                        oninput="handleDateFieldChange()">
-                                    <span class="font-bold text-slate-500 px-1 select-none">.</span>
-                                    <input id="dateDD" type="text" maxlength="2" placeholder="DD"
-                                        style="width: 2.2ch;"
-                                        class="planner-input text-center text-[13px] font-medium uppercase"
-                                        oninput="handleDateFieldChange()">
+                                <div class="group flex items-baseline whitespace-nowrap flex-nowrap text-slate-700 py-0.5 select-none">
+                                    <span id="dateYYYY" class="inline-block min-w-[4.2ch] text-center text-[13.5px] font-semibold tracking-tight uppercase"></span>
+                                    <span class="font-bold text-slate-400 px-1 select-none">.</span>
+                                    <span id="dateMM" class="inline-block min-w-[2.2ch] text-center text-[13.5px] font-semibold tracking-tight uppercase"></span>
+                                    <span class="font-bold text-slate-400 px-1 select-none">.</span>
+                                    <span id="dateDD" class="inline-block min-w-[2.2ch] text-center text-[13.5px] font-semibold tracking-tight uppercase"></span>
                                     <span class="inline-flex items-baseline ml-1.5 text-slate-400 text-[13px] flex-shrink-0">
                                         <span class="select-none">(</span>
-                                        <input id="dateDOW" type="text" maxlength="3" placeholder="DAY"
-                                            style="width: 2.6ch;"
-                                            class="planner-input mx-0.5 text-center text-[12px] font-medium text-slate-700 uppercase"
-                                            oninput="handleDateFieldChange()">
+                                        <span id="dateDOW" class="mx-1 text-center text-[12px] font-semibold text-slate-700 uppercase"></span>
                                         <span class="select-none">)</span>
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- GOAL CELL (73% width, vertically centered input row below GOAL label) -->
-                        <div class="w-[73%] px-3.5 pt-1.5 pb-1 flex flex-col overflow-hidden">
-                            <span class="field-label flex-shrink-0">GOAL</span>
+                        <!-- GOAL CELL (73% width, Clean like original PDF) -->
+                        <div class="top-goal-cell w-[73%] px-3.5 pt-1.5 pb-1 flex flex-col overflow-hidden">
+                            <div class="flex items-center justify-between gap-2 flex-shrink-0">
+                                <span class="field-label">GOAL</span>
+                                <div class="no-print flex items-center gap-2">
+                                    <span id="twoTapIndicator" class="hidden items-center gap-1 text-[9.5px] font-semibold text-blue-700 bg-blue-50/90 px-2 py-0.5 rounded-full border border-blue-200">
+                                        <span id="twoTapText">SELECT END</span>
+                                        <button type="button" onclick="cancelTwoTapSelection()" class="ml-1">✕</button>
+                                    </span>
+                                </div>
+                            </div>
                             <div class="flex-1 flex items-center w-full">
                                 <input id="goalInput" type="text" placeholder=""
                                     class="planner-input w-full text-[13.5px] font-medium text-slate-800"
@@ -490,12 +521,12 @@
                     </div>
 
                     <!-- 3. DAILY REVIEW SECTION (Column 1, Rows 21..24 = Hours 20..23) -->
-                    <div style="grid-column: 1; grid-row: 21;" class="portrait-row-h b-right-strong b-bottom-light px-3 flex items-center">
+                    <div style="grid-column: 1; grid-row: 21;" class="portrait-review-row portrait-row-h b-right-strong b-bottom-light px-3 flex items-center">
                         <span class="field-label">DAILY REVIEW</span>
                     </div>
 
                     <!-- Row 22 (Hour 21): • KEEP : -->
-                    <div style="grid-column: 1; grid-row: 22;" class="portrait-row-h b-right-strong b-bottom-light px-3.5 flex items-center">
+                    <div style="grid-column: 1; grid-row: 22;" class="portrait-review-row portrait-row-h b-right-strong b-bottom-light px-3.5 flex items-center">
                         <div class="inline-flex items-center text-[12px] font-normal text-[#475569] select-none flex-shrink-0 mr-2.5">
                             <span class="inline-flex items-center w-[82px] tracking-[0.03em]">
                                 <span class="text-[#64748b] mr-1.5">•</span>KEEP
@@ -508,7 +539,7 @@
                     </div>
 
                     <!-- Row 23 (Hour 22): • PROBLEM : -->
-                    <div style="grid-column: 1; grid-row: 23;" class="portrait-row-h b-right-strong b-bottom-light px-3.5 flex items-center">
+                    <div style="grid-column: 1; grid-row: 23;" class="portrait-review-row portrait-row-h b-right-strong b-bottom-light px-3.5 flex items-center">
                         <div class="inline-flex items-center text-[12px] font-normal text-[#475569] select-none flex-shrink-0 mr-2.5">
                             <span class="inline-flex items-center w-[82px] tracking-[0.03em]">
                                 <span class="text-[#64748b] mr-1.5">•</span>PROBLEM
@@ -521,7 +552,7 @@
                     </div>
 
                     <!-- Row 24 (Hour 23): • TRY : -->
-                    <div style="grid-column: 1; grid-row: 24;" class="portrait-row-h b-right-strong px-3.5 flex items-center">
+                    <div style="grid-column: 1; grid-row: 24;" class="portrait-review-row portrait-row-h b-right-strong px-3.5 flex items-center">
                         <div class="inline-flex items-center text-[12px] font-normal text-[#475569] select-none flex-shrink-0 mr-2.5">
                             <span class="inline-flex items-center w-[82px] tracking-[0.03em]">
                                 <span class="text-[#64748b] mr-1.5">•</span>TRY
@@ -544,6 +575,132 @@
 
     <!-- Floating Touch Drag Ghost (iPhone / iPad Touch Drag-and-Drop) -->
     <div id="touchDragGhost" class="touch-drag-ghost hidden"></div>
+
+    <!-- ============================================================================ -->
+    <!-- MODAL 0: LIQUID GLASS CALENDAR DATE PICKER (AUTO DATE + DAY OF WEEK)         -->
+    <!-- ============================================================================ -->
+    <div id="datePickerModalBackdrop" onclick="if(event.target===this) closeDatePickerModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="liquid-glass-modal relative rounded-3xl max-w-xs w-full p-5 space-y-3.5 select-none">
+            <!-- Calendar Header: Month / Year + Prev/Next -->
+            <div class="flex items-center justify-between">
+                <button type="button" onclick="changeCalendarMonth(-1)"
+                    class="liquid-btn-inactive w-8 h-8 rounded-xl flex items-center justify-center font-bold text-slate-700 transition">
+                    ‹
+                </button>
+                <span id="calendarMonthLabel" class="text-[13px] font-bold tracking-widest uppercase text-slate-800"></span>
+                <button type="button" onclick="changeCalendarMonth(1)"
+                    class="liquid-btn-inactive w-8 h-8 rounded-xl flex items-center justify-center font-bold text-slate-700 transition">
+                    ›
+                </button>
+            </div>
+
+            <!-- Day-of-Week Header -->
+            <div class="grid grid-cols-7 text-center text-[10px] font-bold tracking-wider text-slate-400 uppercase pt-1">
+                <span class="text-rose-400">SUN</span>
+                <span>MON</span>
+                <span>TUE</span>
+                <span>WED</span>
+                <span>THU</span>
+                <span>FRI</span>
+                <span class="text-blue-400">SAT</span>
+            </div>
+
+            <!-- Days Grid -->
+            <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1 text-center"></div>
+
+            <!-- Footer Actions: CLEAR DAY / CLOUD / WIDGET / TODAY / CLOSE -->
+            <div class="flex items-center justify-between pt-2 border-t border-white/60">
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="resetCurrentDatePage()"
+                        class="text-[10.5px] font-bold tracking-widest uppercase text-slate-400 hover:text-rose-600 transition px-1 py-1">
+                        CLEAR
+                    </button>
+                    <button type="button" onclick="closeDatePickerModal(); openCloudSyncModal();"
+                        class="inline-flex items-center gap-1 text-[10.5px] font-bold tracking-widest uppercase text-slate-500 hover:text-slate-900 transition px-1 py-1">
+                        <span id="calendarCloudStatusDot" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                        CLOUD
+                    </button>
+                    <button type="button" onclick="closeDatePickerModal(); openWidgetSimulator();"
+                        class="text-[10.5px] font-bold tracking-widest uppercase text-slate-500 hover:text-slate-900 transition px-1 py-1">
+                        WIDGET
+                    </button>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="selectDateFromPicker(getTodayDateKey())"
+                        class="liquid-btn-inactive px-3 py-1.5 rounded-xl text-[10.5px] font-bold tracking-wider uppercase transition">
+                        TODAY
+                    </button>
+                    <button type="button" onclick="closeDatePickerModal()"
+                        class="liquid-btn-active px-3.5 py-1.5 rounded-xl text-[10.5px] font-bold tracking-wider uppercase transition">
+                        CLOSE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================================ -->
+    <!-- MODAL 0-B: REAL-TIME MULTI-DEVICE CLOUD SYNC MODAL (iPHONE / iPAD / MAC)     -->
+    <!-- ============================================================================ -->
+    <div id="cloudSyncModalBackdrop" onclick="if(event.target===this) closeCloudSyncModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/25 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="liquid-glass-modal relative rounded-3xl max-w-md w-full p-5 space-y-3.5 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-2 border-b border-white/60">
+                <div class="flex items-center gap-2">
+                    <span id="cloudModalDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-xs"></span>
+                    <span class="text-[12px] font-bold tracking-widest uppercase text-slate-800">REAL-TIME CLOUD SYNC</span>
+                </div>
+                <span id="cloudStatusBadge" class="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-white/60 text-slate-700 border border-white/80">
+                    CONNECTING...
+                </span>
+            </div>
+
+            <!-- Sync Workspace Key (Shared across user's iPhone, iPad, MacBook) -->
+            <div class="liquid-glass-subcard rounded-2xl p-3.5 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10.5px] font-bold tracking-wider uppercase text-slate-700">SYNC KEY (기기 공통 연동 코드)</span>
+                    <button type="button" onclick="applySyncKeyInput()"
+                        class="liquid-btn-active px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase transition">
+                        APPLY
+                    </button>
+                </div>
+                <input id="syncKeyInput" type="text" placeholder="e.g. my-secret-planner-key"
+                    class="liquid-input w-full h-9 px-3 rounded-xl text-[12.5px] font-mono font-semibold text-slate-800 focus:outline-none"
+                    onkeydown="if(event.key==='Enter'){ event.preventDefault(); applySyncKeyInput(); }">
+                <p class="text-[10.5px] text-slate-500 leading-relaxed">
+                    아이폰·아이패드·맥북에서 동일한 <strong>SYNC KEY</strong>를 사용하면 모든 날짜의 플래너와 색연필 팔레트가 실시간으로 동기화됩니다.
+                </p>
+                <div class="pt-1 border-t border-white/50 flex items-center justify-between text-[10px] text-slate-400 font-mono break-all">
+                    <span>USER ID: <span id="cloudUserIdDisplay">AUTHENTICATING...</span></span>
+                </div>
+            </div>
+
+            <!-- Firebase Config Setup for GitHub Pages Deployment -->
+            <div class="liquid-glass-subcard rounded-2xl p-3.5 space-y-2 text-[11px] text-slate-700">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-900 tracking-wider uppercase text-[10.5px]">GITHUB PAGES 무료 실시간 DB 연결 방법</span>
+                    <button type="button" onclick="connectRuntimeFirebaseConfig()"
+                        class="liquid-btn-inactive px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase transition">
+                        TEST CONNECT
+                    </button>
+                </div>
+                <ol class="list-decimal list-inside space-y-1 text-[10.5px] text-slate-600 leading-relaxed">
+                    <li><strong>console.firebase.google.com</strong> 접속 → 무료 프로젝트 생성</li>
+                    <li><strong>Build → Authentication → Sign-in method</strong>에서 <strong>Anonymous(익명)</strong> 사용 설정</li>
+                    <li><strong>Build → Firestore Database → Create database</strong> 생성 후 <strong>Rules</strong> 탭에서 <code>allow read, write: if request.auth != null;</code> 게시</li>
+                    <li>프로젝트 설정의 웹 앱(<code>&lt;/&gt;</code>) <strong>firebaseConfig</strong> 값을 복사해 코드 내 <code>USER_FIREBASE_CONFIG</code>에 붙여넣거나 아래 칸에 입력 후 연결하세요.</li>
+                </ol>
+                <textarea id="runtimeFirebaseConfigInput" rows="3" placeholder='{"apiKey":"...","authDomain":"...","projectId":"..."}'
+                    class="liquid-input w-full p-2.5 rounded-xl text-[10.5px] font-mono text-slate-800 focus:outline-none"></textarea>
+            </div>
+
+            <div class="flex justify-end pt-1">
+                <button type="button" onclick="closeCloudSyncModal()"
+                    class="liquid-btn-active h-10 px-5 rounded-xl font-semibold text-xs tracking-wider uppercase transition">
+                    DONE
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- ============================================================================ -->
     <!-- MODAL 1: ROW SETTING MODAL (TOPIC / TO-DO, DONE / UNDONE, SHADE, CLEAR/SAVE) -->
@@ -780,12 +937,33 @@
         </div>
     </div>
 
-    <script>
-        const STORAGE_KEY = 'daily_planner_landscape_v7_24h';
-        const PINNED_COLORS_KEY = 'daily_planner_pinned_5_colors_v2';
+    <script type="module">
+        import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, deleteDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // =========================================================================
+        // [중요] GitHub Pages 배포 시 내 무료 Firebase 설정값을 아래 객체에 붙여넣으세요.
+        // 한 번만 넣어두면 아이폰·아이패드·맥북에서 접속 즉시 자동 실시간 연동됩니다!
+        // =========================================================================
+        const USER_FIREBASE_CONFIG = null;
+        /* 예시:
+        const USER_FIREBASE_CONFIG = {
+            apiKey: "AIzaSy...",
+            authDomain: "my-planner.firebaseapp.com",
+            projectId: "my-planner",
+            storageBucket: "my-planner.firebasestorage.app",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
+        */
+        const DEFAULT_SYNC_KEY = 'my-personal-planner';
+
         const HOURS = Array.from({ length: 24 }, (_, i) => i); // 0 to 23 (24 hours)
         const MIDDLE_ROW_COUNT = 18; // 18 rows per column (Hours 2..19)
         const TOTAL_SLOTS = HOURS.length * 6; // 144 ten-minute slots (00:00 to 24:00)
+        const DOW_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+        const MONTH_NAMES = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 
         // Default 5 Pinned Shade Colors
         const DEFAULT_PINNED_COLORS = ['#93D5F6', '#F9A8C9', '#FDE072', '#99E6C3', '#D1B3FC'];
@@ -799,7 +977,19 @@
             orange: '#FDBA8C'
         };
 
-        let pinnedColors = loadPinnedColors();
+        // Cloud Firestore State
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'daily-planner-app';
+        let syncWorkspaceKey = DEFAULT_SYNC_KEY;
+        let firebaseApp = null;
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let unsubscribeDaysSnapshot = null;
+        let unsubscribeSettingsSnapshot = null;
+        let saveDebounceTimer = null;
+        let activeFirebaseProjectId = '';
+
+        let pinnedColors = [...DEFAULT_PINNED_COLORS];
         let activeModalTaskRef = null;
         let activeModalRowType = 'task';
         let activeModalTaskDone = false;
@@ -826,6 +1016,36 @@
 
         // Layout Mode: 'auto' | 'landscape' | 'portrait'
         let currentLayoutMode = 'auto';
+
+        // =========================================================================
+        // DATE KEY & PER-DATE CLOUD STORAGE SYSTEM (AUTO YYYY.MM.DD + DAY OF WEEK)
+        // =========================================================================
+        function formatDateKey(dateObj) {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function getTodayDateKey() {
+            return formatDateKey(new Date());
+        }
+
+        function parseDateKeyToParts(dateKey) {
+            const [y, m, d] = (dateKey || getTodayDateKey()).split('-').map(Number);
+            const dt = new Date(y, (m || 1) - 1, d || 1);
+            return {
+                yyyy: String(dt.getFullYear()),
+                mm: String(dt.getMonth() + 1).padStart(2, '0'),
+                dd: String(dt.getDate()).padStart(2, '0'),
+                dow: DOW_NAMES[dt.getDay()],
+                dateObj: dt
+            };
+        }
+
+        let selectedDateKey = getTodayDateKey();
+        let calendarViewYear = new Date().getFullYear();
+        let calendarViewMonth = new Date().getMonth(); // 0..11
 
         function normalizeColorHex(colorVal) {
             if (!colorVal || colorVal === 'none') return 'none';
@@ -864,29 +1084,136 @@
             element.style.webkitBackdropFilter = 'none';
         }
 
-        function loadPinnedColors() {
+        async function savePinnedColors() {
+            if (!currentUser || !db) return;
             try {
-                const raw = localStorage.getItem(PINNED_COLORS_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (Array.isArray(parsed) && parsed.length === 5) return parsed;
+                const settingsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'planner_settings', `${syncWorkspaceKey}_config`);
+                await setDoc(settingsDocRef, {
+                    syncKey: syncWorkspaceKey,
+                    pinnedColorsJson: JSON.stringify(pinnedColors),
+                    updatedAt: Date.now(),
+                    updatedBy: currentUser.uid
+                });
+            } catch (err) {
+                console.error('Error saving pinned colors to cloud:', err);
+            }
+        }
+
+        // =========================================================================
+        // CALENDAR DATE PICKER & DATE SWITCHING FUNCTIONS
+        // =========================================================================
+        function switchSelectedDate(newDateKey) {
+            if (!newDateKey) newDateKey = getTodayDateKey();
+            selectedDateKey = newDateKey;
+            const parts = parseDateKeyToParts(selectedDateKey);
+            calendarViewYear = parts.dateObj.getFullYear();
+            calendarViewMonth = parts.dateObj.getMonth();
+
+            plannerState = getPlannerDataForDate(selectedDateKey);
+            cancelTwoTapSelection();
+            renderLeftPanel();
+            renderTimetable();
+            renderCalendarGrid();
+        }
+
+        function openDatePickerModal() {
+            const parts = parseDateKeyToParts(selectedDateKey);
+            calendarViewYear = parts.dateObj.getFullYear();
+            calendarViewMonth = parts.dateObj.getMonth();
+            renderCalendarGrid();
+            document.getElementById('datePickerModalBackdrop').classList.remove('hidden');
+        }
+
+        function closeDatePickerModal() {
+            document.getElementById('datePickerModalBackdrop').classList.add('hidden');
+        }
+
+        function changeCalendarMonth(delta) {
+            calendarViewMonth += delta;
+            if (calendarViewMonth < 0) {
+                calendarViewMonth = 11;
+                calendarViewYear--;
+            } else if (calendarViewMonth > 11) {
+                calendarViewMonth = 0;
+                calendarViewYear++;
+            }
+            renderCalendarGrid();
+        }
+
+        function selectDateFromPicker(dateKey) {
+            switchSelectedDate(dateKey);
+            closeDatePickerModal();
+        }
+
+        function resetCurrentDatePage() {
+            plannerState = getBlankPlannerData(selectedDateKey);
+            saveStateToStorage(false);
+            renderLeftPanel();
+            renderTimetable();
+            renderCalendarGrid();
+            closeDatePickerModal();
+        }
+
+        function renderCalendarGrid() {
+            const labelEl = document.getElementById('calendarMonthLabel');
+            const gridEl = document.getElementById('calendarDaysGrid');
+            if (!labelEl || !gridEl) return;
+
+            labelEl.textContent = `${MONTH_NAMES[calendarViewMonth]} ${calendarViewYear}`;
+            gridEl.innerHTML = '';
+
+            const firstDayOfMonth = new Date(calendarViewYear, calendarViewMonth, 1).getDay();
+            const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
+            const todayKey = getTodayDateKey();
+
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'h-9';
+                gridEl.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dt = new Date(calendarViewYear, calendarViewMonth, day);
+                const dKey = formatDateKey(dt);
+                const isSelected = dKey === selectedDateKey;
+                const isToday = dKey === todayKey;
+                const hasData = isDateEntryNonEmpty(allPlannersByDate[dKey]);
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => selectDateFromPicker(dKey);
+
+                let baseCls = 'relative h-9 rounded-xl flex flex-col items-center justify-center text-[12px] font-semibold transition ';
+                if (isSelected) {
+                    baseCls += 'liquid-btn-active text-white font-bold';
+                } else if (isToday) {
+                    baseCls += 'bg-white/75 text-slate-900 border border-slate-400 font-bold hover:bg-white';
+                } else {
+                    baseCls += 'text-slate-700 hover:bg-white/60';
                 }
-            } catch (e) {}
-            return [...DEFAULT_PINNED_COLORS];
-        }
+                btn.className = baseCls;
 
-        function savePinnedColors() {
-            try {
-                localStorage.setItem(PINNED_COLORS_KEY, JSON.stringify(pinnedColors));
-            } catch (e) {}
+                const numSpan = document.createElement('span');
+                numSpan.className = 'leading-none';
+                numSpan.textContent = day;
+                btn.appendChild(numSpan);
+
+                if (hasData) {
+                    const dot = document.createElement('span');
+                    dot.className = `w-1 h-1 rounded-full mt-0.5 ${isSelected ? 'bg-white' : 'bg-slate-800'}`;
+                    btn.appendChild(dot);
+                }
+
+                gridEl.appendChild(btn);
+            }
         }
 
         // =========================================================================
-        // SLEEK NATIVE-STYLE SPECTRUM COLOR PICKER (CENTERED INSIDE ACTIVE MODAL)
+        // 2D SPECTRUM COLOR PICKER HELPERS & EVENTS
         // =========================================================================
-        let pickerHue = 200; // 0..360
-        let pickerSat = 40;  // 0..100
-        let pickerVal = 96;  // 0..100
+        let pickerHue = 200;
+        let pickerSat = 40;
+        let pickerVal = 96;
         let isDraggingSV = false;
         let isDraggingHue = false;
 
@@ -900,13 +1227,11 @@
             const r = ((num >> 16) & 255) / 255;
             const g = ((num >> 8) & 255) / 255;
             const b = (num & 255) / 255;
-
             const max = Math.max(r, g, b), min = Math.min(r, g, b);
             const d = max - min;
             let h = 0;
             const s = max === 0 ? 0 : d / max;
             const v = max;
-
             if (max !== min) {
                 switch (max) {
                     case r: h = (g - b) / d + (g < b ? 6 : 0); break;
@@ -915,11 +1240,7 @@
                 }
                 h /= 6;
             }
-            return {
-                h: Math.round(h * 360),
-                s: Math.round(s * 100),
-                v: Math.round(v * 100)
-            };
+            return { h: Math.round(h * 360), s: Math.round(s * 100), v: Math.round(v * 100) };
         }
 
         function hsvToHex(h, s, v) {
@@ -928,26 +1249,23 @@
             const c = vNorm * sNorm;
             const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
             const m = vNorm - c;
-            let rPrime = 0, gPrime = 0, bPrime = 0;
-
-            if (h >= 0 && h < 60) { rPrime = c; gPrime = x; bPrime = 0; }
-            else if (h >= 60 && h < 120) { rPrime = x; gPrime = c; bPrime = 0; }
-            else if (h >= 120 && h < 180) { rPrime = 0; gPrime = c; bPrime = x; }
-            else if (h >= 180 && h < 240) { rPrime = 0; gPrime = x; bPrime = c; }
-            else if (h >= 240 && h < 300) { rPrime = x; gPrime = 0; bPrime = c; }
-            else { rPrime = c; gPrime = 0; bPrime = x; }
-
-            const toHex = (n) => Math.round((n + m) * 255).toString(16).padStart(2, '0').toUpperCase();
-            return `#${toHex(rPrime)}${toHex(gPrime)}${toHex(bPrime)}`;
+            let r = 0, g = 0, b = 0;
+            if (h >= 0 && h < 60) { r = c; g = x; b = 0; }
+            else if (h >= 60 && h < 120) { r = x; g = c; b = 0; }
+            else if (h >= 120 && h < 180) { r = 0; g = c; b = x; }
+            else if (h >= 180 && h < 240) { r = 0; g = x; b = c; }
+            else if (h >= 240 && h < 300) { r = x; g = 0; b = c; }
+            else { r = c; g = 0; b = x; }
+            const toHex = (n) => Math.round((n + m) * 255).toString(16).padStart(2, '0');
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
         }
 
-        function updateSpectrumPickerUI(skipHexInput = false) {
+        function updateSpectrumPickerUI() {
             const svBox = document.getElementById('svSpectrumBox');
             const svThumb = document.getElementById('svSpectrumThumb');
             const hueThumb = document.getElementById('hueSliderThumb');
-            const liveSwatch = document.getElementById('pickerLiveSwatch');
+            const swatch = document.getElementById('pickerLiveSwatch');
             const hexInput = document.getElementById('pickerHexInput');
-
             const currentHex = hsvToHex(pickerHue, pickerSat, pickerVal);
 
             if (svBox) svBox.style.backgroundColor = `hsl(${pickerHue}, 100%, 50%)`;
@@ -960,53 +1278,47 @@
                 hueThumb.style.left = `${(pickerHue / 360) * 100}%`;
                 hueThumb.style.backgroundColor = `hsl(${pickerHue}, 100%, 50%)`;
             }
-            if (liveSwatch) liveSwatch.style.backgroundColor = currentHex;
-            if (hexInput && !skipHexInput) hexInput.value = currentHex;
+            if (swatch) swatch.style.backgroundColor = currentHex;
+            if (hexInput && document.activeElement !== hexInput) {
+                hexInput.value = currentHex;
+            }
         }
 
-        function triggerNativePicker(target, currentColor) {
-            activePickerTarget = target;
-
-            let initialColor = '#93D5F6';
-            if (currentColor && currentColor !== 'none') {
-                initialColor = normalizeColorHex(currentColor);
-            } else if (target.slotIndex !== undefined && pinnedColors[target.slotIndex]) {
-                initialColor = pinnedColors[target.slotIndex];
-            } else if (target.type === 'taskModalRainbow' && activeModalTaskHl && activeModalTaskHl !== 'none') {
-                initialColor = normalizeColorHex(activeModalTaskHl);
-            } else if (target.type === 'tbModalRainbow' && modalTimeBlockColor && modalTimeBlockColor !== 'none') {
-                initialColor = normalizeColorHex(modalTimeBlockColor);
-            } else if (pinnedColors[4]) {
-                initialColor = pinnedColors[4];
+        function triggerNativePicker(targetInfo, initialHex = null) {
+            activePickerTarget = targetInfo;
+            let startHex = initialHex;
+            if (!startHex || startHex === 'none') {
+                if (targetInfo.type === 'taskModalRainbow') {
+                    startHex = (activeModalTaskHl && activeModalTaskHl !== 'none') ? activeModalTaskHl : (pinnedColors[0] || '#93D5F6');
+                } else if (targetInfo.type === 'tbModalRainbow') {
+                    startHex = (modalTimeBlockColor && modalTimeBlockColor !== 'none') ? modalTimeBlockColor : (pinnedColors[1] || '#F9A8C9');
+                } else {
+                    startHex = pinnedColors[0] || '#93D5F6';
+                }
             }
-
-            const hsv = hexToHsv(initialColor);
+            const hsv = hexToHsv(startHex);
             pickerHue = hsv.h;
             pickerSat = hsv.s;
             pickerVal = hsv.v;
             updateSpectrumPickerUI();
 
             const overlay = document.getElementById('spectrumPickerOverlay');
-            const taskBackdrop = document.getElementById('taskModalBackdrop');
-            const tbBackdrop = document.getElementById('timeBlockModalBackdrop');
             const taskDialog = document.getElementById('taskModalDialog');
             const tbDialog = document.getElementById('timeBlockModalDialog');
 
-            if (!overlay) return;
-
-            // Mount inside the active modal so top:50%/left:50% centers right inside the modal window
-            if (taskDialog && taskBackdrop && !taskBackdrop.classList.contains('hidden')) {
-                taskDialog.appendChild(overlay);
-                overlay.className = 'no-print absolute inset-0 z-[70] rounded-3xl';
-            } else if (tbDialog && tbBackdrop && !tbBackdrop.classList.contains('hidden')) {
-                tbDialog.appendChild(overlay);
-                overlay.className = 'no-print absolute inset-0 z-[70] rounded-3xl';
-            } else {
-                document.body.appendChild(overlay);
-                overlay.className = 'no-print fixed inset-0 z-[70] bg-slate-900/10 backdrop-blur-[2px]';
+            if (overlay) {
+                if (targetInfo.context === 'taskModal' || targetInfo.type === 'taskModalRainbow') {
+                    if (taskDialog) taskDialog.appendChild(overlay);
+                    overlay.className = 'no-print absolute inset-0 z-[70] flex items-center justify-center rounded-3xl bg-slate-900/10 backdrop-blur-[2px]';
+                } else if (targetInfo.context === 'tbModal' || targetInfo.type === 'tbModalRainbow') {
+                    if (tbDialog) tbDialog.appendChild(overlay);
+                    overlay.className = 'no-print absolute inset-0 z-[70] flex items-center justify-center rounded-3xl bg-slate-900/10 backdrop-blur-[2px]';
+                } else {
+                    document.body.appendChild(overlay);
+                    overlay.className = 'no-print fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/15 backdrop-blur-[2px]';
+                }
+                overlay.classList.remove('hidden');
             }
-
-            // Apply the initial color right away when opening
             handleNativePickerValueChange(hsvToHex(pickerHue, pickerSat, pickerVal));
         }
 
@@ -1019,14 +1331,14 @@
         }
 
         function handlePickerHexTyping(val) {
-            const cleaned = val.trim();
-            if (/^#[0-9A-Fa-f]{6}$/.test(cleaned)) {
-                const hsv = hexToHsv(cleaned);
+            const clean = val.trim();
+            if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
+                const hsv = hexToHsv(clean);
                 pickerHue = hsv.h;
                 pickerSat = hsv.s;
                 pickerVal = hsv.v;
-                updateSpectrumPickerUI(true);
-                handleNativePickerValueChange(cleaned.toUpperCase());
+                updateSpectrumPickerUI();
+                handleNativePickerValueChange(clean.toUpperCase());
             }
         }
 
@@ -1171,73 +1483,8 @@
             }
         }
 
-        function getSamplePlannerData() {
-            return {
-                date: { yyyy: '2026', mm: '10', dd: '30', dow: 'FRI' },
-                goal: '이번주 분석결과 최종공유 + Youtube 기획 마무리.',
-                columns: {
-                    left: [
-                        { rowType: 'topic', text: '회사', done: false, hl: 'none' },
-                        { rowType: 'task', text: 'launch failure 메일 확인 후 회신', done: true, hl: '#93D5F6' },
-                        { rowType: 'task', text: '↳ 추가 분석해서 내부 공유', done: true, hl: '#F9A8C9' },
-                        { rowType: 'task', text: 'rlimit 적용 PR 코멘트 확인', done: true, hl: '#93D5F6' },
-                        { rowType: 'task', text: 'rlimit document 추가하기', done: false, hl: '#F9A8C9' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'topic', text: '루틴', done: false, hl: 'none' },
-                        { rowType: 'task', text: '아침 루틴 : 책 30분 읽기', done: true, hl: 'none' },
-                        { rowType: 'task', text: '점심 헬스장', done: true, hl: 'none' },
-                        { rowType: 'task', text: '영어공부 20분 하기', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' }
-                    ],
-                    right: [
-                        { rowType: 'topic', text: 'YT', done: false, hl: 'none' },
-                        { rowType: 'task', text: '롱폼 기획안 작성', done: true, hl: '#F9A8C9' },
-                        { rowType: 'task', text: '롱폼 스크립트 작성', done: true, hl: '#F9A8C9' },
-                        { rowType: 'task', text: '메일 확인 후 회신하기', done: true, hl: '#93D5F6' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'topic', text: 'etc.', done: false, hl: 'none' },
-                        { rowType: 'task', text: '주말 일정 미리 정리하기', done: false, hl: '#93D5F6' },
-                        { rowType: 'task', text: '편지지 · 포장 상자 주문', done: true, hl: '#93D5F6' },
-                        { rowType: 'task', text: '다음주 약속 케이크 주문', done: true, hl: '#93D5F6' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' },
-                        { rowType: 'task', text: '', done: false, hl: 'none' }
-                    ]
-                },
-                review: {
-                    keep: '드디어 원인 파악하고 root cause 근접한 하루.',
-                    problem: '분석이 늦어진 것에 대한 개인 피드백 정리',
-                    try: ''
-                },
-                timeBlocks: [
-                    { id: 'tb-1', startSlot: 5 * 6 + 3, endSlot: 6 * 6 + 2, text: '책 30분 읽기', color: '#F9A8C9' },
-                    { id: 'tb-2', startSlot: 7 * 6 + 0, endSlot: 7 * 6 + 5, text: '집 → 회사 출근', color: '#F9A8C9' },
-                    { id: 'tb-3', startSlot: 8 * 6 + 0, endSlot: 9 * 6 + 5, text: 'launch failure 확인', color: '#F9A8C9' },
-                    { id: 'tb-4', startSlot: 10 * 6 + 0, endSlot: 11 * 6 + 5, text: '이슈 관련 미팅', color: '#F9A8C9' },
-                    { id: 'tb-5', startSlot: 12 * 6 + 0, endSlot: 13 * 6 + 2, text: '점심시간 → 헬스장', color: '#F9A8C9' },
-                    { id: 'tb-6', startSlot: 14 * 6 + 0, endSlot: 14 * 6 + 3, text: '데일리 스크럼', color: '#F9A8C9' },
-                    { id: 'tb-7', startSlot: 15 * 6 + 0, endSlot: 17 * 6 + 5, text: 'rlimit PR 반영', color: '#F9A8C9' },
-                    { id: 'tb-8', startSlot: 18 * 6 + 0, endSlot: 18 * 6 + 5, text: '회사 → 집 퇴근', color: '#F9A8C9' },
-                    { id: 'tb-9', startSlot: 19 * 6 + 0, endSlot: 19 * 6 + 5, text: '저녁먹고 휴식!', color: '#F9A8C9' },
-                    { id: 'tb-10', startSlot: 20 * 6 + 0, endSlot: 22 * 6 + 2, text: '롱폼 기획안 작성', color: '#F9A8C9' }
-                ]
-            };
-        }
-
-        function getBlankPlannerData() {
+        function getBlankPlannerData(dateKey = selectedDateKey) {
+            const parts = parseDateKeyToParts(dateKey);
             const makeEmptyCol = () => Array.from({ length: MIDDLE_ROW_COUNT }, (_, idx) => ({
                 rowType: (idx === 0 || idx === 9) ? 'topic' : 'task',
                 text: '',
@@ -1245,7 +1492,7 @@
                 hl: 'none'
             }));
             return {
-                date: { yyyy: '', mm: '', dd: '', dow: '' },
+                date: { yyyy: parts.yyyy, mm: parts.mm, dd: parts.dd, dow: parts.dow },
                 goal: '',
                 columns: {
                     left: makeEmptyCol(),
@@ -1255,8 +1502,6 @@
                 timeBlocks: []
             };
         }
-
-        let plannerState = loadStateFromStorage();
 
         function normalizeColumnLength(colArr) {
             if (!Array.isArray(colArr)) {
@@ -1278,25 +1523,251 @@
             return colArr.slice(0, MIDDLE_ROW_COUNT);
         }
 
-        function loadStateFromStorage() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    if (parsed && parsed.columns) {
-                        parsed.columns.left = normalizeColumnLength(parsed.columns.left);
-                        parsed.columns.right = normalizeColumnLength(parsed.columns.right);
-                        return parsed;
-                    }
-                }
-            } catch (e) {}
-            return getSamplePlannerData();
+        let allPlannersByDate = {};
+
+        function getPlannerDataForDate(dateKey) {
+            const parts = parseDateKeyToParts(dateKey);
+            const existing = allPlannersByDate[dateKey];
+            if (existing && existing.columns) {
+                existing.columns.left = normalizeColumnLength(existing.columns.left);
+                existing.columns.right = normalizeColumnLength(existing.columns.right);
+                existing.date = { yyyy: parts.yyyy, mm: parts.mm, dd: parts.dd, dow: parts.dow };
+                if (!existing.review) existing.review = { keep: '', problem: '', try: '' };
+                if (!Array.isArray(existing.timeBlocks)) existing.timeBlocks = [];
+                return existing;
+            }
+            return getBlankPlannerData(dateKey);
         }
 
-        function saveStateToStorage() {
+        function isDateEntryNonEmpty(entry) {
+            if (!entry) return false;
+            if (entry.goal && entry.goal.trim()) return true;
+            if (entry.review && ((entry.review.keep && entry.review.keep.trim()) || (entry.review.problem && entry.review.problem.trim()) || (entry.review.try && entry.review.try.trim()))) return true;
+            if (Array.isArray(entry.timeBlocks) && entry.timeBlocks.length > 0) return true;
+            if (entry.columns) {
+                const hasLeft = Array.isArray(entry.columns.left) && entry.columns.left.some(r => r.text && r.text.trim());
+                const hasRight = Array.isArray(entry.columns.right) && entry.columns.right.some(r => r.text && r.text.trim());
+                if (hasLeft || hasRight) return true;
+            }
+            return false;
+        }
+
+        let plannerState = getPlannerDataForDate(selectedDateKey);
+
+        async function pushDateStateToCloud(dateKeyToSave, stateObj) {
+            if (!currentUser || !db) return;
+            const docId = `${syncWorkspaceKey}_${dateKeyToSave}`;
+            const dayDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'planner_days', docId);
             try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(plannerState));
-            } catch (e) {}
+                if (isDateEntryNonEmpty(stateObj)) {
+                    await setDoc(dayDocRef, {
+                        syncKey: syncWorkspaceKey,
+                        dateKey: dateKeyToSave,
+                        payloadJson: JSON.stringify(stateObj),
+                        updatedAt: Date.now(),
+                        updatedBy: currentUser.uid
+                    });
+                } else {
+                    await deleteDoc(dayDocRef);
+                }
+            } catch (err) {
+                console.error('Error syncing planner date to cloud:', err);
+            }
+        }
+
+        function saveStateToStorage(debounced = false) {
+            const targetKey = selectedDateKey;
+            if (isDateEntryNonEmpty(plannerState)) {
+                allPlannersByDate[targetKey] = JSON.parse(JSON.stringify(plannerState));
+            } else {
+                delete allPlannersByDate[targetKey];
+            }
+
+            if (debounced) {
+                clearTimeout(saveDebounceTimer);
+                saveDebounceTimer = setTimeout(() => {
+                    pushDateStateToCloud(targetKey, plannerState);
+                }, 350);
+            } else {
+                clearTimeout(saveDebounceTimer);
+                pushDateStateToCloud(targetKey, plannerState);
+            }
+        }
+
+        // =========================================================================
+        // REAL-TIME FIREBASE CLOUD SYNC ENGINE (MULTI-DEVICE)
+        // =========================================================================
+        function updateCloudStatusUI(status, message) {
+            const calDot = document.getElementById('calendarCloudStatusDot');
+            const modalDot = document.getElementById('cloudModalDot');
+            const badge = document.getElementById('cloudStatusBadge');
+            const uidSpan = document.getElementById('cloudUserIdDisplay');
+
+            const dotClass = status === 'connected'
+                ? 'bg-emerald-500'
+                : (status === 'error' ? 'bg-rose-500' : 'bg-amber-400');
+
+            if (calDot) calDot.className = `w-1.5 h-1.5 rounded-full ${dotClass}`;
+            if (modalDot) modalDot.className = `w-2.5 h-2.5 rounded-full ${dotClass} shadow-xs`;
+            if (badge) badge.textContent = message || status.toUpperCase();
+            if (uidSpan) uidSpan.textContent = currentUser ? currentUser.uid : 'NOT CONNECTED';
+        }
+
+        function resolveInitialFirebaseConfig() {
+            if (USER_FIREBASE_CONFIG && USER_FIREBASE_CONFIG.apiKey) {
+                return USER_FIREBASE_CONFIG;
+            }
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                try {
+                    return JSON.parse(__firebase_config);
+                } catch (e) {}
+            }
+            return null;
+        }
+
+        async function initFirebaseCloudSync(customConfig = null) {
+            const config = customConfig || resolveInitialFirebaseConfig();
+            if (!config || !config.apiKey) {
+                updateCloudStatusUI('setup', 'FIREBASE CONFIG NEEDED');
+                return;
+            }
+
+            try {
+                updateCloudStatusUI('connecting', 'CONNECTING...');
+                activeFirebaseProjectId = config.projectId || '';
+                firebaseApp = getApps().length === 0 ? initializeApp(config) : getApps()[0];
+                auth = getAuth(firebaseApp);
+                db = getFirestore(firebaseApp);
+
+                // RULE 3: Authenticate FIRST before attaching any Firestore listeners
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && !customConfig) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                currentUser = auth.currentUser;
+                if (!currentUser) {
+                    updateCloudStatusUI('error', 'AUTH FAILED');
+                    return;
+                }
+
+                attachRealtimeCloudListeners();
+            } catch (err) {
+                console.error('Firebase initialization error:', err);
+                updateCloudStatusUI('error', 'CONNECTION ERROR');
+            }
+        }
+
+        function attachRealtimeCloudListeners() {
+            if (!currentUser || !db) return;
+
+            if (unsubscribeDaysSnapshot) unsubscribeDaysSnapshot();
+            if (unsubscribeSettingsSnapshot) unsubscribeSettingsSnapshot();
+
+            // RULE 1 & RULE 2: Use strict `/artifacts/{appId}/public/data/...` path and simple collection query
+            const daysColRef = collection(db, 'artifacts', appId, 'public', 'data', 'planner_days');
+            unsubscribeDaysSnapshot = onSnapshot(
+                daysColRef,
+                (snapshot) => {
+                    updateCloudStatusUI('connected', 'LIVE SYNC ACTIVE');
+                    const updatedMap = {};
+                    snapshot.forEach((docSnap) => {
+                        const data = docSnap.data();
+                        if (data && data.syncKey === syncWorkspaceKey && data.dateKey && data.payloadJson) {
+                            try {
+                                updatedMap[data.dateKey] = JSON.parse(data.payloadJson);
+                            } catch (e) {}
+                        }
+                    });
+                    allPlannersByDate = updatedMap;
+                    plannerState = getPlannerDataForDate(selectedDateKey);
+
+                    // Avoid interrupting active typing in text inputs
+                    const activeTag = document.activeElement ? document.activeElement.tagName : '';
+                    const isTypingOnSheet = activeTag === 'INPUT' && (
+                        document.activeElement.id === 'goalInput' ||
+                        document.activeElement.id === 'reviewKeep' ||
+                        document.activeElement.id === 'reviewProblem' ||
+                        document.activeElement.id === 'reviewTry'
+                    );
+                    if (!isTypingOnSheet) {
+                        renderLeftPanel();
+                    } else {
+                        renderMiddleRows();
+                    }
+                    renderTimetable();
+                    renderCalendarGrid();
+                    if (!document.getElementById('widgetSimModalBackdrop').classList.contains('hidden')) {
+                        renderWidgetTopicsGrid();
+                    }
+                },
+                (err) => {
+                    console.error('Firestore days listener error:', err);
+                    updateCloudStatusUI('error', 'SYNC PERMISSION ERROR');
+                }
+            );
+
+            const settingsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'planner_settings');
+            unsubscribeSettingsSnapshot = onSnapshot(
+                settingsColRef,
+                (snapshot) => {
+                    snapshot.forEach((docSnap) => {
+                        const data = docSnap.data();
+                        if (data && data.syncKey === syncWorkspaceKey && data.pinnedColorsJson) {
+                            try {
+                                const parsedColors = JSON.parse(data.pinnedColorsJson);
+                                if (Array.isArray(parsedColors) && parsedColors.length === 5) {
+                                    pinnedColors = parsedColors;
+                                    renderAllPinnedColorBars();
+                                    renderMiddleRows();
+                                    renderTimetable();
+                                }
+                            } catch (e) {}
+                        }
+                    });
+                },
+                (err) => {
+                    console.error('Firestore settings listener error:', err);
+                }
+            );
+        }
+
+        function openCloudSyncModal() {
+            const syncInput = document.getElementById('syncKeyInput');
+            if (syncInput) syncInput.value = syncWorkspaceKey;
+            const uidSpan = document.getElementById('cloudUserIdDisplay');
+            if (uidSpan) uidSpan.textContent = currentUser ? currentUser.uid : 'NOT CONNECTED';
+            document.getElementById('cloudSyncModalBackdrop').classList.remove('hidden');
+        }
+
+        function closeCloudSyncModal() {
+            document.getElementById('cloudSyncModalBackdrop').classList.add('hidden');
+        }
+
+        function applySyncKeyInput() {
+            const syncInput = document.getElementById('syncKeyInput');
+            if (!syncInput) return;
+            const cleaned = syncInput.value.trim().replace(/[^a-zA-Z0-9_-]/g, '-');
+            if (!cleaned) return;
+            syncWorkspaceKey = cleaned;
+            syncInput.value = syncWorkspaceKey;
+            attachRealtimeCloudListeners();
+        }
+
+        async function connectRuntimeFirebaseConfig() {
+            const raw = document.getElementById('runtimeFirebaseConfigInput').value.trim();
+            if (!raw) return;
+            try {
+                const normalizedJson = raw
+                    .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":')
+                    .replace(/'/g, '"');
+                const parsed = JSON.parse(normalizedJson);
+                if (parsed && parsed.apiKey) {
+                    await initFirebaseCloudSync(parsed);
+                }
+            } catch (e) {
+                updateCloudStatusUI('error', 'INVALID JSON FORMAT');
+            }
         }
 
         function detectShouldUsePortrait() {
@@ -1308,13 +1779,14 @@
             const h = window.innerHeight;
             const isPortraitOrientation = h > w;
 
-            if (!isTouchDevice) return false;
+            if (!isTouchDevice && w >= 768) return false;
             if (w < 768) return true;
             return isPortraitOrientation;
         }
 
         function applyResponsiveLayoutMode() {
             const usePortrait = detectShouldUsePortrait();
+            document.documentElement.classList.toggle('layout-portrait', usePortrait);
             document.body.classList.toggle('layout-portrait', usePortrait);
         }
 
@@ -1560,10 +2032,22 @@
         }
 
         function renderLeftPanel() {
-            document.getElementById('dateYYYY').value = plannerState.date.yyyy || '';
-            document.getElementById('dateMM').value = plannerState.date.mm || '';
-            document.getElementById('dateDD').value = plannerState.date.dd || '';
-            document.getElementById('dateDOW').value = plannerState.date.dow || '';
+            const parts = parseDateKeyToParts(selectedDateKey);
+            plannerState.date = { yyyy: parts.yyyy, mm: parts.mm, dd: parts.dd, dow: parts.dow };
+
+            document.getElementById('dateYYYY').textContent = parts.yyyy;
+            document.getElementById('dateMM').textContent = parts.mm;
+            document.getElementById('dateDD').textContent = parts.dd;
+            document.getElementById('dateDOW').textContent = parts.dow;
+
+            const todayBtn = document.getElementById('todayJumpBtn');
+            if (todayBtn) {
+                const isToday = selectedDateKey === getTodayDateKey();
+                todayBtn.className = isToday
+                    ? 'px-1 tracking-wider text-slate-800 font-bold transition'
+                    : 'px-1 tracking-wider text-zinc-400 hover:text-slate-800 transition';
+            }
+
             document.getElementById('goalInput').value = plannerState.goal || '';
 
             document.getElementById('reviewKeep').value = plannerState.review.keep || '';
@@ -1573,22 +2057,14 @@
             renderMiddleRows();
         }
 
-        function handleDateFieldChange() {
-            plannerState.date.yyyy = document.getElementById('dateYYYY').value;
-            plannerState.date.mm = document.getElementById('dateMM').value;
-            plannerState.date.dd = document.getElementById('dateDD').value;
-            plannerState.date.dow = document.getElementById('dateDOW').value;
-            saveStateToStorage();
-        }
-
         function handleGoalChange(val) {
             plannerState.goal = val;
-            saveStateToStorage();
+            saveStateToStorage(true);
         }
 
         function handleReviewChange(key, val) {
             plannerState.review[key] = val;
-            saveStateToStorage();
+            saveStateToStorage(true);
         }
 
         function slotToTimeStr(slotIndex, isEnd = false) {
@@ -2183,13 +2659,16 @@
             return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
-        // Collect all distinct topics across columns and bundle their respective to-do items
-        function getAllTopicCards() {
+        // Collect all distinct topics for a specific date (Widget ALWAYS uses TODAY's date!)
+        function getAllTopicCards(targetDateKey = getTodayDateKey()) {
+            const targetData = (targetDateKey === selectedDateKey)
+                ? plannerState
+                : getPlannerDataForDate(targetDateKey);
             const topicGroups = [];
 
             ['left', 'right'].forEach(colKey => {
                 let currentTopic = null;
-                plannerState.columns[colKey].forEach((item, rowIdx) => {
+                targetData.columns[colKey].forEach((item, rowIdx) => {
                     if (item.rowType === 'topic') {
                         if (item.text.trim()) {
                             currentTopic = {
@@ -2307,14 +2786,16 @@
 
             outer.className = `liquid-glass-widget rounded-[32px] w-full p-5 sm:p-6 transition-all duration-200 ${spec.maxWidthClass}`;
             container.className = `grid ${spec.gridClass}`;
-            if (badge) badge.textContent = spec.label;
+            const todayKey = getTodayDateKey();
+            const todayParts = parseDateKeyToParts(todayKey);
+            if (badge) badge.textContent = `TODAY ${todayParts.yyyy}.${todayParts.mm}.${todayParts.dd} (${todayParts.dow}) · ${spec.label}`;
 
-            const topicGroups = getAllTopicCards();
+            const topicGroups = getAllTopicCards(todayKey);
 
             if (topicGroups.length === 0) {
                 container.innerHTML = `
                     <div class="col-span-full py-12 text-center text-xs font-semibold tracking-widest text-slate-400 uppercase">
-                        NO ACTIVE TASKS
+                        NO ACTIVE TASKS FOR TODAY (${todayParts.yyyy}.${todayParts.mm}.${todayParts.dd})
                     </div>
                 `;
                 return;
@@ -2380,6 +2861,10 @@
 
         function triggerWidgetDeepLinkToTask(colKey, rowIdx) {
             closeWidgetSimulator();
+            const todayKey = getTodayDateKey();
+            if (selectedDateKey !== todayKey) {
+                switchSelectedDate(todayKey);
+            }
             const rowEl = document.getElementById(`planner-row-${colKey}-${rowIdx}`);
             if (rowEl) {
                 rowEl.classList.remove('deeplink-flash');
@@ -2390,10 +2875,11 @@
         }
 
         // =========================================================================
-        // OPTION 2: SCRIPTABLE FREE iOS HOME SCREEN WIDGET INTEGRATION
+        // OPTION 2: SCRIPTABLE FREE iOS HOME SCREEN WIDGET INTEGRATION (TODAY-BASED)
         // =========================================================================
         function buildWidgetSyncPayload() {
-            const topicGroups = getAllTopicCards().map(g => ({
+            const todayKey = getTodayDateKey();
+            const topicGroups = getAllTopicCards(todayKey).map(g => ({
                 topic: g.topicName,
                 tasks: g.tasks.map(t => ({
                     text: t.item.text,
@@ -2402,6 +2888,7 @@
                 }))
             }));
             return {
+                dateKey: todayKey,
                 updatedAt: new Date().toISOString(),
                 appUrl: window.location.href.split('?')[0],
                 topics: topicGroups
@@ -2439,22 +2926,65 @@
 
         function getScriptableWidgetSourceCode() {
             const initialData = JSON.stringify(buildWidgetSyncPayload());
+            const cloudEndpoint = activeFirebaseProjectId
+                ? `https://firestore.googleapis.com/v1/projects/${activeFirebaseProjectId}/databases/(default)/documents/artifacts/${appId}/public/data/planner_days/`
+                : '';
             return `// Variables used by Scriptable.
 // Name this script: DailyPlanner
 const fm = FileManager.local();
 const filePath = fm.joinPath(fm.documentsDirectory(), "daily_planner_widget.json");
+const CLOUD_BASE = ${JSON.stringify(cloudEndpoint)};
+const SYNC_KEY = ${JSON.stringify(syncWorkspaceKey)};
 
-// 1. Save incoming sync data from Web App URL Scheme or Clipboard
+function getTodayKey() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return y + "-" + m + "-" + d;
+}
+
+// 1. Save incoming manual sync data OR auto-fetch latest Today data from Firestore Cloud
 if (args.queryParameters && args.queryParameters.payload) {
   fm.writeString(filePath, args.queryParameters.payload);
 } else if (!fm.fileExists(filePath)) {
   fm.writeString(filePath, ${JSON.stringify(initialData)});
 }
 
-let data = { topics: [], appUrl: "" };
+let data = { topics: [], appUrl: ${JSON.stringify(window.location.href.split('?')[0])} };
 try {
   data = JSON.parse(fm.readString(filePath));
 } catch (e) {}
+
+if (CLOUD_BASE) {
+  try {
+    const docUrl = CLOUD_BASE + SYNC_KEY + "_" + getTodayKey();
+    const req = new Request(docUrl);
+    req.timeoutInterval = 4;
+    const res = await req.loadJSON();
+    if (res && res.fields && res.fields.payloadJson && res.fields.payloadJson.stringValue) {
+      const rawState = JSON.parse(res.fields.payloadJson.stringValue);
+      const groups = [];
+      ["left", "right"].forEach(colKey => {
+        let cur = null;
+        ((rawState.columns && rawState.columns[colKey]) || []).forEach((it, idx) => {
+          if (it.rowType === "topic") {
+            cur = (it.text && it.text.trim()) ? { topic: it.text.trim(), tasks: [] } : null;
+            if (cur) groups.push(cur);
+          } else if (it.text && it.text.trim()) {
+            if (!cur) {
+              cur = { topic: colKey === "left" ? "MAIN" : "ETC", tasks: [] };
+              groups.push(cur);
+            }
+            cur.tasks.push({ text: it.text, done: !!it.done, id: colKey + "-" + idx });
+          }
+        });
+      });
+      data.topics = groups.filter(g => g.tasks.length > 0);
+      fm.writeString(filePath, JSON.stringify(data));
+    }
+  } catch (e) {}
+}
 
 const family = config.widgetFamily || "large";
 const spec = {
@@ -2562,26 +3092,53 @@ Script.complete();`;
             }
         }
 
-        function loadSampleData() {
-            plannerState = getSamplePlannerData();
-            saveStateToStorage();
-            renderLeftPanel();
-            renderTimetable();
-        }
+        // Expose UI handlers to global window scope for inline HTML onclick attributes
+        Object.assign(window, {
+            openDatePickerModal,
+            closeDatePickerModal,
+            changeCalendarMonth,
+            selectDateFromPicker,
+            resetCurrentDatePage,
+            getTodayDateKey,
+            openCloudSyncModal,
+            closeCloudSyncModal,
+            applySyncKeyInput,
+            connectRuntimeFirebaseConfig,
+            openWidgetSimulator,
+            closeWidgetSimulator,
+            setWidgetPreviewSize,
+            syncToScriptableApp,
+            toggleScriptableGuide,
+            copyScriptableWidgetCode,
+            copyWidgetJsonData,
+            triggerWidgetDeepLinkToTask,
+            cancelTwoTapSelection,
+            handleGoalChange,
+            handleReviewChange,
+            openTaskModal,
+            closeTaskModal,
+            setModalRowType,
+            setModalTaskDone,
+            setModalTaskHighlight,
+            saveTaskModal,
+            clearModalTask,
+            handleTbStartSlotChange,
+            handleTbEndSlotChange,
+            setModalTimeBlockColor,
+            saveTimeBlockModal,
+            deleteCurrentTimeBlock,
+            closeTimeBlockModal,
+            triggerNativePicker,
+            closeSpectrumPicker,
+            handlePickerHexTyping
+        });
 
-        function resetToBlank() {
-            plannerState = getBlankPlannerData();
-            saveStateToStorage();
-            renderLeftPanel();
-            renderTimetable();
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             initSpectrumPickerEvents();
             applyResponsiveLayoutMode();
             renderAllPinnedColorBars();
-            renderLeftPanel();
-            renderTimetable();
+            switchSelectedDate(getTodayDateKey());
+            await initFirebaseCloudSync();
             const params = new URLSearchParams(window.location.search);
             const taskId = params.get('taskId');
             if (taskId && /^(left|right)-([0-9]|1[0-7])$/.test(taskId)) {
