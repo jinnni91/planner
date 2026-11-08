@@ -3233,6 +3233,7 @@ Script.complete();`;
         window.addEventListener('DOMContentLoaded', async () => {
             initSpectrumPickerEvents();
             applyResponsiveLayoutMode();
+            injectDynamicAppIcons();
             renderAllPinnedColorBars();
             switchSelectedDate(getTodayDateKey());
             await initFirebaseCloudSync();
