@@ -7,16 +7,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Daily Planner">
     <title>DAILY PLANNER</title>
-    <link id="appleTouchIconLink" rel="apple-touch-icon" sizes="180x180" href="">
-    <link id="faviconLink" rel="icon" type="image/png" sizes="180x180" href="">
+    <link id="appleTouchIconLink" rel="apple-touch-icon" sizes="512x512" href="">
+    <link id="faviconLink" rel="icon" type="image/png" sizes="512x512" href="">
     <script>
         (function() {
             try {
                 const c = document.createElement('canvas');
-                c.width = 180;
-                c.height = 180;
+                c.width = 512;
+                c.height = 512;
                 const ctx = c.getContext('2d');
-                const s = 180 / 120;
+                const s = 512 / 120;
 
                 const rRect = (x, y, w, h, r) => {
                     ctx.beginPath();
@@ -29,7 +29,7 @@
                 };
 
                 ctx.fillStyle = '#EEF2F6';
-                ctx.fillRect(0, 0, 180, 180);
+                ctx.fillRect(0, 0, 512, 512);
 
                 rRect(10 * s, 10 * s, 100 * s, 100 * s, 22 * s);
                 ctx.fillStyle = '#FFFFFF';
@@ -292,8 +292,7 @@
             border-color: #000000;
         }
 
-        .shade-pill,
-        .shade-highlight {
+        .shade-pill {
             display: inline-flex;
             align-items: center;
             gap: 7px;
@@ -448,7 +447,6 @@
             animation: deepLinkPulse 1.6s ease-in-out;
         }
 
-        /* Portrait Mode */
         html.layout-portrait,
         html.layout-portrait body {
             height: auto !important;
@@ -557,11 +555,14 @@
 </head>
 <body>
     <div class="app-viewport">
+        <!-- Main Single-Page Landscape Sheet Area -->
         <main class="workspace-area">
             <section class="planner-sheet" aria-label="Landscape Daily Planner">
                 <div class="planner-master-grid">
 
+                    <!-- 1. TOP HEADER: DATE & GOAL (Column 1, Rows 1..2) -->
                     <div style="grid-column: 1; grid-row: 1 / span 2;" class="top-date-goal-row b-right-strong b-bottom-strong flex min-h-[52px]">
+                        <!-- DATE CELL (27% width, Clickable Date Picker) -->
                         <div onclick="openDatePickerModal()" class="top-date-cell w-[27%] min-w-[190px] b-right-strong px-3 pt-1.5 pb-1 flex flex-col overflow-hidden cursor-pointer hover:bg-zinc-50/60 transition-colors" title="CLICK TO SELECT DATE">
                             <div class="flex items-center justify-between flex-shrink-0">
                                 <span class="field-label">DATE</span>
@@ -582,6 +583,7 @@
                             </div>
                         </div>
 
+                        <!-- GOAL CELL (73% width) -->
                         <div class="top-goal-cell w-[73%] px-3.5 pt-1.5 pb-1 flex flex-col overflow-hidden">
                             <div class="flex items-center justify-between gap-2 flex-shrink-0">
                                 <span class="field-label">GOAL</span>
@@ -600,9 +602,11 @@
                         </div>
                     </div>
 
+                    <!-- 2. MIDDLE 18 FREE-FORM ROWS -->
                     <div id="middleRowsContainer" style="grid-column: 1; grid-row: 3 / span 18;" class="b-right-strong grid grid-cols-2 grid-rows-[repeat(18,minmax(0,1fr))] grid-flow-col min-h-0">
                     </div>
 
+                    <!-- 3. DAILY REVIEW SECTION -->
                     <div style="grid-column: 1; grid-row: 21;" class="portrait-review-row portrait-row-h b-right-strong b-bottom-light px-3 flex items-center">
                         <span class="field-label">DAILY REVIEW</span>
                     </div>
@@ -643,6 +647,7 @@
                             oninput="handleReviewChange('try', this.value)">
                     </div>
 
+                    <!-- 4. RIGHT TIMETABLE -->
                     <div id="timetableColumnContainer" style="grid-column: 2; grid-row: 1 / span 24;" class="grid grid-rows-[repeat(24,minmax(0,1fr))] min-h-0 relative">
                     </div>
 
@@ -651,15 +656,16 @@
         </main>
     </div>
 
+    <!-- Floating Touch Drag Ghost -->
     <div id="touchDragGhost" class="touch-drag-ghost hidden"></div>
 
-    <!-- Floating Timetable Range Selection Banner (Visible on iPhone when selecting start/end slot) -->
+    <!-- Floating Timetable Range Selection Banner -->
     <div id="floatingTwoTapBanner" class="no-print fixed bottom-5 left-1/2 -translate-x-1/2 z-40 hidden items-center gap-2.5 px-4 py-2.5 rounded-full bg-slate-900/90 text-white text-[12px] font-semibold shadow-xl backdrop-blur-md border border-white/20">
         <span id="floatingTwoTapText">09:00 시작 · 종료 칸을 탭하세요</span>
         <button type="button" onclick="cancelTwoTapSelection()" class="w-5 h-5 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-[11px] leading-none">✕</button>
     </div>
 
-    <!-- MODAL: DATE PICKER -->
+    <!-- MODAL 0: DATE PICKER -->
     <div id="datePickerModalBackdrop" onclick="if(event.target===this) closeDatePickerModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="liquid-glass-modal relative rounded-3xl max-w-xs w-full p-5 space-y-3.5 select-none">
             <div class="flex items-center justify-between">
@@ -707,7 +713,48 @@
         </div>
     </div>
 
-    <!-- MODAL: ROW SETTING -->
+    <!-- MODAL 0-B: CLOUD SYNC -->
+    <div id="cloudSyncModalBackdrop" onclick="if(event.target===this) closeCloudSyncModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/25 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="liquid-glass-modal relative rounded-3xl max-w-md w-full p-5 space-y-3.5 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-2 border-b border-white/60">
+                <div class="flex items-center gap-2">
+                    <span id="cloudModalDot" class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-xs"></span>
+                    <span class="text-[12px] font-bold tracking-widest uppercase text-slate-800">REAL-TIME CLOUD SYNC</span>
+                </div>
+                <span id="cloudStatusBadge" class="text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full bg-white/60 text-slate-700 border border-white/80">
+                    CONNECTING...
+                </span>
+            </div>
+
+            <div class="liquid-glass-subcard rounded-2xl p-3.5 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10.5px] font-bold tracking-wider uppercase text-slate-700">SYNC KEY (기기 공통 연동 코드)</span>
+                    <button type="button" onclick="applySyncKeyInput()"
+                        class="liquid-btn-active px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase transition">
+                        APPLY
+                    </button>
+                </div>
+                <input id="syncKeyInput" type="text" placeholder="e.g. my-secret-planner-key"
+                    class="liquid-input w-full h-9 px-3 rounded-xl text-[12.5px] font-mono font-semibold text-slate-800 focus:outline-none"
+                    onkeydown="if(event.key==='Enter'){ event.preventDefault(); applySyncKeyInput(); }">
+                <p class="text-[10.5px] text-slate-500 leading-relaxed">
+                    아이폰·아이패드·맥북에서 동일한 <strong>SYNC KEY</strong>를 사용하면 모든 날짜의 플래너와 색연필 팔레트가 실시간으로 동기화됩니다.
+                </p>
+                <div class="pt-1 border-t border-white/50 flex items-center justify-between text-[10px] text-slate-400 font-mono break-all">
+                    <span>USER ID: <span id="cloudUserIdDisplay">AUTHENTICATING...</span></span>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-1">
+                <button type="button" onclick="closeCloudSyncModal()"
+                    class="liquid-btn-active h-10 px-5 rounded-xl font-semibold text-xs tracking-wider uppercase transition">
+                    DONE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 1: ROW SETTING MODAL -->
     <div id="taskModalBackdrop" onclick="if(event.target===this) closeTaskModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4">
         <div id="taskModalDialog" class="liquid-glass-modal relative rounded-3xl max-w-sm w-full p-5 space-y-3.5">
             <div class="grid grid-cols-2 gap-2">
@@ -755,7 +802,7 @@
                 </button>
             </div>
 
-            <!-- Integrated Time Setting Section (Below color row, right-aligned button or inline time selector) -->
+            <!-- Integrated Time Setting Section -->
             <div id="modalTaskTimeSection" class="pt-0.5">
                 <div id="modalTaskTimeAddWrap" class="flex items-center justify-end">
                     <button type="button" onclick="setModalTaskTimeEnabled(true)"
@@ -792,7 +839,7 @@
         </div>
     </div>
 
-    <!-- MODAL: TIMETABLE BLOCK -->
+    <!-- MODAL 2: TIMETABLE BLOCK MODAL -->
     <div id="timeBlockModalBackdrop" onclick="if(event.target===this) closeTimeBlockModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4">
         <div id="timeBlockModalDialog" class="liquid-glass-modal relative rounded-3xl max-w-sm w-full p-5 space-y-3.5">
             <div class="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
@@ -841,7 +888,61 @@
         </div>
     </div>
 
-    <!-- SPECTRUM COLOR PICKER -->
+    <!-- MODAL 3: WIDGET PREVIEW -->
+    <div id="widgetSimModalBackdrop" onclick="if(event.target===this) closeWidgetSimulator()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/25 backdrop-blur-md flex items-center justify-center p-4">
+        <div id="widgetOuterContainer" class="liquid-glass-widget rounded-[32px] max-w-2xl w-full p-5 sm:p-6 transition-all duration-200 max-h-[92vh] overflow-y-auto">
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3.5 border-b border-white/60">
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] font-bold tracking-widest uppercase text-slate-800">iOS WIDGET</span>
+                    <span id="widgetCapacityBadge" class="text-[10px] font-semibold text-slate-500 bg-white/50 px-2 py-0.5 rounded-full border border-white/70"></span>
+                </div>
+
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <button type="button" onclick="syncToScriptableApp()"
+                        class="liquid-btn-active px-2.5 py-1 rounded-xl text-[10px] font-bold tracking-wider uppercase transition">
+                        SYNC iOS
+                    </button>
+                    <button type="button" onclick="toggleScriptableGuide()"
+                        class="liquid-btn-inactive px-2.5 py-1 rounded-xl text-[10px] font-bold tracking-wider uppercase transition">
+                        SCRIPTABLE CODE
+                    </button>
+                    <div class="inline-flex items-center bg-white/40 border border-white/70 rounded-xl p-0.5 gap-0.5">
+                        <button type="button" id="widgetSizeBtn-small" onclick="setWidgetPreviewSize('small')" class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">S</button>
+                        <button type="button" id="widgetSizeBtn-medium" onclick="setWidgetPreviewSize('medium')" class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">M</button>
+                        <button type="button" id="widgetSizeBtn-large" onclick="setWidgetPreviewSize('large')" class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">L</button>
+                        <button type="button" id="widgetSizeBtn-xl" onclick="setWidgetPreviewSize('xl')" class="px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition">XL</button>
+                    </div>
+                    <button onclick="closeWidgetSimulator()" class="w-7 h-7 rounded-full bg-white/40 hover:bg-white/60 border border-white/70 flex items-center justify-center text-slate-700 text-xs transition ml-1">✕</button>
+                </div>
+            </div>
+
+            <div id="scriptableSetupBox" class="hidden liquid-glass-subcard rounded-2xl p-4 mb-4 space-y-2.5 text-[11.5px] text-slate-700">
+                <div class="flex items-center justify-between gap-2">
+                    <span class="font-bold text-slate-900 tracking-wider uppercase text-[11px]">FREE iOS WIDGET SETUP (SCRIPTABLE)</span>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" id="copyScriptableBtn" onclick="copyScriptableWidgetCode()" class="liquid-btn-active px-3 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase transition">COPY WIDGET SCRIPT</button>
+                        <button type="button" id="copyJsonBtn" onclick="copyWidgetJsonData()" class="liquid-btn-inactive px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider uppercase transition">COPY JSON</button>
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-600 leading-relaxed">
+                    <strong>자동 동기화 지원:</strong> 위 <strong>COPY WIDGET SCRIPT</strong> 버튼으로 복사한 코드를 Scriptable 앱의 <strong>DailyPlanner</strong> 스크립트에 붙여넣어 업데이트해 주세요.
+                </p>
+            </div>
+
+            <!-- Widget Top 1-Line Header Bar -->
+            <div id="widgetTopHeaderBar" class="bg-white/90 border border-[#9ca3af]/80 rounded-xl px-5 py-2.5 mb-3 flex items-center justify-between shadow-2xs select-none">
+                <div class="flex items-center min-w-0">
+                    <span id="widgetHeaderDateText" class="text-[12.5px] font-semibold tracking-tight text-slate-700 whitespace-nowrap"></span>
+                    <span class="ml-5 h-4 w-[1.2px] bg-[#9ca3af] flex-shrink-0"></span>
+                </div>
+                <span class="text-[12.5px] font-bold tracking-wider text-slate-900 uppercase whitespace-nowrap">TO-DO</span>
+            </div>
+
+            <div id="widgetTopicsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"></div>
+        </div>
+    </div>
+
+    <!-- SPECTRUM COLOR PICKER POPOVER -->
     <div id="spectrumPickerOverlay" onclick="if(event.target===this) closeSpectrumPicker()" class="no-print hidden inset-0 z-[70]">
         <div id="spectrumPickerCard" onclick="event.stopPropagation()"
              style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 256px;"
@@ -888,6 +989,7 @@
             appId: "1:898775907977:web:783f1a80fd564065d29058"
         };
         const DEFAULT_SYNC_KEY = 'my-personal-planner';
+        const BASE_APP_URL = 'https://jinnni91.github.io/planner/';
 
         const HOURS = Array.from({ length: 24 }, (_, i) => i);
         const MIDDLE_ROW_COUNT = 18;
@@ -896,7 +998,9 @@
         const MONTH_NAMES = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
 
         const DEFAULT_PINNED_COLORS = ['#93D5F6', '#F9A8C9', '#FDE072', '#99E6C3', '#D1B3FC'];
-        const LEGACY_COLOR_MAP = { blue: '#93D5F6', pink: '#F9A8C9', yellow: '#FDE072', green: '#99E6C3', purple: '#D1B3FC', orange: '#FDBA8C' };
+        const LEGACY_COLOR_MAP = {
+            blue: '#93D5F6', pink: '#F9A8C9', yellow: '#FDE072', green: '#99E6C3', purple: '#D1B3FC', orange: '#FDBA8C'
+        };
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'daily-planner-app';
         let syncWorkspaceKey = DEFAULT_SYNC_KEY;
@@ -922,7 +1026,16 @@
         let isDraggingTimetable = false;
         let dragStartSlot = null;
         let dragCurrentSlot = null;
+        let pointerMovedDuringDrag = false;
+        let pointerDownOccupiedBlockId = null;
         let twoTapStartSlot = null;
+        let touchSlotCandidate = null;
+        let touchStartClientX = 0;
+        let touchStartClientY = 0;
+        let touchWasScrolled = false;
+        let touchHoldDragTimer = null;
+        let isTouchRangeDragging = false;
+
         let editingTimeBlockId = null;
         let editingTimeBlockLinkedTaskKey = null;
         let activeTbStartSlot = 12;
@@ -932,6 +1045,7 @@
         let draggedTodoData = null;
         let dropPreviewSlots = [];
         let activePickerTarget = null;
+        let activeWidgetSize = 'large';
         let currentLayoutMode = 'auto';
 
         function formatDateKey(dateObj) {
@@ -941,7 +1055,9 @@
             return `${y}-${m}-${d}`;
         }
 
-        function getTodayDateKey() { return formatDateKey(new Date()); }
+        function getTodayDateKey() {
+            return formatDateKey(new Date());
+        }
 
         function parseDateKeyToParts(dateKey) {
             const [y, m, d] = (dateKey || getTodayDateKey()).split('-').map(Number);
@@ -972,7 +1088,9 @@
             if (c.length === 3) c = c.split('').map(x => x + x).join('');
             const num = parseInt(c, 16);
             if (isNaN(num)) return `rgba(147, 213, 246, ${alpha})`;
-            const r = (num >> 16) & 255, g = (num >> 8) & 255, b = num & 255;
+            const r = (num >> 16) & 255;
+            const g = (num >> 8) & 255;
+            const b = num & 255;
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
 
@@ -993,8 +1111,15 @@
             if (!currentUser || !db) return;
             try {
                 const settingsDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'planner_settings', `${syncWorkspaceKey}_config`);
-                await setDoc(settingsDocRef, { syncKey: syncWorkspaceKey, pinnedColorsJson: JSON.stringify(pinnedColors), updatedAt: Date.now(), updatedBy: currentUser.uid });
-            } catch (err) {}
+                await setDoc(settingsDocRef, {
+                    syncKey: syncWorkspaceKey,
+                    pinnedColorsJson: JSON.stringify(pinnedColors),
+                    updatedAt: Date.now(),
+                    updatedBy: currentUser.uid
+                });
+            } catch (err) {
+                console.error('Error saving pinned colors:', err);
+            }
         }
 
         function switchSelectedDate(newDateKey) {
@@ -1003,6 +1128,7 @@
             const parts = parseDateKeyToParts(selectedDateKey);
             calendarViewYear = parts.dateObj.getFullYear();
             calendarViewMonth = parts.dateObj.getMonth();
+
             plannerState = getPlannerDataForDate(selectedDateKey);
             cancelTwoTapSelection();
             renderLeftPanel();
@@ -1018,16 +1144,26 @@
             document.getElementById('datePickerModalBackdrop').classList.remove('hidden');
         }
 
-        function closeDatePickerModal() { document.getElementById('datePickerModalBackdrop').classList.add('hidden'); }
+        function closeDatePickerModal() {
+            document.getElementById('datePickerModalBackdrop').classList.add('hidden');
+        }
 
         function changeCalendarMonth(delta) {
             calendarViewMonth += delta;
-            if (calendarViewMonth < 0) { calendarViewMonth = 11; calendarViewYear--; }
-            else if (calendarViewMonth > 11) { calendarViewMonth = 0; calendarViewYear++; }
+            if (calendarViewMonth < 0) {
+                calendarViewMonth = 11;
+                calendarViewYear--;
+            } else if (calendarViewMonth > 11) {
+                calendarViewMonth = 0;
+                calendarViewYear++;
+            }
             renderCalendarGrid();
         }
 
-        function selectDateFromPicker(dateKey) { switchSelectedDate(dateKey); closeDatePickerModal(); }
+        function selectDateFromPicker(dateKey) {
+            switchSelectedDate(dateKey);
+            closeDatePickerModal();
+        }
 
         function resetCurrentDatePage() {
             plannerState = getBlankPlannerData(selectedDateKey);
@@ -1042,8 +1178,10 @@
             const labelEl = document.getElementById('calendarMonthLabel');
             const gridEl = document.getElementById('calendarDaysGrid');
             if (!labelEl || !gridEl) return;
+
             labelEl.textContent = `${MONTH_NAMES[calendarViewMonth]} ${calendarViewYear}`;
             gridEl.innerHTML = '';
+
             const firstDayOfMonth = new Date(calendarViewYear, calendarViewMonth, 1).getDay();
             const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
             const todayKey = getTodayDateKey();
@@ -1064,10 +1202,15 @@
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.onclick = () => selectDateFromPicker(dKey);
+
                 let baseCls = 'relative h-9 rounded-xl flex flex-col items-center justify-center text-[12px] font-semibold transition ';
-                if (isSelected) baseCls += 'liquid-btn-active text-white font-bold';
-                else if (isToday) baseCls += 'bg-white/75 text-slate-900 border border-slate-400 font-bold hover:bg-white';
-                else baseCls += 'text-slate-700 hover:bg-white/60';
+                if (isSelected) {
+                    baseCls += 'liquid-btn-active text-white font-bold';
+                } else if (isToday) {
+                    baseCls += 'bg-white/75 text-slate-900 border border-slate-400 font-bold hover:bg-white';
+                } else {
+                    baseCls += 'text-slate-700 hover:bg-white/60';
+                }
                 btn.className = baseCls;
 
                 const numSpan = document.createElement('span');
@@ -1080,11 +1223,14 @@
                     dot.className = `w-1 h-1 rounded-full mt-0.5 ${isSelected ? 'bg-white' : 'bg-slate-800'}`;
                     btn.appendChild(dot);
                 }
+
                 gridEl.appendChild(btn);
             }
         }
 
         let pickerHue = 200, pickerSat = 40, pickerVal = 96;
+        let isDraggingSV = false, isDraggingHue = false;
+
         function hexToHsv(hex) {
             let c = normalizeColorHex(hex);
             if (!c || c === 'none') c = '#93D5F6';
@@ -1092,9 +1238,14 @@
             if (c.length === 3) c = c.split('').map(x => x + x).join('');
             const num = parseInt(c, 16);
             if (isNaN(num)) return { h: 200, s: 40, v: 96 };
-            const r = ((num >> 16) & 255) / 255, g = ((num >> 8) & 255) / 255, b = (num & 255) / 255;
-            const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
-            let h = 0; const s = max === 0 ? 0 : d / max, v = max;
+            const r = ((num >> 16) & 255) / 255;
+            const g = ((num >> 8) & 255) / 255;
+            const b = (num & 255) / 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            const d = max - min;
+            let h = 0;
+            const s = max === 0 ? 0 : d / max;
+            const v = max;
             if (max !== min) {
                 switch (max) {
                     case r: h = (g - b) / d + (g < b ? 6 : 0); break;
@@ -1107,7 +1258,10 @@
         }
 
         function hsvToHex(h, s, v) {
-            const sNorm = s / 100, vNorm = v / 100, c = vNorm * sNorm, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = vNorm - c;
+            const sNorm = s / 100, vNorm = v / 100;
+            const c = vNorm * sNorm;
+            const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+            const m = vNorm - c;
             let r = 0, g = 0, b = 0;
             if (h >= 0 && h < 60) { r = c; g = x; b = 0; }
             else if (h >= 60 && h < 120) { r = x; g = c; b = 0; }
@@ -1120,32 +1274,71 @@
         }
 
         function updateSpectrumPickerUI() {
-            const svBox = document.getElementById('svSpectrumBox'), svThumb = document.getElementById('svSpectrumThumb'), hueThumb = document.getElementById('hueSliderThumb'), swatch = document.getElementById('pickerLiveSwatch'), hexInput = document.getElementById('pickerHexInput');
+            const svBox = document.getElementById('svSpectrumBox');
+            const svThumb = document.getElementById('svSpectrumThumb');
+            const hueThumb = document.getElementById('hueSliderThumb');
+            const swatch = document.getElementById('pickerLiveSwatch');
+            const hexInput = document.getElementById('pickerHexInput');
             const currentHex = hsvToHex(pickerHue, pickerSat, pickerVal);
+
             if (svBox) svBox.style.backgroundColor = `hsl(${pickerHue}, 100%, 50%)`;
-            if (svThumb) { svThumb.style.left = `${pickerSat}%`; svThumb.style.top = `${100 - pickerVal}%`; svThumb.style.backgroundColor = currentHex; }
-            if (hueThumb) { hueThumb.style.left = `${(pickerHue / 360) * 100}%`; hueThumb.style.backgroundColor = `hsl(${pickerHue}, 100%, 50%)`; }
+            if (svThumb) {
+                svThumb.style.left = `${pickerSat}%`;
+                svThumb.style.top = `${100 - pickerVal}%`;
+                svThumb.style.backgroundColor = currentHex;
+            }
+            if (hueThumb) {
+                hueThumb.style.left = `${(pickerHue / 360) * 100}%`;
+                hueThumb.style.backgroundColor = `hsl(${pickerHue}, 100%, 50%)`;
+            }
             if (swatch) swatch.style.backgroundColor = currentHex;
-            if (hexInput && document.activeElement !== hexInput) hexInput.value = currentHex;
+            if (hexInput && document.activeElement !== hexInput) {
+                hexInput.value = currentHex;
+            }
         }
 
         function triggerNativePicker(targetInfo, initialHex = null) {
             activePickerTarget = targetInfo;
-            let startHex = initialHex || (targetInfo.type === 'taskModalRainbow' ? (activeModalTaskHl !== 'none' ? activeModalTaskHl : pinnedColors[0]) : pinnedColors[0]);
+            let startHex = initialHex;
+            if (!startHex || startHex === 'none') {
+                if (targetInfo.type === 'taskModalRainbow') {
+                    startHex = (activeModalTaskHl && activeModalTaskHl !== 'none') ? activeModalTaskHl : (pinnedColors[0] || '#93D5F6');
+                } else if (targetInfo.type === 'tbModalRainbow') {
+                    startHex = (modalTimeBlockColor && modalTimeBlockColor !== 'none') ? modalTimeBlockColor : (pinnedColors[1] || '#F9A8C9');
+                } else {
+                    startHex = pinnedColors[0] || '#93D5F6';
+                }
+            }
             const hsv = hexToHsv(startHex);
             pickerHue = hsv.h; pickerSat = hsv.s; pickerVal = hsv.v;
             updateSpectrumPickerUI();
-            const overlay = document.getElementById('spectrumPickerOverlay'), taskDialog = document.getElementById('taskModalDialog'), tbDialog = document.getElementById('timeBlockModalDialog');
+
+            const overlay = document.getElementById('spectrumPickerOverlay');
+            const taskDialog = document.getElementById('taskModalDialog');
+            const tbDialog = document.getElementById('timeBlockModalDialog');
+
             if (overlay) {
-                if (targetInfo.context === 'taskModal') { taskDialog.appendChild(overlay); overlay.className = 'no-print absolute inset-0 z-[70] flex items-center justify-center rounded-3xl bg-slate-900/10 backdrop-blur-[2px]'; }
-                else if (targetInfo.context === 'tbModal') { tbDialog.appendChild(overlay); overlay.className = 'no-print absolute inset-0 z-[70] flex items-center justify-center rounded-3xl bg-slate-900/10 backdrop-blur-[2px]'; }
-                else { document.body.appendChild(overlay); overlay.className = 'no-print fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/15 backdrop-blur-[2px]'; }
+                if (targetInfo.context === 'taskModal' || targetInfo.type === 'taskModalRainbow') {
+                    if (taskDialog) taskDialog.appendChild(overlay);
+                    overlay.className = 'no-print absolute inset-0 z-[70] flex items-center justify-center rounded-3xl bg-slate-900/10 backdrop-blur-[2px]';
+                } else if (targetInfo.context === 'tbModal' || targetInfo.type === 'tbModalRainbow') {
+                    if (tbDialog) tbDialog.appendChild(overlay);
+                    overlay.className = 'no-print absolute inset-0 z-[70] flex items-center justify-center rounded-3xl bg-slate-900/10 backdrop-blur-[2px]';
+                } else {
+                    document.body.appendChild(overlay);
+                    overlay.className = 'no-print fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/15 backdrop-blur-[2px]';
+                }
                 overlay.classList.remove('hidden');
             }
             handleNativePickerValueChange(hsvToHex(pickerHue, pickerSat, pickerVal));
         }
 
-        function closeSpectrumPicker() { document.getElementById('spectrumPickerOverlay')?.classList.add('hidden'); activePickerTarget = null; }
+        function closeSpectrumPicker() {
+            const overlay = document.getElementById('spectrumPickerOverlay');
+            if (overlay) overlay.classList.add('hidden');
+            activePickerTarget = null;
+        }
+
         function handlePickerHexTyping(val) {
             const clean = val.trim();
             if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
@@ -1157,22 +1350,36 @@
         }
 
         function initSpectrumPickerEvents() {
-            const svBox = document.getElementById('svSpectrumBox'), hueTrack = document.getElementById('hueSliderTrack');
-            svBox?.addEventListener('pointerdown', (e) => { e.stopPropagation(); svBox.setPointerCapture(e.pointerId); updateSVFromEvent(e, svBox); });
-            svBox?.addEventListener('pointermove', (e) => { if (e.buttons) updateSVFromEvent(e, svBox); });
-            hueTrack?.addEventListener('pointerdown', (e) => { e.stopPropagation(); hueTrack.setPointerCapture(e.pointerId); updateHueFromEvent(e, hueTrack); });
-            hueTrack?.addEventListener('pointermove', (e) => { if (e.buttons) updateHueFromEvent(e, hueTrack); });
-        }
-        function updateSVFromEvent(e, box) {
-            const rect = box.getBoundingClientRect();
-            pickerSat = Math.max(0, Math.min(100, Math.round(((e.clientX - rect.left) / rect.width) * 100)));
-            pickerVal = Math.max(0, Math.min(100, Math.round(100 - ((e.clientY - rect.top) / rect.height) * 100)));
-            updateSpectrumPickerUI(); handleNativePickerValueChange(hsvToHex(pickerHue, pickerSat, pickerVal));
-        }
-        function updateHueFromEvent(e, track) {
-            const rect = track.getBoundingClientRect();
-            pickerHue = Math.max(0, Math.min(360, Math.round(((e.clientX - rect.left) / rect.width) * 360)));
-            updateSpectrumPickerUI(); handleNativePickerValueChange(hsvToHex(pickerHue, pickerSat, pickerVal));
+            const svBox = document.getElementById('svSpectrumBox');
+            const hueTrack = document.getElementById('hueSliderTrack');
+
+            const updateSV = (e) => {
+                if (!svBox) return;
+                const rect = svBox.getBoundingClientRect();
+                pickerSat = Math.round((Math.max(0, Math.min(rect.width, e.clientX - rect.left)) / rect.width) * 100);
+                pickerVal = Math.round(100 - (Math.max(0, Math.min(rect.height, e.clientY - rect.top)) / rect.height) * 100);
+                updateSpectrumPickerUI();
+                handleNativePickerValueChange(hsvToHex(pickerHue, pickerSat, pickerVal));
+            };
+
+            const updateHue = (e) => {
+                if (!hueTrack) return;
+                const rect = hueTrack.getBoundingClientRect();
+                pickerHue = Math.round((Math.max(0, Math.min(rect.width, e.clientX - rect.left)) / rect.width) * 360);
+                updateSpectrumPickerUI();
+                handleNativePickerValueChange(hsvToHex(pickerHue, pickerSat, pickerVal));
+            };
+
+            if (svBox) {
+                svBox.addEventListener('pointerdown', (e) => { e.stopPropagation(); isDraggingSV = true; svBox.setPointerCapture(e.pointerId); updateSV(e); });
+                svBox.addEventListener('pointermove', (e) => { if (isDraggingSV) updateSV(e); });
+                svBox.addEventListener('pointerup', () => { isDraggingSV = false; });
+            }
+            if (hueTrack) {
+                hueTrack.addEventListener('pointerdown', (e) => { e.stopPropagation(); isDraggingHue = true; hueTrack.setPointerCapture(e.pointerId); updateHue(e); });
+                hueTrack.addEventListener('pointermove', (e) => { if (isDraggingHue) updateHue(e); });
+                hueTrack.addEventListener('pointerup', () => { isDraggingHue = false; });
+            }
         }
 
         function handleNativePickerValueChange(hexVal) {
@@ -1183,9 +1390,14 @@
                 savePinnedColors();
                 if (activePickerTarget.context === 'taskModal') setModalTaskHighlight(newHex);
                 else if (activePickerTarget.context === 'tbModal') setModalTimeBlockColor(newHex);
-                renderAllPinnedColorBars(); renderMiddleRows(); renderTimetable();
-            } else if (activePickerTarget.type === 'taskModalRainbow') { setModalTaskHighlight(newHex); }
-            else if (activePickerTarget.type === 'tbModalRainbow') { setModalTimeBlockColor(newHex); }
+                renderAllPinnedColorBars();
+                renderMiddleRows();
+                renderTimetable();
+            } else if (activePickerTarget.type === 'taskModalRainbow') {
+                setModalTaskHighlight(newHex);
+            } else if (activePickerTarget.type === 'tbModalRainbow') {
+                setModalTimeBlockColor(newHex);
+            }
         }
 
         function renderAllPinnedColorBars() {
@@ -1193,19 +1405,18 @@
                 const wrap = document.getElementById(id);
                 if (!wrap) return;
                 wrap.innerHTML = '';
-                const isTaskModal = id.includes('task');
-                const currentSelectedHex = normalizeColorHex(isTaskModal ? activeModalTaskHl : modalTimeBlockColor).toUpperCase();
+                const isTask = id.includes('task');
+                const curHl = isTask ? activeModalTaskHl : modalTimeBlockColor;
                 pinnedColors.forEach((hex, idx) => {
                     const btn = document.createElement('button');
                     btn.type = 'button';
                     btn.style.backgroundColor = hex;
-                    const isSelected = currentSelectedHex === hex.toUpperCase();
+                    const isSelected = normalizeColorHex(curHl).toUpperCase() === hex.toUpperCase();
                     btn.className = `w-8 h-8 rounded-full border border-white/80 shadow-sm transition ${isSelected ? 'ring-2 ring-offset-2 ring-slate-800 scale-105' : 'hover:scale-105'}`;
                     btn.onclick = (e) => {
                         e.stopPropagation();
-                        if (isTaskModal) setModalTaskHighlight(hex);
-                        else setModalTimeBlockColor(hex);
-                        triggerNativePicker({ type: 'pinnedSlot', slotIndex: idx, context: isTaskModal ? 'taskModal' : 'tbModal' }, hex);
+                        if (isTask) setModalTaskHighlight(hex); else setModalTimeBlockColor(hex);
+                        triggerNativePicker({ type: 'pinnedSlot', slotIndex: idx, context: isTask ? 'taskModal' : 'tbModal' }, hex);
                     };
                     wrap.appendChild(btn);
                 });
@@ -1214,25 +1425,39 @@
 
         function getBlankPlannerData(dateKey = selectedDateKey) {
             const parts = parseDateKeyToParts(dateKey);
-            const makeEmptyCol = () => Array.from({ length: MIDDLE_ROW_COUNT }, (_, idx) => ({ rowType: (idx === 0 || idx === 9) ? 'topic' : 'task', text: '', done: false, hl: 'none' }));
-            return { date: parts, goal: '', columns: { left: makeEmptyCol(), right: makeEmptyCol() }, review: { keep: '', problem: '', try: '' }, timeBlocks: [] };
+            const makeEmptyCol = () => Array.from({ length: MIDDLE_ROW_COUNT }, (_, idx) => ({
+                rowType: (idx === 0 || idx === 9) ? 'topic' : 'task',
+                text: '', done: false, hl: 'none'
+            }));
+            return {
+                date: { yyyy: parts.yyyy, mm: parts.mm, dd: parts.dd, dow: parts.dow },
+                goal: '',
+                columns: { left: makeEmptyCol(), right: makeEmptyCol() },
+                review: { keep: '', problem: '', try: '' },
+                timeBlocks: []
+            };
         }
 
         function normalizeColumnLength(colArr) {
-            if (!Array.isArray(colArr) || colArr.length !== MIDDLE_ROW_COUNT) {
-                return Array.from({ length: MIDDLE_ROW_COUNT }, (_, idx) => ({ rowType: (idx === 0 || idx === 9) ? 'topic' : 'task', text: '', done: false, hl: 'none' }));
+            if (!Array.isArray(colArr)) return getBlankPlannerData().columns.left;
+            if (colArr.length === MIDDLE_ROW_COUNT) return colArr;
+            if (colArr.length < MIDDLE_ROW_COUNT) {
+                const padded = [...colArr];
+                while (padded.length < MIDDLE_ROW_COUNT) padded.push({ rowType: 'task', text: '', done: false, hl: 'none' });
+                return padded;
             }
-            return colArr;
+            return colArr.slice(0, MIDDLE_ROW_COUNT);
         }
 
         let allPlannersByDate = {};
+
         function getPlannerDataForDate(dateKey) {
             const parts = parseDateKeyToParts(dateKey);
             const existing = allPlannersByDate[dateKey];
             if (existing && existing.columns) {
                 existing.columns.left = normalizeColumnLength(existing.columns.left);
                 existing.columns.right = normalizeColumnLength(existing.columns.right);
-                existing.date = parts;
+                existing.date = { yyyy: parts.yyyy, mm: parts.mm, dd: parts.dd, dow: parts.dow };
                 if (!existing.review) existing.review = { keep: '', problem: '', try: '' };
                 if (!Array.isArray(existing.timeBlocks)) existing.timeBlocks = [];
                 return existing;
@@ -1242,70 +1467,147 @@
 
         function isDateEntryNonEmpty(entry) {
             if (!entry) return false;
-            if (entry.goal?.trim() || entry.review?.keep?.trim() || entry.review?.problem?.trim() || entry.review?.try?.trim() || entry.timeBlocks?.length > 0) return true;
-            return entry.columns?.left?.some(r => r.text?.trim()) || entry.columns?.right?.some(r => r.text?.trim());
+            if (entry.goal && entry.goal.trim()) return true;
+            if (entry.review && ((entry.review.keep && entry.review.keep.trim()) || (entry.review.problem && entry.review.problem.trim()) || (entry.review.try && entry.review.try.trim()))) return true;
+            if (Array.isArray(entry.timeBlocks) && entry.timeBlocks.length > 0) return true;
+            if (entry.columns) {
+                const hasLeft = Array.isArray(entry.columns.left) && entry.columns.left.some(r => r.text && r.text.trim());
+                const hasRight = Array.isArray(entry.columns.right) && entry.columns.right.some(r => r.text && r.text.trim());
+                if (hasLeft || hasRight) return true;
+            }
+            return false;
         }
 
         let plannerState = getPlannerDataForDate(selectedDateKey);
 
         async function pushDateStateToCloud(dateKeyToSave, stateObj) {
             if (!currentUser || !db) return;
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'planner_days', `${syncWorkspaceKey}_${dateKeyToSave}`);
+            const dayDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'planner_days', `${syncWorkspaceKey}_${dateKeyToSave}`);
             try {
-                if (isDateEntryNonEmpty(stateObj)) await setDoc(docRef, { syncKey: syncWorkspaceKey, dateKey: dateKeyToSave, payloadJson: JSON.stringify(stateObj), updatedAt: Date.now(), updatedBy: currentUser.uid });
-                else await deleteDoc(docRef);
-            } catch (err) {}
+                if (isDateEntryNonEmpty(stateObj)) {
+                    await setDoc(dayDocRef, {
+                        syncKey: syncWorkspaceKey, dateKey: dateKeyToSave,
+                        payloadJson: JSON.stringify(stateObj), updatedAt: Date.now(), updatedBy: currentUser.uid
+                    });
+                } else {
+                    await deleteDoc(dayDocRef);
+                }
+            } catch (err) {
+                console.error('Error syncing planner date to cloud:', err);
+            }
         }
 
         function saveStateToStorage(debounced = false) {
-            if (isDateEntryNonEmpty(plannerState)) allPlannersByDate[selectedDateKey] = JSON.parse(JSON.stringify(plannerState));
-            else delete allPlannersByDate[selectedDateKey];
+            const targetKey = selectedDateKey;
+            if (isDateEntryNonEmpty(plannerState)) allPlannersByDate[targetKey] = JSON.parse(JSON.stringify(plannerState));
+            else delete allPlannersByDate[targetKey];
+
             clearTimeout(saveDebounceTimer);
-            if (debounced) saveDebounceTimer = setTimeout(() => pushDateStateToCloud(selectedDateKey, plannerState), 350);
-            else pushDateStateToCloud(selectedDateKey, plannerState);
+            if (debounced) saveDebounceTimer = setTimeout(() => pushDateStateToCloud(targetKey, plannerState), 350);
+            else pushDateStateToCloud(targetKey, plannerState);
         }
 
         function updateCloudStatusUI(status, message) {
-            const calDot = document.getElementById('calendarCloudStatusDot');
+            const modalDot = document.getElementById('cloudModalDot');
+            const badge = document.getElementById('cloudStatusBadge');
+            const uidSpan = document.getElementById('cloudUserIdDisplay');
             const dotClass = status === 'connected' ? 'bg-emerald-500' : (status === 'error' ? 'bg-rose-500' : 'bg-amber-400');
-            if (calDot) calDot.className = `w-1.5 h-1.5 rounded-full ${dotClass}`;
+            if (modalDot) modalDot.className = `w-2.5 h-2.5 rounded-full ${dotClass} shadow-xs`;
+            if (badge) badge.textContent = message || status.toUpperCase();
+            if (uidSpan) uidSpan.textContent = currentUser ? currentUser.uid : 'NOT CONNECTED';
         }
 
         async function initFirebaseCloudSync() {
             if (!USER_FIREBASE_CONFIG.apiKey) return;
             try {
+                updateCloudStatusUI('connecting', 'CONNECTING...');
+                activeFirebaseProjectId = USER_FIREBASE_CONFIG.projectId;
                 firebaseApp = getApps().length === 0 ? initializeApp(USER_FIREBASE_CONFIG) : getApps()[0];
                 auth = getAuth(firebaseApp);
                 db = getFirestore(firebaseApp);
                 await signInAnonymously(auth);
                 currentUser = auth.currentUser;
                 if (currentUser) attachRealtimeCloudListeners();
-            } catch (err) {}
+            } catch (e) {
+                updateCloudStatusUI('error', 'CONNECTION ERROR');
+            }
         }
 
         function attachRealtimeCloudListeners() {
             if (!currentUser || !db) return;
-            unsubscribeDaysSnapshot?.();
-            unsubscribeSettingsSnapshot?.();
+            if (unsubscribeDaysSnapshot) unsubscribeDaysSnapshot();
+            if (unsubscribeSettingsSnapshot) unsubscribeSettingsSnapshot();
+
             unsubscribeDaysSnapshot = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'planner_days'), (snapshot) => {
                 updateCloudStatusUI('connected', 'LIVE SYNC ACTIVE');
                 const updatedMap = {};
                 snapshot.forEach(docSnap => {
                     const data = docSnap.data();
-                    if (data?.syncKey === syncWorkspaceKey && data?.dateKey && data?.payloadJson) {
-                        try { updatedMap[data.dateKey] = JSON.parse(data.payloadJson); } catch (e) {}
+                    if (data && data.syncKey === syncWorkspaceKey && data.dateKey && data.payloadJson) {
+                        try { updatedMap[data.dateKey] = JSON.parse(data.payloadJson); } catch(e){}
                     }
                 });
                 allPlannersByDate = updatedMap;
                 plannerState = getPlannerDataForDate(selectedDateKey);
-                renderLeftPanel(); renderTimetable(); renderCalendarGrid();
+
+                const activeTag = document.activeElement ? document.activeElement.tagName : '';
+                const isTypingOnSheet = activeTag === 'INPUT' && (
+                    document.activeElement.id === 'goalInput' ||
+                    document.activeElement.id === 'reviewKeep' ||
+                    document.activeElement.id === 'reviewProblem' ||
+                    document.activeElement.id === 'reviewTry'
+                );
+                if (!isTypingOnSheet) renderLeftPanel();
+                else renderMiddleRows();
+
+                renderTimetable();
+                renderCalendarGrid();
+                if (!document.getElementById('widgetSimModalBackdrop').classList.contains('hidden')) {
+                    renderWidgetTopicsGrid();
+                }
             });
+
+            unsubscribeSettingsSnapshot = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'planner_settings'), (snapshot) => {
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data && data.syncKey === syncWorkspaceKey && data.pinnedColorsJson) {
+                        try {
+                            const parsedColors = JSON.parse(data.pinnedColorsJson);
+                            if (Array.isArray(parsedColors) && parsedColors.length === 5) {
+                                pinnedColors = parsedColors;
+                                renderAllPinnedColorBars();
+                                renderMiddleRows();
+                                renderTimetable();
+                            }
+                        } catch (e) {}
+                    }
+                });
+            });
+        }
+
+        function openCloudSyncModal() {
+            const inp = document.getElementById('syncKeyInput');
+            if (inp) inp.value = syncWorkspaceKey;
+            document.getElementById('cloudSyncModalBackdrop').classList.remove('hidden');
+        }
+
+        function closeCloudSyncModal() { document.getElementById('cloudSyncModalBackdrop').classList.add('hidden'); }
+
+        function applySyncKeyInput() {
+            const inp = document.getElementById('syncKeyInput');
+            if (!inp) return;
+            const clean = inp.value.trim().replace(/[^a-zA-Z0-9_-]/g, '-');
+            if (clean) { syncWorkspaceKey = clean; inp.value = syncWorkspaceKey; attachRealtimeCloudListeners(); }
         }
 
         function detectShouldUsePortrait() {
             if (currentLayoutMode === 'landscape') return false;
             if (currentLayoutMode === 'portrait') return true;
-            return window.innerWidth < 768 || window.innerHeight > window.innerWidth;
+            const isTouchDevice = window.matchMedia('(pointer: coarse)').matches || ('ontouchstart' in window);
+            const w = window.innerWidth, h = window.innerHeight;
+            if (!isTouchDevice && w >= 768) return false;
+            if (w < 768) return true;
+            return h > w;
         }
 
         function applyResponsiveLayoutMode() {
@@ -1319,19 +1621,23 @@
             const container = document.getElementById('middleRowsContainer');
             if (!container) return;
             container.innerHTML = '';
+
             ['left', 'right'].forEach((colKey, colIdx) => {
                 for (let rowIdx = 0; rowIdx < MIDDLE_ROW_COUNT; rowIdx++) {
                     const item = plannerState.columns[colKey][rowIdx];
                     const isTopic = item.rowType === 'topic';
                     const hlColor = normalizeColorHex(item.hl);
+                    const hasHl = hlColor && hlColor !== 'none';
+
+                    let borderBottom = (rowIdx === 8 || rowIdx === 17) ? 'b-bottom-strong' : (isTopic ? 'b-bottom-cat' : 'b-bottom-light');
+
                     const rowEl = document.createElement('div');
                     rowEl.id = `planner-row-${colKey}-${rowIdx}`;
-                    let borderBottom = (rowIdx === 8 || rowIdx === 17) ? 'b-bottom-strong' : (isTopic ? 'b-bottom-cat' : 'b-bottom-light');
                     rowEl.className = `portrait-row-h ${borderBottom} ${colIdx === 0 ? 'b-right-strong' : ''} relative flex items-center pl-2 pr-2 min-w-0 overflow-hidden cursor-pointer hover:bg-zinc-50/70 transition-colors`;
-                    
+
                     const pill = document.createElement('div');
                     pill.className = 'shade-pill';
-                    if (hlColor && hlColor !== 'none' && (item.text.trim() || !isTopic)) applyNaturalShadeStyle(pill, hlColor);
+                    if (hasHl && (item.text.trim() || !isTopic)) applyNaturalShadeStyle(pill, hlColor);
 
                     if (!isTopic) {
                         const checkBtn = document.createElement('button');
@@ -1349,50 +1655,170 @@
                     rowEl.appendChild(pill);
 
                     const taskKey = `${colKey}-${rowIdx}`;
-
-                    if (!isTopic && item.text?.trim().length > 0) {
+                    if (!isTopic && item.text && item.text.trim().length > 0) {
                         rowEl.classList.add('todo-draggable-row', 'group');
                         rowEl.setAttribute('draggable', 'true');
+
                         const actionWrap = document.createElement('div');
                         actionWrap.className = 'ml-auto flex items-center gap-1 pl-1 flex-shrink-0';
-
                         const dragHint = document.createElement('span');
-                        dragHint.className = 'px-1 py-1 text-[11px] text-slate-400 opacity-40 group-hover:opacity-100 transition-opacity select-none cursor-grab';
+                        dragHint.className = 'px-1 py-1 text-[11px] text-slate-400 opacity-50 group-hover:opacity-100 transition-opacity select-none cursor-grab';
                         dragHint.textContent = '⋮⋮';
+                        dragHint.title = 'DRAG TO TIMETABLE';
                         actionWrap.appendChild(dragHint);
                         rowEl.appendChild(actionWrap);
 
-                        const createPayload = () => ({
-                            colKey,
-                            rowIdx,
-                            taskKey,
-                            text: item.text.trim(),
-                            hl: normalizeColorHex(item.hl)
-                        });
+                        const createPayload = () => ({ colKey, rowIdx, taskKey, text: item.text.trim(), hl: normalizeColorHex(item.hl) });
 
                         rowEl.addEventListener('dragstart', (e) => {
                             draggedTodoData = createPayload();
-                            if (e.dataTransfer) {
-                                e.dataTransfer.effectAllowed = 'copy';
-                                e.dataTransfer.setData('text/plain', item.text.trim());
-                            }
+                            if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'copy'; e.dataTransfer.setData('text/plain', item.text.trim()); }
                             rowEl.classList.add('opacity-60');
                         });
+                        rowEl.addEventListener('dragend', () => { rowEl.classList.remove('opacity-60'); draggedTodoData = null; clearTodoDropPreview(); });
 
-                        rowEl.addEventListener('dragend', () => {
+                        let touchLongPressTimer = null;
+                        let isTouchDraggingTodo = false;
+                        let touchStartX = 0;
+                        let touchStartY = 0;
+                        let suppressNextClick = false;
+
+                        const beginTouchDrag = (touch) => {
+                            isTouchDraggingTodo = true;
+                            suppressNextClick = true;
+                            draggedTodoData = createPayload();
+                            rowEl.classList.add('opacity-60');
+                            showTouchDragGhost(draggedTodoData, touch.clientX, touch.clientY);
+                        };
+
+                        rowEl.addEventListener('touchstart', (e) => {
+                            if (e.touches.length !== 1) return;
+                            if (e.target && e.target.closest('.task-checkbox')) return;
+
+                            const touch = e.touches[0];
+                            touchStartX = touch.clientX;
+                            touchStartY = touch.clientY;
+                            isTouchDraggingTodo = false;
+
+                            const touchedHandle = e.target === dragHint || dragHint.contains(e.target);
+                            if (touchedHandle) {
+                                e.preventDefault();
+                                beginTouchDrag(touch);
+                            } else {
+                                touchLongPressTimer = setTimeout(() => {
+                                    beginTouchDrag(touch);
+                                }, 260);
+                            }
+                        }, { passive: false });
+
+                        rowEl.addEventListener('touchmove', (e) => {
+                            if (e.touches.length !== 1) return;
+                            const touch = e.touches[0];
+                            const dx = Math.abs(touch.clientX - touchStartX);
+                            const dy = Math.abs(touch.clientY - touchStartY);
+
+                            if (!isTouchDraggingTodo) {
+                                if (dx > 8 || dy > 8) {
+                                    clearTimeout(touchLongPressTimer);
+                                    touchLongPressTimer = null;
+                                }
+                                return;
+                            }
+
+                            e.preventDefault();
+                            moveTouchDragGhost(touch.clientX, touch.clientY);
+
+                            if (touch.clientY > window.innerHeight - 75) {
+                                window.scrollBy(0, 14);
+                            } else if (touch.clientY < 75) {
+                                window.scrollBy(0, -14);
+                            }
+
+                            const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+                            const slotEl = targetEl ? targetEl.closest('[data-slot]') : null;
+                            if (slotEl && slotEl.dataset.slot !== undefined) {
+                                const slotIndex = Number(slotEl.dataset.slot);
+                                if (!isSlotOccupied(slotIndex)) {
+                                    updateTodoDropPreview(slotIndex);
+                                } else {
+                                    clearTodoDropPreview();
+                                }
+                            } else {
+                                clearTodoDropPreview();
+                            }
+                        }, { passive: false });
+
+                        const finishTouchDrag = (e) => {
+                            clearTimeout(touchLongPressTimer);
+                            touchLongPressTimer = null;
+
+                            if (!isTouchDraggingTodo) return;
+                            isTouchDraggingTodo = false;
                             rowEl.classList.remove('opacity-60');
+                            hideTouchDragGhost();
+
+                            const touch = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0] : null;
+                            const todoPayload = draggedTodoData ? { ...draggedTodoData } : null;
                             draggedTodoData = null;
+
+                            let droppedSlot = null;
+                            if (touch) {
+                                const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+                                const slotEl = targetEl ? targetEl.closest('[data-slot]') : null;
+                                if (slotEl && slotEl.dataset.slot !== undefined) {
+                                    droppedSlot = Number(slotEl.dataset.slot);
+                                }
+                            }
+
                             clearTodoDropPreview();
-                        });
+
+                            if (todoPayload && droppedSlot !== null && !isSlotOccupied(droppedSlot)) {
+                                cancelTwoTapSelection();
+                                const startSlot = droppedSlot;
+                                const endSlot = clampSlotRangeToEmpty(startSlot, Math.min(TOTAL_SLOTS - 1, startSlot + 5));
+                                const dropColor = (todoPayload.hl && todoPayload.hl !== 'none')
+                                    ? todoPayload.hl
+                                    : (pinnedColors[0] || '#93D5F6');
+                                openTimeBlockModalForRange(startSlot, endSlot, todoPayload.text, dropColor, todoPayload.taskKey || null);
+                            }
+
+                            setTimeout(() => { suppressNextClick = false; }, 80);
+                        };
+
+                        rowEl.addEventListener('touchend', finishTouchDrag);
+                        rowEl.addEventListener('touchcancel', finishTouchDrag);
+
+                        rowEl.onclick = (e) => {
+                            if (suppressNextClick) { e.stopPropagation(); suppressNextClick = false; return; }
+                            openTaskModal(colKey, rowIdx);
+                        };
+                    } else {
+                        rowEl.onclick = () => openTaskModal(colKey, rowIdx);
                     }
-                    rowEl.onclick = () => openTaskModal(colKey, rowIdx);
                     container.appendChild(rowEl);
                 }
             });
         }
 
+        function showTouchDragGhost(p, x, y) {
+            const g = document.getElementById('touchDragGhost');
+            if (!g || !p) return;
+            const hlColor = normalizeColorHex(p.hl);
+            g.textContent = p.text;
+            g.style.backgroundColor = (hlColor && hlColor !== 'none') ? hexToRgba(hlColor, 0.78) : 'rgba(255, 255, 255, 0.92)';
+            g.style.left = `${x}px`; g.style.top = `${y}px`;
+            g.classList.remove('hidden');
+        }
+        function moveTouchDragGhost(x, y) {
+            const g = document.getElementById('touchDragGhost');
+            if (!g) return;
+            g.style.left = `${x}px`; g.style.top = `${y}px`;
+        }
+        function hideTouchDragGhost() { document.getElementById('touchDragGhost')?.classList.add('hidden'); }
+
         function renderLeftPanel() {
             const parts = parseDateKeyToParts(selectedDateKey);
+            plannerState.date = { yyyy: parts.yyyy, mm: parts.mm, dd: parts.dd, dow: parts.dow };
             document.getElementById('dateYYYY').textContent = parts.yyyy;
             document.getElementById('dateMM').textContent = parts.mm;
             document.getElementById('dateDD').textContent = parts.dd;
@@ -1405,64 +1831,43 @@
         }
 
         function handleGoalChange(val) { plannerState.goal = val; saveStateToStorage(true); }
-        function handleReviewChange(key, val) { plannerState.review[key] = val; saveStateToStorage(true); }
+        function handleReviewChange(k, v) { plannerState.review[k] = v; saveStateToStorage(true); }
 
-        function slotToTimeStr(slotIndex, isEnd = false) {
-            const mins = (isEnd ? slotIndex + 1 : slotIndex) * 10;
-            return `${String(Math.floor(mins / 60)).padStart(2, '0')}:${String(mins % 60).padStart(2, '0')}`;
+        function slotToTimeStr(s, isEnd = false) {
+            const m = (isEnd ? s + 1 : s) * 10;
+            return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
         }
 
-        function getBlockAtSlot(slotIndex, ignoreBlockId = null) {
-            return plannerState.timeBlocks.find(b => !ignoreBlockId || b.id !== ignoreBlockId ? (slotIndex >= b.startSlot && slotIndex <= b.endSlot) : false);
+        function getBlockAtSlot(s, ignoreId = null) {
+            return plannerState.timeBlocks.find(b => (!ignoreId || b.id !== ignoreId) && s >= b.startSlot && s <= b.endSlot);
         }
-        function isSlotOccupied(slotIndex, ignoreBlockId = null) { return !!getBlockAtSlot(slotIndex, ignoreBlockId); }
-        function isRangeOverlapping(startS, endS, ignoreBlockId = null) {
-            const minS = Math.min(startS, endS), maxS = Math.max(startS, endS);
-            return plannerState.timeBlocks.some(b => (!ignoreBlockId || b.id !== ignoreBlockId) && !(b.endSlot < minS || b.startSlot > maxS));
+        function isSlotOccupied(s, ignoreId = null) { return !!getBlockAtSlot(s, ignoreId); }
+        function isRangeOverlapping(s, e, ignoreId = null) {
+            const minS = Math.min(s, e), maxS = Math.max(s, e);
+            return plannerState.timeBlocks.some(b => (!ignoreId || b.id !== ignoreId) && !(b.endSlot < minS || b.startSlot > maxS));
         }
-        function clampSlotRangeToEmpty(anchorSlot, targetSlot, ignoreBlockId = null) {
-            const clamped = Math.max(0, Math.min(TOTAL_SLOTS - 1, targetSlot));
-            if (isSlotOccupied(anchorSlot, ignoreBlockId)) return anchorSlot;
-            const step = clamped >= anchorSlot ? 1 : -1;
-            let lastValid = anchorSlot;
-            for (let s = anchorSlot + step; step > 0 ? s <= clamped : s >= clamped; s += step) {
-                if (isSlotOccupied(s, ignoreBlockId)) break;
-                lastValid = s;
+        function clampSlotRangeToEmpty(anchor, target, ignoreId = null) {
+            const clamped = Math.max(0, Math.min(TOTAL_SLOTS - 1, target));
+            if (isSlotOccupied(anchor, ignoreId)) return anchor;
+            const step = clamped >= anchor ? 1 : -1;
+            let last = anchor;
+            for (let s = anchor + step; step > 0 ? s <= clamped : s >= clamped; s += step) {
+                if (isSlotOccupied(s, ignoreId)) break;
+                last = s;
             }
-            return lastValid;
+            return last;
         }
 
-        function findFirstAvailableSlot(preferredSlot = 54, ignoreBlockId = null) {
-            if (!isSlotOccupied(preferredSlot, ignoreBlockId)) return preferredSlot;
-            for (let s = preferredSlot; s < TOTAL_SLOTS; s++) {
-                if (!isSlotOccupied(s, ignoreBlockId)) return s;
-            }
-            for (let s = 0; s < preferredSlot; s++) {
-                if (!isSlotOccupied(s, ignoreBlockId)) return s;
-            }
-            return 0;
-        }
-
-        function findLinkedTimeBlockForTask(colKey, rowIdx, taskText = '') {
-            const taskKey = `${colKey}-${rowIdx}`;
-            const byKey = plannerState.timeBlocks.find(b => b.linkedTaskKey === taskKey);
-            if (byKey) return byKey;
-            const cleanTxt = (taskText || '').trim();
-            if (!cleanTxt) return null;
-            return plannerState.timeBlocks.find(b => !b.linkedTaskKey && (b.text || '').trim() === cleanTxt) || null;
-        }
-
-        function updateTodoDropPreview(startSlot) {
+        function updateTodoDropPreview(start) {
             clearTodoDropPreview();
-            if (startSlot === null || startSlot === undefined || isSlotOccupied(startSlot)) return;
-            const endSlot = clampSlotRangeToEmpty(startSlot, Math.min(TOTAL_SLOTS - 1, startSlot + 5));
-            dropPreviewSlots = [startSlot, endSlot];
+            if (start === null || isSlotOccupied(start)) return;
+            const end = clampSlotRangeToEmpty(start, Math.min(TOTAL_SLOTS - 1, start + 5));
+            dropPreviewSlots = [start, end];
             document.querySelectorAll('.tt-slot').forEach(el => {
                 const s = Number(el.dataset.slot);
-                if (s >= startSlot && s <= endSlot) el.classList.add('tt-slot-drop-preview');
+                if (s >= start && s <= end) el.classList.add('tt-slot-drop-preview');
             });
         }
-
         function clearTodoDropPreview() {
             dropPreviewSlots = [];
             document.querySelectorAll('.tt-slot-drop-preview').forEach(el => el.classList.remove('tt-slot-drop-preview'));
@@ -1470,11 +1875,14 @@
 
         function renderTimetable() {
             const container = document.getElementById('timetableColumnContainer');
+            if (!container) return;
             container.innerHTML = '';
+
             HOURS.forEach((hour, rowIdx) => {
                 let borderBottom = (hour === 1 || hour === 10 || hour === 19) ? 'b-bottom-strong' : (hour === 23 ? '' : 'b-bottom-light');
                 const rowEl = document.createElement('div');
                 rowEl.className = `portrait-row-h ${borderBottom} flex items-stretch relative min-h-0 overflow-hidden`;
+
                 const hourCol = document.createElement('div');
                 hourCol.className = 'w-6 flex-shrink-0 flex items-center pl-1.5 text-[11px] font-medium text-[#71717a] select-none';
                 hourCol.textContent = hour;
@@ -1482,6 +1890,7 @@
 
                 const slotsWrap = document.createElement('div');
                 slotsWrap.className = 'flex-1 grid grid-cols-6 relative min-w-0';
+
                 for (let s = 0; s < 6; s++) {
                     const globalSlot = rowIdx * 6 + s;
                     const block = getBlockAtSlot(globalSlot);
@@ -1489,57 +1898,38 @@
                     slotEl.dataset.slot = globalSlot;
                     slotEl.className = `tt-slot relative h-full cursor-pointer hover:bg-black/[0.03] ${block ? 'tt-slot-occupied' : ''}`;
                     if (block && block.color && block.color !== 'none') {
-                        slotEl.style.backgroundColor = hexToRgba(block.color, 0.42);
+                        slotEl.style.backgroundColor = hexToRgba(normalizeColorHex(block.color), 0.42);
                     }
-
                     if (isDraggingTimetable && dragStartSlot !== null && dragCurrentSlot !== null) {
-                        const minS = Math.min(dragStartSlot, dragCurrentSlot);
-                        const maxS = Math.max(dragStartSlot, dragCurrentSlot);
-                        if (globalSlot >= minS && globalSlot <= maxS) slotEl.classList.add('tt-slot-selecting');
+                        if (globalSlot >= Math.min(dragStartSlot, dragCurrentSlot) && globalSlot <= Math.max(dragStartSlot, dragCurrentSlot)) slotEl.classList.add('tt-slot-selecting');
                     } else if (twoTapStartSlot === globalSlot) {
                         slotEl.classList.add('tt-slot-selecting');
                     }
 
                     slotEl.addEventListener('pointerdown', (e) => handleSlotPointerDown(e, globalSlot));
                     slotEl.addEventListener('pointerenter', (e) => handleSlotPointerEnter(e, globalSlot));
-
                     slotEl.addEventListener('dragover', (e) => {
-                        if (!draggedTodoData) return;
-                        if (isSlotOccupied(globalSlot)) {
-                            if (e.dataTransfer) e.dataTransfer.dropEffect = 'none';
-                            clearTodoDropPreview();
-                            return;
-                        }
-                        e.preventDefault();
-                        if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
-                        updateTodoDropPreview(globalSlot);
+                        if (!draggedTodoData || isSlotOccupied(globalSlot)) { clearTodoDropPreview(); return; }
+                        e.preventDefault(); updateTodoDropPreview(globalSlot);
                     });
-
                     slotEl.addEventListener('drop', (e) => {
-                        if (!draggedTodoData) return;
+                        if (!draggedTodoData || isSlotOccupied(globalSlot)) return;
                         e.preventDefault();
-                        const todoPayload = { ...draggedTodoData };
-                        draggedTodoData = null;
-                        clearTodoDropPreview();
-                        if (isSlotOccupied(globalSlot)) return;
-
+                        const todo = { ...draggedTodoData }; draggedTodoData = null; clearTodoDropPreview();
                         cancelTwoTapSelection();
-                        const startSlot = globalSlot;
-                        const endSlot = clampSlotRangeToEmpty(startSlot, Math.min(TOTAL_SLOTS - 1, startSlot + 5));
-                        const dropColor = (todoPayload.hl && todoPayload.hl !== 'none') ? todoPayload.hl : (pinnedColors[0] || '#93D5F6');
-                        openTimeBlockModalForRange(startSlot, endSlot, todoPayload.text, dropColor, todoPayload.taskKey || null);
+                        const dropColor = (todo.hl && todo.hl !== 'none') ? todo.hl : (pinnedColors[0] || '#93D5F6');
+                        openTimeBlockModalForRange(globalSlot, clampSlotRangeToEmpty(globalSlot, Math.min(TOTAL_SLOTS - 1, globalSlot + 5)), todo.text, dropColor, todo.taskKey);
                     });
-
                     slotsWrap.appendChild(slotEl);
                 }
 
                 plannerState.timeBlocks.forEach(block => {
                     const rStart = rowIdx * 6, rEnd = rStart + 5;
-                    if (block.endSlot < rStart || block.startSlot > rEnd || block.startSlot < rStart || block.startSlot > rEnd || !block.text) return;
-                    const lPct = ((Math.max(0, block.startSlot - rStart)) / 6) * 100;
-                    const wPct = (((Math.min(5, block.endSlot - rStart) - Math.max(0, block.startSlot - rStart) + 1)) / 6) * 100;
+                    if (block.endSlot < rStart || block.startSlot > rEnd || block.startSlot < rStart || !block.text) return;
+                    const segStart = Math.max(0, block.startSlot - rStart), segEnd = Math.min(5, block.endSlot - rStart);
                     const overlay = document.createElement('div');
-                    overlay.style.left = `${lPct}%`; overlay.style.width = `${wPct}%`;
+                    overlay.style.left = `${(segStart / 6) * 100}%`;
+                    overlay.style.width = `${((segEnd - segStart + 1) / 6) * 100}%`;
                     overlay.className = 'absolute inset-y-0 z-10 flex items-center px-1.5 pointer-events-none overflow-hidden';
                     const span = document.createElement('span');
                     span.className = 'text-[11.5px] font-medium text-slate-800 whitespace-nowrap overflow-visible';
@@ -1553,152 +1943,89 @@
             });
         }
 
-        let pointerMovedDuringDrag = false;
-        let pointerDownOccupiedBlockId = null;
-        let touchSlotCandidate = null;
-        let touchStartClientX = 0;
-        let touchStartClientY = 0;
-        let touchWasScrolled = false;
-        let touchHoldDragTimer = null;
-        let isTouchRangeDragging = false;
+        function findFirstAvailableSlot(preferred = 54, ignoreId = null) {
+            if (!isSlotOccupied(preferred, ignoreId)) return preferred;
+            for (let s = preferred; s < TOTAL_SLOTS; s++) if (!isSlotOccupied(s, ignoreId)) return s;
+            for (let s = 0; s < preferred; s++) if (!isSlotOccupied(s, ignoreId)) return s;
+            return 0;
+        }
 
-        function setTwoTapStartSlotUI(slotIndex) {
-            twoTapStartSlot = slotIndex;
-            const timeLabel = slotToTimeStr(slotIndex);
-            const indicator = document.getElementById('twoTapIndicator');
-            const textEl = document.getElementById('twoTapText');
-            if (indicator && textEl) {
-                indicator.classList.remove('hidden');
-                indicator.classList.add('inline-flex');
-                textEl.textContent = `${timeLabel} - SELECT END`;
-            }
-            const floatingBanner = document.getElementById('floatingTwoTapBanner');
-            const floatingText = document.getElementById('floatingTwoTapText');
-            if (floatingBanner && floatingText) {
-                floatingBanner.classList.remove('hidden');
-                floatingBanner.classList.add('inline-flex');
-                floatingText.textContent = `${timeLabel} 시작 · 종료 칸을 탭하세요 (같은 칸 탭 시 1칸)`;
-            }
+        function findLinkedTimeBlockForTask(colKey, rowIdx, taskText = '') {
+            const taskKey = `${colKey}-${rowIdx}`;
+            const byKey = plannerState.timeBlocks.find(b => b.linkedTaskKey === taskKey);
+            if (byKey) return byKey;
+            const cleanTxt = (taskText || '').trim();
+            if (!cleanTxt) return null;
+            return plannerState.timeBlocks.find(b => !b.linkedTaskKey && (b.text || '').trim() === cleanTxt) || null;
+        }
+
+        function setTwoTapStartSlotUI(s) {
+            twoTapStartSlot = s;
+            const timeStr = slotToTimeStr(s);
+            const ind = document.getElementById('twoTapIndicator'), txt = document.getElementById('twoTapText');
+            if (ind && txt) { ind.classList.remove('hidden'); ind.classList.add('inline-flex'); txt.textContent = `${timeStr} - SELECT END`; }
+            const banner = document.getElementById('floatingTwoTapBanner'), bTxt = document.getElementById('floatingTwoTapText');
+            if (banner && bTxt) { banner.classList.remove('hidden'); banner.classList.add('inline-flex'); bTxt.textContent = `${timeStr} 시작 · 종료 칸을 탭하세요 (같은 칸 탭 시 1칸)`; }
             renderTimetable();
         }
 
-        function cancelTwoTapSelection() {
-            twoTapStartSlot = null;
-            const indicator = document.getElementById('twoTapIndicator');
-            if (indicator) {
-                indicator.classList.add('hidden');
-                indicator.classList.remove('inline-flex');
-            }
-            const floatingBanner = document.getElementById('floatingTwoTapBanner');
-            if (floatingBanner) {
-                floatingBanner.classList.add('hidden');
-                floatingBanner.classList.remove('inline-flex');
-            }
-            renderTimetable();
-        }
-
-        function handleSlotPointerDown(e, slotIndex) {
+        function handleSlotPointerDown(e, slotIdx) {
             if (e.button !== undefined && e.button !== 0) return;
-
             if (e.pointerType === 'touch') {
                 clearTimeout(touchHoldDragTimer);
-                touchSlotCandidate = slotIndex;
-                touchStartClientX = e.clientX;
-                touchStartClientY = e.clientY;
-                touchWasScrolled = false;
-                isTouchRangeDragging = false;
-                isDraggingTimetable = false;
-                pointerDownOccupiedBlockId = null;
-
-                if (!isSlotOccupied(slotIndex) && twoTapStartSlot === null) {
+                touchSlotCandidate = slotIdx; touchStartClientX = e.clientX; touchStartClientY = e.clientY;
+                touchWasScrolled = false; isTouchRangeDragging = false; isDraggingTimetable = false; pointerDownOccupiedBlockId = null;
+                if (!isSlotOccupied(slotIdx) && twoTapStartSlot === null) {
                     touchHoldDragTimer = setTimeout(() => {
-                        if (!touchWasScrolled && touchSlotCandidate === slotIndex) {
-                            isTouchRangeDragging = true;
-                            isDraggingTimetable = true;
-                            dragStartSlot = slotIndex;
-                            dragCurrentSlot = slotIndex;
-                            updateDragVisuals();
+                        if (!touchWasScrolled && touchSlotCandidate === slotIdx) {
+                            isTouchRangeDragging = true; isDraggingTimetable = true; dragStartSlot = slotIdx; dragCurrentSlot = slotIdx; updateDragVisuals();
                         }
                     }, 220);
                 }
                 return;
             }
-
             pointerMovedDuringDrag = false;
-            pointerDownOccupiedBlockId = null;
-
-            const existingBlock = getBlockAtSlot(slotIndex);
-            if (existingBlock && twoTapStartSlot === null) {
-                pointerDownOccupiedBlockId = existingBlock.id;
-                isDraggingTimetable = false;
-                return;
-            }
-
-            if (existingBlock && twoTapStartSlot !== null) {
-                const clampedEnd = clampSlotRangeToEmpty(twoTapStartSlot, slotIndex);
-                const rangeStart = Math.min(twoTapStartSlot, clampedEnd);
-                const rangeEnd = Math.max(twoTapStartSlot, clampedEnd);
+            pointerDownOccupiedBlockId = getBlockAtSlot(slotIdx)?.id || null;
+            if (pointerDownOccupiedBlockId && twoTapStartSlot === null) { isDraggingTimetable = false; return; }
+            if (pointerDownOccupiedBlockId && twoTapStartSlot !== null) {
+                const end = clampSlotRangeToEmpty(twoTapStartSlot, slotIdx);
                 cancelTwoTapSelection();
-                openTimeBlockModalForRange(rangeStart, rangeEnd);
+                openTimeBlockModalForRange(Math.min(twoTapStartSlot, end), Math.max(twoTapStartSlot, end));
                 return;
             }
-
-            isDraggingTimetable = true;
-            dragStartSlot = slotIndex;
-            dragCurrentSlot = slotIndex;
-            updateDragVisuals();
+            isDraggingTimetable = true; dragStartSlot = slotIdx; dragCurrentSlot = slotIdx; updateDragVisuals();
         }
 
-        function handleSlotPointerEnter(e, slotIndex) {
-            if (e.pointerType === 'touch') return;
-            if (!isDraggingTimetable || dragStartSlot === null) return;
-            const clampedSlot = clampSlotRangeToEmpty(dragStartSlot, slotIndex);
-            if (slotIndex !== dragStartSlot) pointerMovedDuringDrag = true;
-            if (clampedSlot !== dragCurrentSlot) {
-                dragCurrentSlot = clampedSlot;
-                updateDragVisuals();
-            }
+        function handleSlotPointerEnter(e, slotIdx) {
+            if (e.pointerType === 'touch' || !isDraggingTimetable || dragStartSlot === null) return;
+            const clamped = clampSlotRangeToEmpty(dragStartSlot, slotIdx);
+            if (slotIdx !== dragStartSlot) pointerMovedDuringDrag = true;
+            if (clamped !== dragCurrentSlot) { dragCurrentSlot = clamped; updateDragVisuals(); }
         }
 
         window.addEventListener('pointermove', (e) => {
             if (e.pointerType === 'touch') {
                 if (isTouchRangeDragging && isDraggingTimetable && dragStartSlot !== null) {
                     if (e.cancelable) e.preventDefault();
-                    const el = document.elementFromPoint(e.clientX, e.clientY);
-                    const slotEl = el ? el.closest('[data-slot]') : null;
-                    if (slotEl && slotEl.dataset.slot !== undefined) {
-                        const slotIdx = Number(slotEl.dataset.slot);
-                        const clampedSlot = clampSlotRangeToEmpty(dragStartSlot, slotIdx);
-                        if (clampedSlot !== dragCurrentSlot) {
-                            dragCurrentSlot = clampedSlot;
-                            updateDragVisuals();
-                        }
+                    const slotEl = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-slot]');
+                    if (slotEl) {
+                        const clamped = clampSlotRangeToEmpty(dragStartSlot, Number(slotEl.dataset.slot));
+                        if (clamped !== dragCurrentSlot) { dragCurrentSlot = clamped; updateDragVisuals(); }
                     }
                     return;
                 }
-
-                if (touchSlotCandidate !== null) {
-                    const dx = Math.abs(e.clientX - touchStartClientX);
-                    const dy = Math.abs(e.clientY - touchStartClientY);
-                    if (dx > 12 || dy > 12) {
-                        clearTimeout(touchHoldDragTimer);
-                        touchWasScrolled = true;
-                        touchSlotCandidate = null;
-                    }
+                if (touchSlotCandidate !== null && (Math.abs(e.clientX - touchStartClientX) > 12 || Math.abs(e.clientY - touchStartClientY) > 12)) {
+                    clearTimeout(touchHoldDragTimer); touchWasScrolled = true; touchSlotCandidate = null;
                 }
                 return;
             }
-
             if (!isDraggingTimetable || dragStartSlot === null) return;
-            const el = document.elementFromPoint(e.clientX, e.clientY);
-            if (el && el.dataset && el.dataset.slot !== undefined) {
-                const slotIdx = Number(el.dataset.slot);
-                const clampedSlot = clampSlotRangeToEmpty(dragStartSlot, slotIdx);
+            const slotEl = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-slot]');
+            if (slotEl) {
+                const slotIdx = Number(slotEl.dataset.slot);
+                const clamped = clampSlotRangeToEmpty(dragStartSlot, slotIdx);
                 if (slotIdx !== dragStartSlot) pointerMovedDuringDrag = true;
-                if (clampedSlot !== dragCurrentSlot) {
-                    dragCurrentSlot = clampedSlot;
-                    updateDragVisuals();
-                }
+                if (clamped !== dragCurrentSlot) { dragCurrentSlot = clamped; updateDragVisuals(); }
             }
         }, { passive: false });
 
@@ -1720,85 +2047,55 @@
 
         window.addEventListener('pointerup', (e) => {
             clearTimeout(touchHoldDragTimer);
-
             if (e && e.pointerType === 'touch') {
                 if (isTouchRangeDragging && isDraggingTimetable && dragStartSlot !== null) {
-                    isTouchRangeDragging = false;
-                    isDraggingTimetable = false;
-                    const startS = Math.min(dragStartSlot, dragCurrentSlot);
-                    const endS = Math.max(dragStartSlot, dragCurrentSlot);
-                    dragStartSlot = null;
-                    dragCurrentSlot = null;
-                    touchSlotCandidate = null;
+                    isTouchRangeDragging = false; isDraggingTimetable = false;
+                    const start = Math.min(dragStartSlot, dragCurrentSlot), end = Math.max(dragStartSlot, dragCurrentSlot);
+                    dragStartSlot = null; dragCurrentSlot = null; touchSlotCandidate = null;
                     cancelTwoTapSelection();
-                    openTimeBlockModalForRange(startS, endS);
+                    openTimeBlockModalForRange(start, end);
                     return;
                 }
-
-                if (touchWasScrolled || touchSlotCandidate === null) {
-                    touchSlotCandidate = null;
-                    touchWasScrolled = false;
-                    return;
-                }
-                const tappedSlot = touchSlotCandidate;
-                touchSlotCandidate = null;
-                touchWasScrolled = false;
-
-                const existingBlock = getBlockAtSlot(tappedSlot);
+                if (touchWasScrolled || touchSlotCandidate === null) { touchSlotCandidate = null; touchWasScrolled = false; return; }
+                const tapped = touchSlotCandidate; touchSlotCandidate = null; touchWasScrolled = false;
+                const existing = getBlockAtSlot(tapped);
                 if (twoTapStartSlot !== null) {
-                    const clampedEnd = clampSlotRangeToEmpty(twoTapStartSlot, tappedSlot);
-                    const rangeStart = Math.min(twoTapStartSlot, clampedEnd);
-                    const rangeEnd = Math.max(twoTapStartSlot, clampedEnd);
+                    const end = clampSlotRangeToEmpty(twoTapStartSlot, tapped);
+                    const rStart = Math.min(twoTapStartSlot, end), rEnd = Math.max(twoTapStartSlot, end);
                     cancelTwoTapSelection();
-                    openTimeBlockModalForRange(rangeStart, rangeEnd);
-                } else if (existingBlock) {
-                    openTimeBlockModalForExisting(existingBlock.id);
+                    openTimeBlockModalForRange(rStart, rEnd);
+                } else if (existing) {
+                    openTimeBlockModalForExisting(existing.id);
                 } else {
-                    setTwoTapStartSlotUI(tappedSlot);
+                    setTwoTapStartSlotUI(tapped);
                 }
                 return;
             }
 
-            if (pointerDownOccupiedBlockId) {
-                const blockId = pointerDownOccupiedBlockId;
-                pointerDownOccupiedBlockId = null;
-                openTimeBlockModalForExisting(blockId);
-                return;
-            }
-
+            if (pointerDownOccupiedBlockId) { const id = pointerDownOccupiedBlockId; pointerDownOccupiedBlockId = null; openTimeBlockModalForExisting(id); return; }
             if (!isDraggingTimetable) return;
             isDraggingTimetable = false;
-
-            const startS = Math.min(dragStartSlot, dragCurrentSlot);
-            const endS = Math.max(dragStartSlot, dragCurrentSlot);
-
-            if (pointerMovedDuringDrag && startS !== endS) {
-                cancelTwoTapSelection();
-                openTimeBlockModalForRange(startS, endS);
-            } else {
-                const clickedSlot = dragStartSlot;
-                const existingBlock = getBlockAtSlot(clickedSlot);
-
+            const start = Math.min(dragStartSlot, dragCurrentSlot), end = Math.max(dragStartSlot, dragCurrentSlot);
+            if (pointerMovedDuringDrag && start !== end) { cancelTwoTapSelection(); openTimeBlockModalForRange(start, end); }
+            else {
+                const clicked = dragStartSlot;
+                const existing = getBlockAtSlot(clicked);
                 if (twoTapStartSlot !== null) {
-                    const clampedEnd = clampSlotRangeToEmpty(twoTapStartSlot, clickedSlot);
-                    const rangeStart = Math.min(twoTapStartSlot, clampedEnd);
-                    const rangeEnd = Math.max(twoTapStartSlot, clampedEnd);
+                    const clamped = clampSlotRangeToEmpty(twoTapStartSlot, clicked);
+                    const rStart = Math.min(twoTapStartSlot, clamped), rEnd = Math.max(twoTapStartSlot, clamped);
                     cancelTwoTapSelection();
-                    openTimeBlockModalForRange(rangeStart, rangeEnd);
-                } else if (existingBlock) {
-                    openTimeBlockModalForExisting(existingBlock.id);
+                    openTimeBlockModalForRange(rStart, rEnd);
+                } else if (existing) {
+                    openTimeBlockModalForExisting(existing.id);
                 } else {
-                    setTwoTapStartSlotUI(clickedSlot);
+                    setTwoTapStartSlotUI(clicked);
                 }
             }
-
-            dragStartSlot = null;
-            dragCurrentSlot = null;
+            dragStartSlot = null; dragCurrentSlot = null;
         });
 
         function updateDragVisuals() {
-            const minS = Math.min(dragStartSlot, dragCurrentSlot);
-            const maxS = Math.max(dragStartSlot, dragCurrentSlot);
+            const minS = Math.min(dragStartSlot, dragCurrentSlot), maxS = Math.max(dragStartSlot, dragCurrentSlot);
             document.querySelectorAll('.tt-slot').forEach(el => {
                 const s = Number(el.dataset.slot);
                 if (s >= minS && s <= maxS) el.classList.add('tt-slot-selecting');
@@ -1806,31 +2103,128 @@
             });
         }
 
-        function populateModalTaskTimeSelects() {
-            const startSel = document.getElementById('modalTaskStartSlotSelect');
-            const endSel = document.getElementById('modalTaskEndSlotSelect');
-            if (!startSel || !endSel) return;
+        function cancelTwoTapSelection() {
+            twoTapStartSlot = null;
+            const indicator = document.getElementById('twoTapIndicator');
+            if (indicator) { indicator.classList.add('hidden'); indicator.classList.remove('inline-flex'); }
+            const banner = document.getElementById('floatingTwoTapBanner');
+            if (banner) { banner.classList.add('hidden'); banner.classList.remove('inline-flex'); }
+            renderTimetable();
+        }
 
+        function populateTimeBlockSelects() {
+            const startSel = document.getElementById('tbStartSlotSelect'), endSel = document.getElementById('tbEndSlotSelect');
+            if (!startSel || !endSel) return;
             startSel.innerHTML = '';
             for (let s = 0; s < TOTAL_SLOTS; s++) {
                 const opt = document.createElement('option');
-                opt.value = s;
-                opt.textContent = slotToTimeStr(s, false);
+                opt.value = s; opt.textContent = slotToTimeStr(s, false);
+                if (isSlotOccupied(s, editingTimeBlockId)) opt.disabled = true;
+                if (s === activeTbStartSlot) opt.selected = true;
+                startSel.appendChild(opt);
+            }
+            activeTbEndSlot = clampSlotRangeToEmpty(activeTbStartSlot, Math.max(activeTbStartSlot, activeTbEndSlot), editingTimeBlockId);
+            endSel.innerHTML = '';
+            for (let e = activeTbStartSlot; e < TOTAL_SLOTS; e++) {
+                const opt = document.createElement('option');
+                opt.value = e; opt.textContent = slotToTimeStr(e, true);
+                if (isRangeOverlapping(activeTbStartSlot, e, editingTimeBlockId)) opt.disabled = true;
+                if (e === activeTbEndSlot) opt.selected = true;
+                endSel.appendChild(opt);
+            }
+        }
+
+        function handleTbStartSlotChange(v) {
+            const start = Number(v);
+            if (isNaN(start) || isSlotOccupied(start, editingTimeBlockId)) return;
+            const dur = Math.max(0, activeTbEndSlot - activeTbStartSlot);
+            activeTbStartSlot = start;
+            activeTbEndSlot = clampSlotRangeToEmpty(start, Math.min(TOTAL_SLOTS - 1, start + dur), editingTimeBlockId);
+            populateTimeBlockSelects();
+        }
+        function handleTbEndSlotChange(v) {
+            const end = Number(v);
+            if (isNaN(end) || end < activeTbStartSlot) return;
+            activeTbEndSlot = clampSlotRangeToEmpty(activeTbStartSlot, end, editingTimeBlockId);
+            populateTimeBlockSelects();
+        }
+
+        function openTimeBlockModalForRange(start, end, text = '', color = null, taskKey = null) {
+            editingTimeBlockId = null; editingTimeBlockLinkedTaskKey = taskKey;
+            const rawStart = Math.min(start, end);
+            if (isSlotOccupied(rawStart, null)) return;
+            activeTbStartSlot = rawStart;
+            activeTbEndSlot = clampSlotRangeToEmpty(rawStart, Math.max(start, end), null);
+            populateTimeBlockSelects();
+            document.getElementById('tbTextInput').value = text || '';
+            setModalTimeBlockColor(color !== null ? color : (pinnedColors[1] || '#F9A8C9'));
+            document.getElementById('timeBlockModalBackdrop').classList.remove('hidden');
+            setTimeout(() => document.getElementById('tbTextInput')?.focus(), 40);
+        }
+
+        function openTimeBlockModalForExisting(id) {
+            const b = plannerState.timeBlocks.find(x => x.id === id);
+            if (!b) return;
+            editingTimeBlockId = b.id; editingTimeBlockLinkedTaskKey = b.linkedTaskKey || null;
+            activeTbStartSlot = b.startSlot; activeTbEndSlot = b.endSlot;
+            populateTimeBlockSelects();
+            document.getElementById('tbTextInput').value = b.text || '';
+            setModalTimeBlockColor(normalizeColorHex(b.color) || 'none');
+            document.getElementById('timeBlockModalBackdrop').classList.remove('hidden');
+            setTimeout(() => document.getElementById('tbTextInput')?.focus(), 40);
+        }
+
+        function setModalTimeBlockColor(c) {
+            modalTimeBlockColor = normalizeColorHex(c);
+            const noneBtn = document.getElementById('tbHlNoneBtn');
+            if (noneBtn) {
+                if (modalTimeBlockColor === 'none') noneBtn.classList.add('ring-2', 'ring-offset-2', 'ring-slate-800');
+                else noneBtn.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-800');
+            }
+            renderAllPinnedColorBars();
+        }
+
+        function saveTimeBlockModal() {
+            const start = Math.min(activeTbStartSlot, activeTbEndSlot);
+            if (isSlotOccupied(start, editingTimeBlockId)) return;
+            const end = clampSlotRangeToEmpty(start, Math.max(activeTbStartSlot, activeTbEndSlot), editingTimeBlockId);
+            const text = document.getElementById('tbTextInput').value.trim();
+            if (editingTimeBlockId) plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== editingTimeBlockId);
+            if (text || modalTimeBlockColor !== 'none') {
+                plannerState.timeBlocks.push({
+                    id: editingTimeBlockId || ('tb-' + Date.now()),
+                    startSlot: start, endSlot: end, text, color: modalTimeBlockColor,
+                    linkedTaskKey: editingTimeBlockLinkedTaskKey || null
+                });
+            }
+            saveStateToStorage(); closeTimeBlockModal(); renderMiddleRows(); renderTimetable();
+        }
+
+        function deleteCurrentTimeBlock() {
+            const start = Math.min(activeTbStartSlot, activeTbEndSlot);
+            const end = Math.max(activeTbStartSlot, activeTbEndSlot);
+            plannerState.timeBlocks = plannerState.timeBlocks.filter(b => {
+                if (editingTimeBlockId && b.id === editingTimeBlockId) return false;
+                return b.endSlot < start || b.startSlot > end;
+            });
+            saveStateToStorage(); closeTimeBlockModal(); renderMiddleRows(); renderTimetable();
+        }
+        function closeTimeBlockModal() { closeSpectrumPicker(); document.getElementById('timeBlockModalBackdrop').classList.add('hidden'); renderTimetable(); }
+
+        function populateModalTaskTimeSelects() {
+            const startSel = document.getElementById('modalTaskStartSlotSelect'), endSel = document.getElementById('modalTaskEndSlotSelect');
+            if (!startSel || !endSel) return;
+            startSel.innerHTML = '';
+            for (let s = 0; s < TOTAL_SLOTS; s++) {
+                const opt = document.createElement('option'); opt.value = s; opt.textContent = slotToTimeStr(s, false);
                 if (isSlotOccupied(s, activeModalTaskBlockId)) opt.disabled = true;
                 if (s === activeModalTaskStartSlot) opt.selected = true;
                 startSel.appendChild(opt);
             }
-
-            if (activeModalTaskEndSlot < activeModalTaskStartSlot) {
-                activeModalTaskEndSlot = activeModalTaskStartSlot;
-            }
-            activeModalTaskEndSlot = clampSlotRangeToEmpty(activeModalTaskStartSlot, activeModalTaskEndSlot, activeModalTaskBlockId);
-
+            activeModalTaskEndSlot = clampSlotRangeToEmpty(activeModalTaskStartSlot, Math.max(activeModalTaskStartSlot, activeModalTaskEndSlot), activeModalTaskBlockId);
             endSel.innerHTML = '';
             for (let e = activeModalTaskStartSlot; e < TOTAL_SLOTS; e++) {
-                const opt = document.createElement('option');
-                opt.value = e;
-                opt.textContent = slotToTimeStr(e, true);
+                const opt = document.createElement('option'); opt.value = e; opt.textContent = slotToTimeStr(e, true);
                 if (isRangeOverlapping(activeModalTaskStartSlot, e, activeModalTaskBlockId)) opt.disabled = true;
                 if (e === activeModalTaskEndSlot) opt.selected = true;
                 endSel.appendChild(opt);
@@ -1839,10 +2233,8 @@
 
         function setModalTaskTimeEnabled(enabled) {
             activeModalTaskHasTime = !!enabled;
-            const addWrap = document.getElementById('modalTaskTimeAddWrap');
-            const pickerWrap = document.getElementById('modalTaskTimePickerWrap');
+            const addWrap = document.getElementById('modalTaskTimeAddWrap'), pickerWrap = document.getElementById('modalTaskTimePickerWrap');
             if (!addWrap || !pickerWrap) return;
-
             if (activeModalTaskHasTime) {
                 if (isSlotOccupied(activeModalTaskStartSlot, activeModalTaskBlockId)) {
                     const now = new Date();
@@ -1851,29 +2243,24 @@
                     activeModalTaskEndSlot = clampSlotRangeToEmpty(activeModalTaskStartSlot, Math.min(TOTAL_SLOTS - 1, activeModalTaskStartSlot + 5), activeModalTaskBlockId);
                 }
                 populateModalTaskTimeSelects();
-                addWrap.classList.add('hidden');
-                pickerWrap.classList.remove('hidden');
-                pickerWrap.classList.add('grid');
+                addWrap.classList.add('hidden'); pickerWrap.classList.remove('hidden'); pickerWrap.classList.add('grid');
             } else {
-                addWrap.classList.remove('hidden');
-                pickerWrap.classList.add('hidden');
-                pickerWrap.classList.remove('grid');
+                addWrap.classList.remove('hidden'); pickerWrap.classList.add('hidden'); pickerWrap.classList.remove('grid');
             }
         }
 
-        function handleModalTaskStartSlotChange(val) {
-            const newStart = Number(val);
-            if (isNaN(newStart) || isSlotOccupied(newStart, activeModalTaskBlockId)) return;
-            const duration = Math.max(0, activeModalTaskEndSlot - activeModalTaskStartSlot);
-            activeModalTaskStartSlot = newStart;
-            activeModalTaskEndSlot = clampSlotRangeToEmpty(activeModalTaskStartSlot, Math.min(TOTAL_SLOTS - 1, newStart + duration), activeModalTaskBlockId);
+        function handleModalTaskStartSlotChange(v) {
+            const start = Number(v);
+            if (isNaN(start) || isSlotOccupied(start, activeModalTaskBlockId)) return;
+            const dur = Math.max(0, activeModalTaskEndSlot - activeModalTaskStartSlot);
+            activeModalTaskStartSlot = start;
+            activeModalTaskEndSlot = clampSlotRangeToEmpty(start, Math.min(TOTAL_SLOTS - 1, start + dur), activeModalTaskBlockId);
             populateModalTaskTimeSelects();
         }
-
-        function handleModalTaskEndSlotChange(val) {
-            const newEnd = Number(val);
-            if (isNaN(newEnd) || newEnd < activeModalTaskStartSlot) return;
-            activeModalTaskEndSlot = clampSlotRangeToEmpty(activeModalTaskStartSlot, newEnd, activeModalTaskBlockId);
+        function handleModalTaskEndSlotChange(v) {
+            const end = Number(v);
+            if (isNaN(end) || end < activeModalTaskStartSlot) return;
+            activeModalTaskEndSlot = clampSlotRangeToEmpty(activeModalTaskStartSlot, end, activeModalTaskBlockId);
             populateModalTaskTimeSelects();
         }
 
@@ -1900,29 +2287,37 @@
             setModalRowType(item.rowType || 'task');
             setModalTaskDone(!!item.done);
             setModalTaskHighlight(normalizeColorHex(item.hl) || 'none');
-
             const clearBtn = document.getElementById('btnTaskModalClear');
             if (clearBtn) clearBtn.textContent = 'CLEAR';
-
             document.getElementById('taskModalBackdrop').classList.remove('hidden');
-            setTimeout(() => {
-                const input = document.getElementById('modalTaskTextInput');
-                if (input) input.focus();
-            }, 40);
+            setTimeout(() => document.getElementById('modalTaskTextInput')?.focus(), 40);
         }
 
         function setModalRowType(type) {
             activeModalRowType = type === 'topic' ? 'topic' : 'task';
-            document.getElementById('btnRowTypeTopic').className = activeModalRowType === 'topic' ? 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition' : 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
-            document.getElementById('btnRowTypeTask').className = activeModalRowType === 'task' ? 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition' : 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
-            document.getElementById('modalCompletionSection').classList.toggle('hidden', activeModalRowType === 'topic');
-            document.getElementById('modalTaskTimeSection').classList.toggle('hidden', activeModalRowType === 'topic');
+            const btnTopic = document.getElementById('btnRowTypeTopic'), btnTask = document.getElementById('btnRowTypeTask');
+            const compSec = document.getElementById('modalCompletionSection'), timeSec = document.getElementById('modalTaskTimeSection');
+            if (activeModalRowType === 'topic') {
+                btnTopic.className = 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
+                btnTask.className = 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
+                compSec?.classList.add('hidden'); timeSec?.classList.add('hidden');
+            } else {
+                btnTopic.className = 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
+                btnTask.className = 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
+                compSec?.classList.remove('hidden'); timeSec?.classList.remove('hidden');
+            }
         }
 
         function setModalTaskDone(done) {
             activeModalTaskDone = done;
-            document.getElementById('btnMarkDone').className = done ? 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition' : 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition';
-            document.getElementById('btnMarkUndone').className = !done ? 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition' : 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition';
+            const btnDone = document.getElementById('btnMarkDone'), btnUndone = document.getElementById('btnMarkUndone');
+            if (done) {
+                btnDone.className = 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition';
+                btnUndone.className = 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition';
+            } else {
+                btnDone.className = 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition';
+                btnUndone.className = 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition';
+            }
         }
 
         function setModalTaskHighlight(hl) {
@@ -1942,8 +2337,7 @@
             const item = plannerState.columns[colKey][rowIdx];
             const newText = document.getElementById('modalTaskTextInput').value;
 
-            item.rowType = activeModalRowType;
-            item.text = newText;
+            item.rowType = activeModalRowType; item.text = newText;
             item.done = activeModalRowType === 'task' ? activeModalTaskDone : false;
             item.hl = activeModalTaskHl;
 
@@ -1955,27 +2349,17 @@
                     const blockColor = (activeModalTaskHl && activeModalTaskHl !== 'none')
                         ? activeModalTaskHl
                         : ((existingLinked && existingLinked.color && existingLinked.color !== 'none') ? existingLinked.color : (pinnedColors[0] || '#93D5F6'));
-
-                    if (existingLinked) {
-                        plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== existingLinked.id);
-                    }
+                    if (existingLinked) plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== existingLinked.id);
                     plannerState.timeBlocks.push({
-                        id: (existingLinked && existingLinked.id) ? existingLinked.id : ('tb-' + Date.now()),
-                        startSlot: startS,
-                        endSlot: endS,
-                        text: newText.trim(),
-                        color: blockColor,
-                        linkedTaskKey: taskKey
+                        id: existingLinked?.id || ('tb-' + Date.now()),
+                        startSlot: startS, endSlot: endS, text: newText.trim(), color: blockColor, linkedTaskKey: taskKey
                     });
                 }
             } else if (existingLinked) {
                 plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== existingLinked.id);
             }
 
-            saveStateToStorage();
-            closeTaskModal();
-            renderMiddleRows();
-            renderTimetable();
+            saveStateToStorage(); closeTaskModal(); renderMiddleRows(); renderTimetable();
         }
 
         function clearModalTask() {
@@ -1983,149 +2367,510 @@
             const { colKey, rowIdx } = activeModalTaskRef;
             const taskKey = `${colKey}-${rowIdx}`;
 
-            // 1. 모달 내 모든 설정값(토픽/투두, 완료여부, 텍스트, 색연필, 시간)을 초기 상태로 리셋
-            setModalRowType('task');
-            setModalTaskDone(false);
+            setModalRowType('task'); setModalTaskDone(false);
             const textInput = document.getElementById('modalTaskTextInput');
             if (textInput) textInput.value = '';
-            setModalTaskHighlight('none');
-            setModalTaskTimeEnabled(false);
+            setModalTaskHighlight('none'); setModalTaskTimeEnabled(false);
 
-            // 2. 시트에 저장되어 있던 데이터 및 연결된 타임테이블 블록도 즉시 초기화
-            plannerState.columns[colKey][rowIdx] = {
-                rowType: 'task',
-                text: '',
-                done: false,
-                hl: 'none'
-            };
+            plannerState.columns[colKey][rowIdx] = { rowType: 'task', text: '', done: false, hl: 'none' };
             plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== activeModalTaskBlockId && b.linkedTaskKey !== taskKey);
             activeModalTaskBlockId = null;
 
-            saveStateToStorage();
-            renderMiddleRows();
-            renderTimetable();
-
-            const clearBtn = document.getElementById('btnTaskModalClear');
-            if (clearBtn) {
-                clearBtn.textContent = 'CLEARED ✓';
-                setTimeout(() => { if (clearBtn) clearBtn.textContent = 'CLEAR'; }, 900);
-            }
+            saveStateToStorage(); renderMiddleRows(); renderTimetable();
+            const btn = document.getElementById('btnTaskModalClear');
+            if (btn) { btn.textContent = 'CLEARED ✓'; setTimeout(() => { if (btn) btn.textContent = 'CLEAR'; }, 900); }
         }
 
-        function closeTaskModal() {
-            closeSpectrumPicker();
-            document.getElementById('taskModalBackdrop').classList.add('hidden');
-            activeModalTaskRef = null;
+        function closeTaskModal() { closeSpectrumPicker(); document.getElementById('taskModalBackdrop').classList.add('hidden'); activeModalTaskRef = null; }
+
+        const WIDGET_SIZE_SPECS = {
+            small: { label: 'SMALL (1 COL · 5 LINES)', columns: 1, linesPerCol: 5, maxWidthClass: 'max-w-[310px]', gridClass: 'grid-cols-1 gap-3' },
+            medium: { label: 'MEDIUM (2 COL · 10 LINES)', columns: 2, linesPerCol: 5, maxWidthClass: 'max-w-xl', gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5' },
+            large: { label: 'LARGE (2 COL · 26 LINES)', columns: 2, linesPerCol: 13, maxWidthClass: 'max-w-2xl', gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5' },
+            xl: { label: 'XL (4 COL · 52 LINES)', columns: 4, linesPerCol: 13, maxWidthClass: 'max-w-5xl', gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5' }
+        };
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
-        function openTimeBlockModalForRange(startS, endS, text = '', color = null, linkedTaskKey = null) {
-            editingTimeBlockId = null;
-            editingTimeBlockLinkedTaskKey = linkedTaskKey;
-            activeTbStartSlot = Math.min(startS, endS);
-            if (isSlotOccupied(activeTbStartSlot, null)) return;
-            activeTbEndSlot = clampSlotRangeToEmpty(activeTbStartSlot, Math.max(startS, endS), null);
-            populateTimeBlockSelects();
-            document.getElementById('tbTextInput').value = text;
-            setModalTimeBlockColor(color || pinnedColors[1]);
-            document.getElementById('timeBlockModalBackdrop').classList.remove('hidden');
-        }
-        function openTimeBlockModalForExisting(blockId) {
-            const block = plannerState.timeBlocks.find(b => b.id === blockId);
-            if (!block) return;
-            editingTimeBlockId = block.id;
-            editingTimeBlockLinkedTaskKey = block.linkedTaskKey || null;
-            activeTbStartSlot = block.startSlot;
-            activeTbEndSlot = block.endSlot;
-            populateTimeBlockSelects();
-            document.getElementById('tbTextInput').value = block.text || '';
-            setModalTimeBlockColor(block.color);
-            document.getElementById('timeBlockModalBackdrop').classList.remove('hidden');
-        }
-        function populateTimeBlockSelects() {
-            const startSel = document.getElementById('tbStartSlotSelect'), endSel = document.getElementById('tbEndSlotSelect');
-            startSel.innerHTML = ''; endSel.innerHTML = '';
-            for (let s = 0; s < TOTAL_SLOTS; s++) {
-                const opt = document.createElement('option'); opt.value = s; opt.textContent = slotToTimeStr(s);
-                if (isSlotOccupied(s, editingTimeBlockId)) opt.disabled = true;
-                if (s === activeTbStartSlot) opt.selected = true;
-                startSel.appendChild(opt);
-            }
-            if (activeTbEndSlot < activeTbStartSlot) activeTbEndSlot = activeTbStartSlot;
-            activeTbEndSlot = clampSlotRangeToEmpty(activeTbStartSlot, activeTbEndSlot, editingTimeBlockId);
-            for (let e = activeTbStartSlot; e < TOTAL_SLOTS; e++) {
-                const opt = document.createElement('option'); opt.value = e; opt.textContent = slotToTimeStr(e, true);
-                if (isRangeOverlapping(activeTbStartSlot, e, editingTimeBlockId)) opt.disabled = true;
-                if (e === activeTbEndSlot) opt.selected = true;
-                endSel.appendChild(opt);
-            }
-        }
-        function handleTbStartSlotChange(val) {
-            const newStart = Number(val);
-            if (isNaN(newStart) || isSlotOccupied(newStart, editingTimeBlockId)) return;
-            const duration = Math.max(0, activeTbEndSlot - activeTbStartSlot);
-            activeTbStartSlot = newStart;
-            activeTbEndSlot = clampSlotRangeToEmpty(activeTbStartSlot, Math.min(TOTAL_SLOTS - 1, newStart + duration), editingTimeBlockId);
-            populateTimeBlockSelects();
-        }
-        function handleTbEndSlotChange(val) {
-            const newEnd = Number(val);
-            if (isNaN(newEnd) || newEnd < activeTbStartSlot) return;
-            activeTbEndSlot = clampSlotRangeToEmpty(activeTbStartSlot, newEnd, editingTimeBlockId);
-            populateTimeBlockSelects();
-        }
-        function setModalTimeBlockColor(c) {
-            modalTimeBlockColor = normalizeColorHex(c);
-            const noneBtn = document.getElementById('tbHlNoneBtn');
-            if (noneBtn) {
-                if (modalTimeBlockColor === 'none') noneBtn.classList.add('ring-2', 'ring-offset-2', 'ring-slate-800');
-                else noneBtn.classList.remove('ring-2', 'ring-offset-2', 'ring-slate-800');
-            }
-            renderAllPinnedColorBars();
-        }
-        function saveTimeBlockModal() {
-            const text = document.getElementById('tbTextInput').value.trim();
-            if (editingTimeBlockId) plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== editingTimeBlockId);
-            if (text || modalTimeBlockColor !== 'none') {
-                plannerState.timeBlocks.push({
-                    id: editingTimeBlockId || ('tb-' + Date.now()),
-                    startSlot: activeTbStartSlot,
-                    endSlot: activeTbEndSlot,
-                    text,
-                    color: modalTimeBlockColor,
-                    linkedTaskKey: editingTimeBlockLinkedTaskKey || null
+        function getAllTopicCards(targetDateKey = getTodayDateKey()) {
+            const targetData = (targetDateKey === selectedDateKey) ? plannerState : getPlannerDataForDate(targetDateKey);
+            const topicGroups = [];
+            let currentTopic = null;
+
+            ['left', 'right'].forEach(colKey => {
+                targetData.columns[colKey].forEach((item, rowIdx) => {
+                    const txt = (item.text || '').trim();
+                    if (item.rowType === 'topic') {
+                        if (txt) { currentTopic = { topicName: txt, colKey, tasks: [] }; topicGroups.push(currentTopic); }
+                    } else if (txt) {
+                        if (!currentTopic) { currentTopic = { topicName: '', colKey, tasks: [] }; topicGroups.push(currentTopic); }
+                        currentTopic.tasks.push({ item, rowIdx, colKey });
+                    }
                 });
-            }
-            saveStateToStorage(); closeTimeBlockModal(); renderMiddleRows(); renderTimetable();
+            });
+            return topicGroups.filter(g => g.tasks.length > 0);
         }
-        function deleteCurrentTimeBlock() {
-            if (editingTimeBlockId) {
-                plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== editingTimeBlockId);
-            }
-            saveStateToStorage(); closeTimeBlockModal(); renderMiddleRows(); renderTimetable();
+
+        function setWidgetPreviewSize(sizeKey) {
+            if (WIDGET_SIZE_SPECS[sizeKey]) { activeWidgetSize = sizeKey; renderWidgetTopicsGrid(); }
         }
-        function closeTimeBlockModal() { closeSpectrumPicker(); document.getElementById('timeBlockModalBackdrop').classList.add('hidden'); renderTimetable(); }
+
+        function allocateTopicsToWidgetColumns(topicGroups, numCols, linesPerCol) {
+            const cols = Array.from({ length: numCols }, () => ({ usedLines: 0, cards: [] }));
+            let hiddenTopicsCount = 0, hiddenTasksCount = 0;
+
+            topicGroups.forEach(group => {
+                let remaining = [...group.tasks];
+                let isCont = false;
+                const hasTitle = Boolean(group.topicName && group.topicName.trim());
+                const headerCost = hasTitle ? 1 : 0;
+
+                while (remaining.length > 0) {
+                    let target = cols.find(c => (linesPerCol - c.usedLines) >= (headerCost + 1));
+                    if (!target) { if (!isCont) hiddenTopicsCount++; hiddenTasksCount += remaining.length; break; }
+                    const free = (linesPerCol - target.usedLines) - headerCost;
+                    const canSplit = topicGroups.length < numCols && cols.some(c => c !== target && c.usedLines === 0);
+                    const title = hasTitle ? (isCont ? `${group.topicName} ···` : group.topicName) : '';
+
+                    if (remaining.length <= free) {
+                        target.cards.push({ topicName: title, visibleTasks: remaining, overflowCount: 0 });
+                        target.usedLines += headerCost + remaining.length; remaining = [];
+                    } else if (canSplit) {
+                        const chunk = remaining.slice(0, free);
+                        target.cards.push({ topicName: title, visibleTasks: chunk, overflowCount: 0 });
+                        target.usedLines += headerCost + chunk.length; remaining = remaining.slice(free); isCont = true;
+                    } else {
+                        const visible = remaining.slice(0, free);
+                        target.cards.push({ topicName: title, visibleTasks: visible, overflowCount: remaining.length - visible.length });
+                        target.usedLines += headerCost + visible.length; remaining = [];
+                    }
+                }
+            });
+            return { cols, hiddenTopicsCount, hiddenTasksCount };
+        }
+
+        function renderWidgetTopicsGrid() {
+            const container = document.getElementById('widgetTopicsGrid'), outer = document.getElementById('widgetOuterContainer'), badge = document.getElementById('widgetCapacityBadge');
+            if (!container || !outer) return;
+            const spec = WIDGET_SIZE_SPECS[activeWidgetSize] || WIDGET_SIZE_SPECS.large;
+
+            ['small', 'medium', 'large', 'xl'].forEach(k => {
+                const btn = document.getElementById(`widgetSizeBtn-${k}`);
+                if (btn) btn.className = k === activeWidgetSize ? 'liquid-btn-active px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase transition' : 'px-2.5 py-1 rounded-[9px] text-[10px] font-bold tracking-wider uppercase text-slate-600 hover:text-slate-900 transition';
+            });
+
+            outer.className = `liquid-glass-widget rounded-[32px] w-full p-5 sm:p-6 transition-all duration-200 max-h-[92vh] overflow-y-auto ${spec.maxWidthClass}`;
+            const todayKey = getTodayDateKey(), parts = parseDateKeyToParts(todayKey);
+            if (badge) badge.textContent = spec.label;
+            const headerDate = document.getElementById('widgetHeaderDateText');
+            if (headerDate) headerDate.textContent = activeWidgetSize === 'small' ? `${parts.mm}.${parts.dd} (${parts.dow})` : `${parts.yyyy}.${parts.mm}.${parts.dd} (${parts.dow})`;
+
+            const groups = getAllTopicCards(todayKey);
+            if (groups.length === 0) {
+                container.className = 'grid grid-cols-1';
+                container.innerHTML = `<div class="col-span-full py-10 text-center text-xs font-semibold tracking-widest text-slate-400 uppercase">NO ACTIVE TASKS FOR TODAY</div>`;
+                return;
+            }
+
+            const { cols, hiddenTopicsCount, hiddenTasksCount } = allocateTopicsToWidgetColumns(groups, spec.columns, spec.linesPerCol);
+            const activeCols = cols.filter(c => c.cards.length > 0);
+            container.className = activeCols.length === 1 ? 'grid grid-cols-1 gap-3.5' : `grid ${spec.gridClass}`;
+
+            container.innerHTML = activeCols.map((col, idx) => `
+                <div class="flex flex-col gap-3">
+                    ${col.cards.map(card => `
+                        <div class="liquid-glass-subcard rounded-2xl p-3.5 flex flex-col gap-2">
+                            ${(card.topicName || card.overflowCount > 0) ? `
+                                <div class="flex items-center justify-between select-none">
+                                    <span class="text-[13px] sm:text-[13.5px] font-bold text-slate-900 tracking-tight uppercase">${escapeHtml(card.topicName)}</span>
+                                    ${card.overflowCount > 0 ? `<span class="text-[10px] font-semibold text-slate-500 bg-white/60 px-2 py-0.5 rounded-full border border-white/80">+${card.overflowCount} MORE</span>` : ''}
+                                </div>
+                            ` : ''}
+                            <div class="space-y-1">
+                                ${card.visibleTasks.map(({ item, rowIdx, colKey }) => `
+                                    <div onclick="triggerWidgetDeepLinkToTask('${colKey}', ${rowIdx})" class="group flex items-center gap-2.5 px-2 py-1 rounded-xl cursor-pointer hover:bg-white/60 transition">
+                                        <span class="w-[15px] h-[15px] rounded-[3px] border-[1.5px] border-slate-700 bg-transparent flex items-center justify-center flex-shrink-0">
+                                            ${item.done ? '<svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6.2L4.8 9L10.2 2.8" stroke="#111111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
+                                        </span>
+                                        <span class="text-[12.5px] font-medium leading-none text-slate-800 truncate select-none ${item.done ? 'line-through text-slate-400' : ''}">${escapeHtml(item.text)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                    ${(idx === activeCols.length - 1 && hiddenTopicsCount > 0) ? `<div class="text-right pr-1"><span class="text-[10px] font-bold text-slate-500 bg-white/50 px-2.5 py-1 rounded-full border border-white/70">+${hiddenTopicsCount} TOPICS (${hiddenTasksCount} TO-DOS)</span></div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function openWidgetSimulator() { renderWidgetTopicsGrid(); document.getElementById('widgetSimModalBackdrop').classList.remove('hidden'); }
+        function closeWidgetSimulator() { document.getElementById('widgetSimModalBackdrop').classList.add('hidden'); }
+
+        function triggerWidgetDeepLinkToTask(colKey, rowIdx) {
+            closeWidgetSimulator();
+            if (selectedDateKey !== getTodayDateKey()) switchSelectedDate(getTodayDateKey());
+            const rowEl = document.getElementById(`planner-row-${colKey}-${rowIdx}`);
+            if (rowEl) { rowEl.classList.remove('deeplink-flash'); void rowEl.offsetWidth; rowEl.classList.add('deeplink-flash'); }
+            setTimeout(() => openTaskModal(colKey, rowIdx), 180);
+        }
+
+        function buildWidgetSyncPayload() {
+            const todayKey = getTodayDateKey();
+            const topics = getAllTopicCards(todayKey).map(g => ({
+                topic: g.topicName, tasks: g.tasks.map(t => ({ text: t.item.text, done: !!t.item.done, id: `${t.colKey}-${t.rowIdx}` }))
+            }));
+            return { dateKey: todayKey, updatedAt: new Date().toISOString(), appUrl: BASE_APP_URL, topics };
+        }
+
+        function toggleScriptableGuide() { document.getElementById('scriptableSetupBox')?.classList.toggle('hidden'); }
+
+        function copyTextFallback(text) {
+            if (navigator.clipboard?.writeText) { navigator.clipboard.writeText(text).catch(()=>{}); return; }
+            const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+            document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch(e){} document.body.removeChild(ta);
+        }
+
+        function syncToScriptableApp() {
+            const str = JSON.stringify(buildWidgetSyncPayload());
+            copyTextFallback(str);
+            window.location.href = `scriptable:///run/DailyPlanner?payload=${encodeURIComponent(str)}`;
+        }
+
+        function copyWidgetJsonData() {
+            copyTextFallback(JSON.stringify(buildWidgetSyncPayload(), null, 2));
+            const btn = document.getElementById('copyJsonBtn');
+            if (btn) { btn.textContent = 'COPIED!'; setTimeout(() => { btn.textContent = 'COPY JSON'; }, 1400); }
+        }
+
+        function getScriptableWidgetSourceCode() {
+            const initialData = JSON.stringify(buildWidgetSyncPayload());
+            const apiKey = USER_FIREBASE_CONFIG.apiKey;
+            const cloudEndpoint = `https://firestore.googleapis.com/v1/projects/${USER_FIREBASE_CONFIG.projectId}/databases/(default)/documents/artifacts/${appId}/public/data/planner_days/`;
+            return `// Variables used by Scriptable.
+// Name this script: DailyPlanner
+const fm = FileManager.local();
+const filePath = fm.joinPath(fm.documentsDirectory(), "daily_planner_widget.json");
+const tokenPath = fm.joinPath(fm.documentsDirectory(), "daily_planner_firebase_token.json");
+const FIREBASE_API_KEY = ${JSON.stringify(apiKey)};
+const CLOUD_BASE = ${JSON.stringify(cloudEndpoint)};
+const SYNC_KEY = ${JSON.stringify(syncWorkspaceKey)};
+const DEFAULT_APP_URL = ${JSON.stringify(BASE_APP_URL)};
+const DOW_NAMES = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+function getTodayKey() {
+  const now = new Date();
+  return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
+}
+
+function getTodayHeaderDisplay(compact = false) {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const dow = DOW_NAMES[now.getDay()];
+  return compact ? (mm + "." + dd + " (" + dow + ")") : (yyyy + "." + mm + "." + dd + " (" + dow + ")");
+}
+
+function slotToTimeStr(slotIndex, isEnd = false) {
+  const totalMinutes = (isEnd ? slotIndex + 1 : slotIndex) * 10;
+  const hh = Math.floor(totalMinutes / 60);
+  const mm = totalMinutes % 60;
+  return String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
+}
+
+function resolveTaskTimeRange(timeBlocks, taskKey, taskText) {
+  if (!Array.isArray(timeBlocks) || timeBlocks.length === 0) return "";
+  let found = timeBlocks.find(b => b && b.linkedTaskKey === taskKey);
+  if (!found && taskText) {
+    found = timeBlocks.find(b => b && !b.linkedTaskKey && (b.text || "").trim() === taskText);
+  }
+  if (!found || typeof found.startSlot !== "number" || typeof found.endSlot !== "number") return "";
+  return slotToTimeStr(found.startSlot, false) + " - " + slotToTimeStr(found.endSlot, true);
+}
+
+async function getFirebaseIdToken() {
+  if (!FIREBASE_API_KEY) return null;
+  try {
+    if (fm.fileExists(tokenPath)) {
+      const cached = JSON.parse(fm.readString(tokenPath));
+      if (cached && cached.idToken && cached.expiresAt > Date.now()) return cached.idToken;
+    }
+  } catch (e) {}
+  try {
+    const authReq = new Request("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + FIREBASE_API_KEY);
+    authReq.method = "POST";
+    authReq.headers = { "Content-Type": "application/json" };
+    authReq.body = JSON.stringify({ returnSecureToken: true });
+    authReq.timeoutInterval = 5;
+    const authRes = await authReq.loadJSON();
+    if (authRes && authRes.idToken) {
+      fm.writeString(tokenPath, JSON.stringify({ idToken: authRes.idToken, expiresAt: Date.now() + 50 * 60 * 1000 }));
+      return authRes.idToken;
+    }
+  } catch (e) {}
+  return null;
+}
+
+let data = ${initialData};
+data.appUrl = DEFAULT_APP_URL;
+if (args.queryParameters && args.queryParameters.payload) {
+  try {
+    data = JSON.parse(args.queryParameters.payload);
+    data.appUrl = DEFAULT_APP_URL;
+    fm.writeString(filePath, JSON.stringify(data));
+  } catch(e) {}
+} else if (fm.fileExists(filePath)) {
+  try {
+    const saved = JSON.parse(fm.readString(filePath));
+    if (saved && saved.dateKey === getTodayKey()) {
+      data = saved;
+      data.appUrl = DEFAULT_APP_URL;
+    }
+  } catch (e) {}
+}
+
+if (CLOUD_BASE) {
+  try {
+    const idToken = await getFirebaseIdToken();
+    const req = new Request(CLOUD_BASE + SYNC_KEY + "_" + getTodayKey());
+    req.timeoutInterval = 5;
+    if (idToken) req.headers = { "Authorization": "Bearer " + idToken };
+    const res = await req.loadJSON();
+    if (res && res.fields && res.fields.payloadJson && res.fields.payloadJson.stringValue) {
+      const rawState = JSON.parse(res.fields.payloadJson.stringValue);
+      const timeBlocks = Array.isArray(rawState.timeBlocks) ? rawState.timeBlocks : [];
+      const groups = [];
+      let cur = null;
+      ["left", "right"].forEach(colKey => {
+        ((rawState.columns && rawState.columns[colKey]) || []).forEach((it, idx) => {
+          const txt = (it.text || "").trim();
+          if (it.rowType === "topic") {
+            if (txt) { cur = { topic: txt, tasks: [] }; groups.push(cur); }
+          } else if (txt) {
+            if (!cur) { cur = { topic: "", tasks: [] }; groups.push(cur); }
+            const taskKey = colKey + "-" + idx;
+            const timeStr = resolveTaskTimeRange(timeBlocks, taskKey, txt);
+            cur.tasks.push({ text: txt, done: !!it.done, id: taskKey, timeStr: timeStr });
+          }
+        });
+      });
+      data.dateKey = getTodayKey();
+      data.appUrl = DEFAULT_APP_URL;
+      data.topics = groups.filter(g => g.tasks.length > 0);
+      fm.writeString(filePath, JSON.stringify(data));
+    } else if (res && res.error && res.error.code === 404) {
+      data.dateKey = getTodayKey();
+      data.appUrl = DEFAULT_APP_URL;
+      data.topics = [];
+      fm.writeString(filePath, JSON.stringify(data));
+    }
+  } catch (e) {}
+}
+
+const targetAppUrl = DEFAULT_APP_URL;
+const family = config.widgetFamily || "large";
+const spec = {
+  small: { cols: 1, lines: 5 },
+  medium: { cols: 2, lines: 5 },
+  large: { cols: 2, lines: 13 },
+  extraLarge: { cols: 4, lines: 13 }
+}[family] || { cols: 2, lines: 13 };
+
+const w = new ListWidget();
+w.backgroundColor = new Color("#EEF2F6");
+w.setPadding(12, 12, 12, 12);
+w.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000);
+w.url = targetAppUrl;
+
+const isSmallWidget = family === "small";
+const headerOuter = w.addStack();
+headerOuter.layoutVertically();
+headerOuter.backgroundColor = new Color("#FFFFFF", 0.94);
+headerOuter.cornerRadius = 12;
+headerOuter.borderColor = new Color("#9CA3AF", 0.65);
+headerOuter.borderWidth = 1.2;
+headerOuter.setPadding(9, isSmallWidget ? 14 : 22, 9, isSmallWidget ? 14 : 22);
+
+const headerRow = headerOuter.addStack();
+headerRow.layoutHorizontally();
+headerRow.centerAlignContent();
+
+const dateText = headerRow.addText(getTodayHeaderDisplay(isSmallWidget));
+dateText.font = Font.semiboldSystemFont(isSmallWidget ? 11 : 12.5);
+dateText.textColor = new Color("#334155");
+dateText.lineLimit = 1;
+
+headerRow.addSpacer(isSmallWidget ? 14 : 24);
+const dividerBar = headerRow.addStack();
+dividerBar.size = new Size(1.2, 15);
+dividerBar.backgroundColor = new Color("#9CA3AF", 0.85);
+
+headerRow.addSpacer();
+const todoTitle = headerRow.addText("TO-DO");
+todoTitle.font = Font.boldSystemFont(isSmallWidget ? 11.5 : 12.5);
+todoTitle.textColor = new Color("#0F172A");
+todoTitle.lineLimit = 1;
+
+w.addSpacer(8);
+
+const cols = Array.from({ length: spec.cols }, () => ({ used: 0, cards: [] }));
+(data.topics || []).forEach(g => {
+  let rem = [...(g.tasks || [])];
+  let cont = false;
+  const hasTitle = Boolean(g.topic && g.topic.trim());
+  const headerCost = hasTitle ? 1 : 0;
+  while (rem.length > 0) {
+    let target = cols.find(c => (spec.lines - c.used) >= (headerCost + 1));
+    if (!target) break;
+    let free = (spec.lines - target.used) - headerCost;
+    let canSplit = data.topics.length < spec.cols && cols.some(c => c !== target && c.used === 0);
+    let cardTitle = hasTitle ? (cont ? g.topic + " ···" : g.topic) : "";
+    if (rem.length <= free) {
+      target.cards.push({ title: cardTitle, tasks: rem, more: 0 });
+      target.used += headerCost + rem.length; rem = [];
+    } else if (canSplit) {
+      let chunk = rem.slice(0, free);
+      target.cards.push({ title: cardTitle, tasks: chunk, more: 0 });
+      target.used += headerCost + chunk.length; rem = rem.slice(free); cont = true;
+    } else {
+      let vis = rem.slice(0, free);
+      target.cards.push({ title: cardTitle, tasks: vis, more: rem.length - vis.length });
+      target.used += headerCost + vis.length; rem = [];
+    }
+  }
+});
+
+const activeCols = cols.filter(c => c.cards.length > 0);
+if (activeCols.length === 0) {
+  w.addSpacer();
+  const emptyRow = w.addStack();
+  emptyRow.layoutHorizontally();
+  emptyRow.addSpacer();
+  const emptyTxt = emptyRow.addText("NO TASKS FOR TODAY");
+  emptyTxt.font = Font.boldSystemFont(12);
+  emptyTxt.textColor = new Color("#94A3B8");
+  emptyRow.addSpacer();
+  w.addSpacer();
+} else {
+  const mainRow = w.addStack();
+  mainRow.layoutHorizontally();
+  mainRow.spacing = 10;
+  mainRow.topAlignContent();
+
+  activeCols.forEach(col => {
+    const colStack = mainRow.addStack();
+    colStack.layoutVertically();
+    colStack.spacing = 10;
+    colStack.topAlignContent();
+
+    col.cards.forEach(card => {
+      const box = colStack.addStack();
+      box.layoutVertically();
+      box.backgroundColor = new Color("#FFFFFF", 0.9);
+      box.cornerRadius = 16;
+      box.setPadding(12, 14, 12, 14);
+      box.spacing = 6;
+      box.topAlignContent();
+
+      if (card.title || card.more > 0) {
+        const head = box.addStack();
+        head.layoutHorizontally();
+        head.centerAlignContent();
+        if (card.title) {
+          const titleTxt = head.addText(card.title.toUpperCase());
+          titleTxt.font = Font.boldSystemFont(13);
+          titleTxt.textColor = new Color("#0F172A");
+        }
+        head.addSpacer();
+        if (card.more > 0) {
+          const moreTxt = head.addText("+" + card.more + " MORE");
+          moreTxt.font = Font.semiboldSystemFont(9.5);
+          moreTxt.textColor = new Color("#64748B");
+        }
+      }
+
+      card.tasks.forEach(t => {
+        const r = box.addStack();
+        r.layoutHorizontally();
+        r.centerAlignContent();
+        r.spacing = 8;
+        r.size = new Size(0, 18);
+        r.url = t.id ? (targetAppUrl + "?taskId=" + t.id) : targetAppUrl;
+        const sym = SFSymbol.named(t.done ? "checkmark.square.fill" : "square");
+        if (sym) {
+          const img = r.addImage(sym.image);
+          img.imageSize = new Size(17, 17);
+          img.tintColor = t.done ? new Color("#64748B") : new Color("#1E293B");
+        } else {
+          const chk = r.addText(t.done ? "☑" : "☐");
+          chk.font = Font.mediumSystemFont(14);
+          chk.textColor = new Color("#1E293B");
+        }
+
+        if (t.timeStr) {
+          const textCol = r.addStack();
+          textCol.layoutVertically();
+          textCol.spacing = 0;
+
+          const lbl = textCol.addText(t.text);
+          lbl.font = Font.mediumSystemFont(10);
+          lbl.textColor = t.done ? new Color("#94A3B8") : new Color("#1E293B");
+          lbl.lineLimit = 1;
+
+          const timeLbl = textCol.addText(t.timeStr);
+          timeLbl.font = Font.regularSystemFont(7.5);
+          timeLbl.textColor = t.done ? new Color("#CBD5E1") : new Color("#64748B");
+          timeLbl.lineLimit = 1;
+        } else {
+          const lbl = r.addText(t.text);
+          lbl.font = Font.mediumSystemFont(13);
+          lbl.textColor = t.done ? new Color("#94A3B8") : new Color("#1E293B");
+          lbl.lineLimit = 1;
+        }
+        r.addSpacer();
+      });
+    });
+  });
+  w.addSpacer();
+}
+
+Script.setWidget(w);
+if (!config.runsInWidget) {
+  Safari.open(targetAppUrl);
+}
+Script.complete();`;
+        }
+
+        function copyScriptableWidgetCode() {
+            copyTextFallback(getScriptableWidgetSourceCode());
+            const btn = document.getElementById('copyScriptableBtn');
+            if (btn) { btn.textContent = 'COPIED!'; setTimeout(() => { btn.textContent = 'COPY WIDGET SCRIPT'; }, 1400); }
+        }
 
         Object.assign(window, {
-            openDatePickerModal, closeDatePickerModal, changeCalendarMonth, selectDateFromPicker, resetCurrentDatePage, getTodayDateKey,
-            handleGoalChange, handleReviewChange, cancelTwoTapSelection,
-            openTaskModal, closeTaskModal, setModalRowType, setModalTaskDone, setModalTaskHighlight,
-            setModalTaskTimeEnabled, handleModalTaskStartSlotChange, handleModalTaskEndSlotChange,
-            saveTaskModal, clearModalTask,
-            handleTbStartSlotChange, handleTbEndSlotChange, setModalTimeBlockColor, saveTimeBlockModal, deleteCurrentTimeBlock, closeTimeBlockModal,
-            triggerNativePicker, closeSpectrumPicker, handlePickerHexTyping
+            openDatePickerModal, closeDatePickerModal, changeCalendarMonth, selectDateFromPicker, resetCurrentDatePage,
+            getTodayDateKey, openCloudSyncModal, closeCloudSyncModal, applySyncKeyInput, openWidgetSimulator, closeWidgetSimulator,
+            setWidgetPreviewSize, syncToScriptableApp, toggleScriptableGuide, copyScriptableWidgetCode, copyWidgetJsonData,
+            triggerWidgetDeepLinkToTask, cancelTwoTapSelection, handleGoalChange, handleReviewChange, openTaskModal, closeTaskModal,
+            setModalRowType, setModalTaskDone, setModalTaskHighlight, setModalTaskTimeEnabled, handleModalTaskStartSlotChange,
+            handleModalTaskEndSlotChange, saveTaskModal, clearModalTask, handleTbStartSlotChange, handleTbEndSlotChange,
+            setModalTimeBlockColor, saveTimeBlockModal, deleteCurrentTimeBlock, closeTimeBlockModal, triggerNativePicker,
+            closeSpectrumPicker, handlePickerHexTyping
         });
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             initSpectrumPickerEvents();
             applyResponsiveLayoutMode();
             renderAllPinnedColorBars();
             switchSelectedDate(getTodayDateKey());
-            initFirebaseCloudSync();
-            const params = new URLSearchParams(window.location.search);
-            const taskId = params.get('taskId');
+            await initFirebaseCloudSync();
+            const taskId = new URLSearchParams(window.location.search).get('taskId');
             if (taskId && /^(left|right)-([0-9]|1[0-7])$/.test(taskId)) {
                 const [col, r] = taskId.split('-');
-                setTimeout(() => openTaskModal(col, Number(r)), 200);
+                triggerWidgetDeepLinkToTask(col, Number(r));
             }
         });
     </script>
