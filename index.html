@@ -1022,6 +1022,8 @@
         let activeModalTaskBlockId = null;
         let activeModalTaskStartSlot = 54;
         let activeModalTaskEndSlot = 59;
+        let pendingModalClear = false;
+        let pendingTopicCascadeClear = false;
 
         let isDraggingTimetable = false;
         let dragStartSlot = null;
@@ -2201,13 +2203,9 @@
         }
 
         function deleteCurrentTimeBlock() {
-            const start = Math.min(activeTbStartSlot, activeTbEndSlot);
-            const end = Math.max(activeTbStartSlot, activeTbEndSlot);
-            plannerState.timeBlocks = plannerState.timeBlocks.filter(b => {
-                if (editingTimeBlockId && b.id === editingTimeBlockId) return false;
-                return b.endSlot < start || b.startSlot > end;
-            });
-            saveStateToStorage(); closeTimeBlockModal(); renderMiddleRows(); renderTimetable();
+            const inputEl = document.getElementById('tbTextInput');
+            if (inputEl) inputEl.value = '';
+            setModalTimeBlockColor('none');
         }
         function closeTimeBlockModal() { closeSpectrumPicker(); document.getElementById('timeBlockModalBackdrop').classList.add('hidden'); renderTimetable(); }
 
@@ -2267,6 +2265,8 @@
         function openTaskModal(colKey, rowIdx) {
             const item = plannerState.columns[colKey][rowIdx];
             activeModalTaskRef = { colKey, rowIdx };
+            pendingModalClear = false;
+            pendingTopicCascadeClear = false;
             document.getElementById('modalTaskTextInput').value = item.text || '';
 
             const linkedBlock = findLinkedTimeBlockForTask(colKey, rowIdx, item.text);
@@ -2335,48 +2335,21 @@
             const { colKey, rowIdx } = activeModalTaskRef;
             const taskKey = `${colKey}-${rowIdx}`;
             const item = plannerState.columns[colKey][rowIdx];
+            const wasOriginallyTopic = item && item.rowType === 'topic' && (item.text || '').trim() !== '';
+            const oldTextTrimmed = (item && item.text) ? item.text.trim() : '';
             const newText = document.getElementById('modalTaskTextInput').value;
+            const newTextTrimmed = newText.trim();
 
-            item.rowType = activeModalRowType; item.text = newText;
-            item.done = activeModalRowType === 'task' ? activeModalTaskDone : false;
-            item.hl = activeModalTaskHl;
-
-            const existingLinked = plannerState.timeBlocks.find(b => b.id === activeModalTaskBlockId || b.linkedTaskKey === taskKey);
-            if (activeModalRowType === 'task' && activeModalTaskHasTime) {
-                const startS = Math.min(activeModalTaskStartSlot, activeModalTaskEndSlot);
-                const endS = clampSlotRangeToEmpty(startS, Math.max(activeModalTaskStartSlot, activeModalTaskEndSlot), activeModalTaskBlockId);
-                if (!isSlotOccupied(startS, activeModalTaskBlockId)) {
-                    const blockColor = (activeModalTaskHl && activeModalTaskHl !== 'none')
-                        ? activeModalTaskHl
-                        : ((existingLinked && existingLinked.color && existingLinked.color !== 'none') ? existingLinked.color : (pinnedColors[0] || '#93D5F6'));
-                    if (existingLinked) plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== existingLinked.id);
-                    plannerState.timeBlocks.push({
-                        id: existingLinked?.id || ('tb-' + Date.now()),
-                        startSlot: startS, endSlot: endS, text: newText.trim(), color: blockColor, linkedTaskKey: taskKey
-                    });
-                }
-            } else if (existingLinked) {
-                plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== existingLinked.id);
-            }
-
-            saveStateToStorage(); closeTaskModal(); renderMiddleRows(); renderTimetable();
-        }
-
-        function clearModalTask() {
-            if (!activeModalTaskRef) return;
-            const { colKey, rowIdx } = activeModalTaskRef;
-            const taskKey = `${colKey}-${rowIdx}`;
-            const currentItem = plannerState.columns[colKey][rowIdx];
-            const wasTopic = (currentItem && currentItem.rowType === 'topic') || activeModalRowType === 'topic';
-
-            const clearedTaskKeys = new Set([taskKey]);
+            const clearedTaskKeys = new Set();
             const clearedTexts = new Set();
-            if (currentItem && currentItem.text && currentItem.text.trim()) {
-                clearedTexts.add(currentItem.text.trim());
+
+            if (pendingModalClear || newTextTrimmed === '') {
+                clearedTaskKeys.add(taskKey);
+                if (oldTextTrimmed) clearedTexts.add(oldTextTrimmed);
             }
 
-            // 상위 항목인 토픽(TOPIC)을 클리어한 경우, 다음 토픽이 나오기 전까지의 모든 하위 투두(TO-DO)도 함께 클리어
-            if (wasTopic) {
+            // 상위 항목인 토픽(TOPIC)을 CLEAR 했거나 내용을 비운 뒤 SAVE를 누른 경우에만 하위 투두 일괄 초기화 적용
+            if (pendingTopicCascadeClear || (wasOriginallyTopic && newTextTrimmed === '')) {
                 for (let r = rowIdx + 1; r < MIDDLE_ROW_COUNT; r++) {
                     const subItem = plannerState.columns[colKey][r];
                     if (!subItem) continue;
@@ -2396,6 +2369,58 @@
                 }
             }
 
+            item.rowType = activeModalRowType;
+            item.text = newText;
+            item.done = activeModalRowType === 'task' ? activeModalTaskDone : false;
+            item.hl = activeModalTaskHl;
+
+            if (clearedTaskKeys.size > 0) {
+                plannerState.timeBlocks = plannerState.timeBlocks.filter(b => {
+                    if (b.id === activeModalTaskBlockId && (!activeModalTaskHasTime || activeModalRowType !== 'task' || newTextTrimmed === '')) return false;
+                    if (b.linkedTaskKey && clearedTaskKeys.has(b.linkedTaskKey)) return false;
+                    if (!b.linkedTaskKey && b.text && clearedTexts.has(b.text.trim())) return false;
+                    return true;
+                });
+            }
+
+            const existingLinked = plannerState.timeBlocks.find(b => b.id === activeModalTaskBlockId || b.linkedTaskKey === taskKey);
+            if (activeModalRowType === 'task' && activeModalTaskHasTime && newTextTrimmed !== '') {
+                const startS = Math.min(activeModalTaskStartSlot, activeModalTaskEndSlot);
+                const endS = clampSlotRangeToEmpty(startS, Math.max(activeModalTaskStartSlot, activeModalTaskEndSlot), activeModalTaskBlockId);
+                if (!isSlotOccupied(startS, activeModalTaskBlockId)) {
+                    const blockColor = (activeModalTaskHl && activeModalTaskHl !== 'none')
+                        ? activeModalTaskHl
+                        : ((existingLinked && existingLinked.color && existingLinked.color !== 'none') ? existingLinked.color : (pinnedColors[0] || '#93D5F6'));
+                    if (existingLinked) plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== existingLinked.id);
+                    plannerState.timeBlocks.push({
+                        id: existingLinked?.id || ('tb-' + Date.now()),
+                        startSlot: startS, endSlot: endS, text: newTextTrimmed, color: blockColor, linkedTaskKey: taskKey
+                    });
+                }
+            } else if (existingLinked) {
+                plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== existingLinked.id);
+            }
+
+            pendingModalClear = false;
+            pendingTopicCascadeClear = false;
+            saveStateToStorage();
+            closeTaskModal();
+            renderMiddleRows();
+            renderTimetable();
+        }
+
+        function clearModalTask() {
+            if (!activeModalTaskRef) return;
+            const { colKey, rowIdx } = activeModalTaskRef;
+            const currentItem = plannerState.columns[colKey][rowIdx];
+            const wasTopic = (currentItem && currentItem.rowType === 'topic') || activeModalRowType === 'topic';
+
+            // SAVE 버튼을 누르기 전까지는 모달 내부 UI 상태와 예약 플래그만 초기화
+            pendingModalClear = true;
+            if (wasTopic) {
+                pendingTopicCascadeClear = true;
+            }
+
             const defaultRowType = (rowIdx === 0 || rowIdx === 9) ? 'topic' : 'task';
             setModalRowType(defaultRowType);
             setModalTaskDone(false);
@@ -2404,19 +2429,6 @@
             setModalTaskHighlight('none');
             setModalTaskTimeEnabled(false);
 
-            plannerState.columns[colKey][rowIdx] = { rowType: defaultRowType, text: '', done: false, hl: 'none' };
-            plannerState.timeBlocks = plannerState.timeBlocks.filter(b => {
-                if (b.id === activeModalTaskBlockId) return false;
-                if (b.linkedTaskKey && clearedTaskKeys.has(b.linkedTaskKey)) return false;
-                if (!b.linkedTaskKey && b.text && clearedTexts.has(b.text.trim())) return false;
-                return true;
-            });
-            activeModalTaskBlockId = null;
-
-            saveStateToStorage();
-            renderMiddleRows();
-            renderTimetable();
-
             const btn = document.getElementById('btnTaskModalClear');
             if (btn) {
                 btn.classList.add('text-rose-600');
@@ -2424,7 +2436,13 @@
             }
         }
 
-        function closeTaskModal() { closeSpectrumPicker(); document.getElementById('taskModalBackdrop').classList.add('hidden'); activeModalTaskRef = null; }
+        function closeTaskModal() {
+            closeSpectrumPicker();
+            document.getElementById('taskModalBackdrop').classList.add('hidden');
+            activeModalTaskRef = null;
+            pendingModalClear = false;
+            pendingTopicCascadeClear = false;
+        }
 
         const WIDGET_SIZE_SPECS = {
             small: { label: 'SMALL (1 COL · 5 LINES)', columns: 1, linesPerCol: 5, maxWidthClass: 'max-w-[310px]', gridClass: 'grid-cols-1 gap-3' },
