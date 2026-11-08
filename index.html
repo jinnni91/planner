@@ -2628,6 +2628,7 @@ if (args.queryParameters && args.queryParameters.payload) {
     if (saved && saved.dateKey === getTodayKey()) {
       data = saved;
       data.appUrl = DEFAULT_APP_URL;
+      fm.writeString(filePath, JSON.stringify(data));
     }
   } catch (e) {}
 }
@@ -2838,7 +2839,9 @@ if (activeCols.length === 0) {
 }
 
 Script.setWidget(w);
-if (!config.runsInWidget) {
+if (config.runsInApp) {
+  await w.presentLarge();
+} else if (!config.runsInWidget) {
   Safari.open(targetAppUrl);
 }
 Script.complete();`;
