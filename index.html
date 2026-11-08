@@ -785,19 +785,19 @@
                     onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveTaskModal(); }">
             </div>
 
-            <div class="flex items-center justify-between pt-1">
-                <div class="flex items-center gap-2">
+            <div class="flex items-center justify-between gap-2 pt-1">
+                <div class="flex items-center gap-1.5 min-w-0">
                     <button type="button" id="taskHlNoneBtn" onclick="setModalTaskHighlight('none')"
-                        class="no-color-slash w-8 h-8 rounded-full border border-slate-300 shadow-xs transition hover:scale-105"
+                        class="no-color-slash w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-300 shadow-xs transition hover:scale-105 flex-shrink-0"
                         title="NO SHADE"></button>
-                    <div id="taskModalPinnedColors" class="flex items-center gap-2"></div>
+                    <div id="taskModalPinnedColors" class="flex items-center gap-1.5"></div>
                     <button type="button" onclick="triggerNativePicker({ type: 'taskModalRainbow' })"
-                        class="w-8 h-8 rounded-full border border-white/90 shadow-sm transition hover:scale-105"
+                        class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-white/90 shadow-sm transition hover:scale-105 flex-shrink-0"
                         style="background: conic-gradient(#f87171, #fbbf24, #34d399, #60a5fa, #a78bfa, #f472b6, #f87171);"
                         title="COLOR PICKER"></button>
                 </div>
                 <button type="button" id="btnTaskModalClear" onclick="clearModalTask()"
-                    class="text-[11px] font-bold tracking-widest uppercase text-slate-500 hover:text-rose-600 px-2 py-1 transition flex-shrink-0">
+                    class="text-[11px] font-bold tracking-widest uppercase text-slate-500 hover:text-rose-600 px-1.5 py-1 transition flex-shrink-0 whitespace-nowrap">
                     CLEAR
                 </button>
             </div>
@@ -1412,7 +1412,7 @@
                     btn.type = 'button';
                     btn.style.backgroundColor = hex;
                     const isSelected = normalizeColorHex(curHl).toUpperCase() === hex.toUpperCase();
-                    btn.className = `w-8 h-8 rounded-full border border-white/80 shadow-sm transition ${isSelected ? 'ring-2 ring-offset-2 ring-slate-800 scale-105' : 'hover:scale-105'}`;
+                    btn.className = `w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-white/80 shadow-sm transition flex-shrink-0 ${isSelected ? 'ring-2 ring-offset-2 ring-slate-800 scale-105' : 'hover:scale-105'}`;
                     btn.onclick = (e) => {
                         e.stopPropagation();
                         if (isTask) setModalTaskHighlight(hex); else setModalTimeBlockColor(hex);
@@ -2366,19 +2366,62 @@
             if (!activeModalTaskRef) return;
             const { colKey, rowIdx } = activeModalTaskRef;
             const taskKey = `${colKey}-${rowIdx}`;
+            const currentItem = plannerState.columns[colKey][rowIdx];
+            const wasTopic = (currentItem && currentItem.rowType === 'topic') || activeModalRowType === 'topic';
 
-            setModalRowType('task'); setModalTaskDone(false);
+            const clearedTaskKeys = new Set([taskKey]);
+            const clearedTexts = new Set();
+            if (currentItem && currentItem.text && currentItem.text.trim()) {
+                clearedTexts.add(currentItem.text.trim());
+            }
+
+            // 상위 항목인 토픽(TOPIC)을 클리어한 경우, 다음 토픽이 나오기 전까지의 모든 하위 투두(TO-DO)도 함께 클리어
+            if (wasTopic) {
+                for (let r = rowIdx + 1; r < MIDDLE_ROW_COUNT; r++) {
+                    const subItem = plannerState.columns[colKey][r];
+                    if (!subItem) continue;
+                    if (subItem.rowType === 'topic' && (subItem.text || '').trim() !== '') {
+                        break;
+                    }
+                    if (subItem.text && subItem.text.trim()) {
+                        clearedTexts.add(subItem.text.trim());
+                    }
+                    clearedTaskKeys.add(`${colKey}-${r}`);
+                    plannerState.columns[colKey][r] = {
+                        rowType: (r === 0 || r === 9) ? 'topic' : 'task',
+                        text: '',
+                        done: false,
+                        hl: 'none'
+                    };
+                }
+            }
+
+            const defaultRowType = (rowIdx === 0 || rowIdx === 9) ? 'topic' : 'task';
+            setModalRowType(defaultRowType);
+            setModalTaskDone(false);
             const textInput = document.getElementById('modalTaskTextInput');
             if (textInput) textInput.value = '';
-            setModalTaskHighlight('none'); setModalTaskTimeEnabled(false);
+            setModalTaskHighlight('none');
+            setModalTaskTimeEnabled(false);
 
-            plannerState.columns[colKey][rowIdx] = { rowType: 'task', text: '', done: false, hl: 'none' };
-            plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== activeModalTaskBlockId && b.linkedTaskKey !== taskKey);
+            plannerState.columns[colKey][rowIdx] = { rowType: defaultRowType, text: '', done: false, hl: 'none' };
+            plannerState.timeBlocks = plannerState.timeBlocks.filter(b => {
+                if (b.id === activeModalTaskBlockId) return false;
+                if (b.linkedTaskKey && clearedTaskKeys.has(b.linkedTaskKey)) return false;
+                if (!b.linkedTaskKey && b.text && clearedTexts.has(b.text.trim())) return false;
+                return true;
+            });
             activeModalTaskBlockId = null;
 
-            saveStateToStorage(); renderMiddleRows(); renderTimetable();
+            saveStateToStorage();
+            renderMiddleRows();
+            renderTimetable();
+
             const btn = document.getElementById('btnTaskModalClear');
-            if (btn) { btn.textContent = 'CLEARED ✓'; setTimeout(() => { if (btn) btn.textContent = 'CLEAR'; }, 900); }
+            if (btn) {
+                btn.classList.add('text-rose-600');
+                setTimeout(() => { if (btn) btn.classList.remove('text-rose-600'); }, 600);
+            }
         }
 
         function closeTaskModal() { closeSpectrumPicker(); document.getElementById('taskModalBackdrop').classList.add('hidden'); activeModalTaskRef = null; }
