@@ -757,17 +757,6 @@
     <!-- MODAL 1: ROW SETTING MODAL -->
     <div id="taskModalBackdrop" onclick="if(event.target===this) closeTaskModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4">
         <div id="taskModalDialog" class="liquid-glass-modal relative rounded-3xl max-w-sm w-full p-5 space-y-3.5">
-            <div class="grid grid-cols-2 gap-2">
-                <button type="button" id="btnRowTypeTopic" onclick="setModalRowType('topic')"
-                    class="liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition">
-                    TOPIC
-                </button>
-                <button type="button" id="btnRowTypeTask" onclick="setModalRowType('task')"
-                    class="liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition">
-                    TO-DO
-                </button>
-            </div>
-
             <div id="modalCompletionSection" class="grid grid-cols-2 gap-2">
                 <button type="button" id="btnMarkDone" onclick="setModalTaskDone(true)"
                     class="liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center gap-1.5 font-semibold text-xs tracking-wider uppercase transition">
@@ -780,7 +769,7 @@
             </div>
 
             <div>
-                <input id="modalTaskTextInput" type="text" placeholder="ENTER TEXT..."
+                <input id="modalTaskTextInput" type="text" placeholder="ENTER TO-DO..."
                     class="liquid-input w-full h-11 px-3.5 rounded-[12px] text-[13.5px] font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none"
                     onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveTaskModal(); }">
             </div>
@@ -927,15 +916,6 @@
                 <p class="text-[11px] text-slate-600 leading-relaxed">
                     <strong>자동 동기화 지원:</strong> 위 <strong>COPY WIDGET SCRIPT</strong> 버튼으로 복사한 코드를 Scriptable 앱의 <strong>DailyPlanner</strong> 스크립트에 붙여넣어 업데이트해 주세요.
                 </p>
-            </div>
-
-            <!-- Widget Top 1-Line Header Bar -->
-            <div id="widgetTopHeaderBar" class="bg-white/90 border border-[#9ca3af]/80 rounded-xl px-5 py-2.5 mb-3 flex items-center justify-between shadow-2xs select-none">
-                <div class="flex items-center min-w-0">
-                    <span id="widgetHeaderDateText" class="text-[12.5px] font-semibold tracking-tight text-slate-700 whitespace-nowrap"></span>
-                    <span class="ml-5 h-4 w-[1.2px] bg-[#9ca3af] flex-shrink-0"></span>
-                </div>
-                <span class="text-[12.5px] font-bold tracking-wider text-slate-900 uppercase whitespace-nowrap">TO-DO</span>
             </div>
 
             <div id="widgetTopicsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"></div>
@@ -1427,8 +1407,8 @@
 
         function getBlankPlannerData(dateKey = selectedDateKey) {
             const parts = parseDateKeyToParts(dateKey);
-            const makeEmptyCol = () => Array.from({ length: MIDDLE_ROW_COUNT }, (_, idx) => ({
-                rowType: (idx === 0 || idx === 9) ? 'topic' : 'task',
+            const makeEmptyCol = () => Array.from({ length: MIDDLE_ROW_COUNT }, () => ({
+                rowType: 'task',
                 text: '', done: false, hl: 'none'
             }));
             return {
@@ -1442,13 +1422,79 @@
 
         function normalizeColumnLength(colArr) {
             if (!Array.isArray(colArr)) return getBlankPlannerData().columns.left;
-            if (colArr.length === MIDDLE_ROW_COUNT) return colArr;
-            if (colArr.length < MIDDLE_ROW_COUNT) {
-                const padded = [...colArr];
-                while (padded.length < MIDDLE_ROW_COUNT) padded.push({ rowType: 'task', text: '', done: false, hl: 'none' });
-                return padded;
+            const normalized = colArr.slice(0, MIDDLE_ROW_COUNT).map(it => ({
+                rowType: 'task',
+                text: (it && it.text) ? it.text : '',
+                done: !!(it && it.done),
+                hl: (it && it.hl) ? it.hl : 'none'
+            }));
+            while (normalized.length < MIDDLE_ROW_COUNT) {
+                normalized.push({ rowType: 'task', text: '', done: false, hl: 'none' });
             }
-            return colArr.slice(0, MIDDLE_ROW_COUNT);
+            return normalized;
+        }
+
+        function sortAndCompactTasks(stateObj = plannerState) {
+            if (!stateObj || !stateObj.columns) return;
+            const timeBlocks = Array.isArray(stateObj.timeBlocks) ? stateObj.timeBlocks : [];
+            const allEntries = [];
+            let orderIdx = 0;
+
+            ['left', 'right'].forEach(colKey => {
+                (stateObj.columns[colKey] || []).forEach((it, rowIdx) => {
+                    const txt = (it && it.text) ? it.text.trim() : '';
+                    if (!txt) return;
+                    const oldKey = `${colKey}-${rowIdx}`;
+                    let linkedBlock = timeBlocks.find(b => b && b.linkedTaskKey === oldKey);
+                    if (!linkedBlock) {
+                        linkedBlock = timeBlocks.find(b => b && !b.linkedTaskKey && (b.text || '').trim() === txt);
+                    }
+                    allEntries.push({
+                        text: it.text,
+                        done: !!it.done,
+                        hl: normalizeColorHex(it.hl) || 'none',
+                        linkedBlockId: linkedBlock ? linkedBlock.id : null,
+                        startSlot: linkedBlock ? linkedBlock.startSlot : null,
+                        endSlot: linkedBlock ? linkedBlock.endSlot : null,
+                        order: orderIdx++
+                    });
+                });
+            });
+
+            allEntries.sort((a, b) => {
+                const aTimed = a.startSlot !== null && a.startSlot !== undefined;
+                const bTimed = b.startSlot !== null && b.startSlot !== undefined;
+                if (aTimed && !bTimed) return -1;
+                if (!aTimed && bTimed) return 1;
+                if (aTimed && bTimed) {
+                    if (a.startSlot !== b.startSlot) return a.startSlot - b.startSlot;
+                    if (a.endSlot !== b.endSlot) return a.endSlot - b.endSlot;
+                }
+                return a.order - b.order;
+            });
+
+            const newLeft = Array.from({ length: MIDDLE_ROW_COUNT }, () => ({ rowType: 'task', text: '', done: false, hl: 'none' }));
+            const newRight = Array.from({ length: MIDDLE_ROW_COUNT }, () => ({ rowType: 'task', text: '', done: false, hl: 'none' }));
+
+            allEntries.slice(0, MIDDLE_ROW_COUNT * 2).forEach((entry, idx) => {
+                const targetCol = idx < MIDDLE_ROW_COUNT ? 'left' : 'right';
+                const targetRow = idx < MIDDLE_ROW_COUNT ? idx : (idx - MIDDLE_ROW_COUNT);
+                const newKey = `${targetCol}-${targetRow}`;
+                const targetArr = targetCol === 'left' ? newLeft : newRight;
+                targetArr[targetRow] = {
+                    rowType: 'task',
+                    text: entry.text,
+                    done: entry.done,
+                    hl: entry.hl
+                };
+                if (entry.linkedBlockId) {
+                    const blk = timeBlocks.find(b => b && b.id === entry.linkedBlockId);
+                    if (blk) blk.linkedTaskKey = newKey;
+                }
+            });
+
+            stateObj.columns.left = newLeft;
+            stateObj.columns.right = newRight;
         }
 
         let allPlannersByDate = {};
@@ -1627,11 +1673,11 @@
             ['left', 'right'].forEach((colKey, colIdx) => {
                 for (let rowIdx = 0; rowIdx < MIDDLE_ROW_COUNT; rowIdx++) {
                     const item = plannerState.columns[colKey][rowIdx];
-                    const isTopic = item.rowType === 'topic';
                     const hlColor = normalizeColorHex(item.hl);
                     const hasHl = hlColor && hlColor !== 'none';
 
-                    let borderBottom = (rowIdx === 8 || rowIdx === 17) ? 'b-bottom-strong' : (isTopic ? 'b-bottom-cat' : 'b-bottom-light');
+                    // 모든 투두 행의 가로줄 디자인을 통일 (맨 마지막 18번째 줄만 하단 리뷰 섹션과 구분)
+                    let borderBottom = (rowIdx === 17) ? 'b-bottom-strong' : 'b-bottom-light';
 
                     const rowEl = document.createElement('div');
                     rowEl.id = `planner-row-${colKey}-${rowIdx}`;
@@ -1639,25 +1685,23 @@
 
                     const pill = document.createElement('div');
                     pill.className = 'shade-pill';
-                    if (hasHl && (item.text.trim() || !isTopic)) applyNaturalShadeStyle(pill, hlColor);
+                    if (hasHl) applyNaturalShadeStyle(pill, hlColor);
 
-                    if (!isTopic) {
-                        const checkBtn = document.createElement('button');
-                        checkBtn.type = 'button';
-                        checkBtn.className = 'task-checkbox';
-                        checkBtn.innerHTML = item.done ? `<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6.2L4.8 9L10.2 2.8" stroke="#111111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>` : '';
-                        checkBtn.onclick = (e) => { e.stopPropagation(); item.done = !item.done; saveStateToStorage(); renderMiddleRows(); };
-                        pill.appendChild(checkBtn);
-                    }
+                    const checkBtn = document.createElement('button');
+                    checkBtn.type = 'button';
+                    checkBtn.className = 'task-checkbox';
+                    checkBtn.innerHTML = item.done ? `<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6.2L4.8 9L10.2 2.8" stroke="#111111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>` : '';
+                    checkBtn.onclick = (e) => { e.stopPropagation(); item.done = !item.done; saveStateToStorage(); renderMiddleRows(); };
+                    pill.appendChild(checkBtn);
 
                     const textSpan = document.createElement('span');
                     textSpan.textContent = item.text || '';
-                    textSpan.className = isTopic ? 'text-[13.5px] font-semibold text-slate-800 whitespace-pre select-none leading-none' : `text-[12.5px] font-medium whitespace-pre select-none leading-none ${item.done ? 'line-through text-slate-400 opacity-75' : 'text-slate-800'}`;
+                    textSpan.className = `text-[12.5px] font-medium whitespace-pre select-none leading-none ${item.done ? 'line-through text-slate-400 opacity-75' : 'text-slate-800'}`;
                     pill.appendChild(textSpan);
                     rowEl.appendChild(pill);
 
                     const taskKey = `${colKey}-${rowIdx}`;
-                    if (!isTopic && item.text && item.text.trim().length > 0) {
+                    if (item.text && item.text.trim().length > 0) {
                         rowEl.classList.add('todo-draggable-row', 'group');
                         rowEl.setAttribute('draggable', 'true');
 
@@ -2199,6 +2243,7 @@
                     linkedTaskKey: editingTimeBlockLinkedTaskKey || null
                 });
             }
+            sortAndCompactTasks(plannerState);
             saveStateToStorage(); closeTimeBlockModal(); renderMiddleRows(); renderTimetable();
         }
 
@@ -2293,19 +2338,12 @@
             setTimeout(() => document.getElementById('modalTaskTextInput')?.focus(), 40);
         }
 
-        function setModalRowType(type) {
-            activeModalRowType = type === 'topic' ? 'topic' : 'task';
-            const btnTopic = document.getElementById('btnRowTypeTopic'), btnTask = document.getElementById('btnRowTypeTask');
-            const compSec = document.getElementById('modalCompletionSection'), timeSec = document.getElementById('modalTaskTimeSection');
-            if (activeModalRowType === 'topic') {
-                btnTopic.className = 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
-                btnTask.className = 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
-                compSec?.classList.add('hidden'); timeSec?.classList.add('hidden');
-            } else {
-                btnTopic.className = 'liquid-btn-inactive h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
-                btnTask.className = 'liquid-btn-active h-11 px-4 rounded-[12px] flex items-center justify-center font-semibold text-xs tracking-wider uppercase transition';
-                compSec?.classList.remove('hidden'); timeSec?.classList.remove('hidden');
-            }
+        function setModalRowType() {
+            activeModalRowType = 'task';
+            const compSec = document.getElementById('modalCompletionSection');
+            const timeSec = document.getElementById('modalTaskTimeSection');
+            compSec?.classList.remove('hidden');
+            timeSec?.classList.remove('hidden');
         }
 
         function setModalTaskDone(done) {
@@ -2335,74 +2373,45 @@
             const { colKey, rowIdx } = activeModalTaskRef;
             const taskKey = `${colKey}-${rowIdx}`;
             const item = plannerState.columns[colKey][rowIdx];
-            const wasOriginallyTopic = item && item.rowType === 'topic' && (item.text || '').trim() !== '';
             const oldTextTrimmed = (item && item.text) ? item.text.trim() : '';
             const newText = document.getElementById('modalTaskTextInput').value;
             const newTextTrimmed = newText.trim();
 
-            const clearedTaskKeys = new Set();
-            const clearedTexts = new Set();
-
-            if (pendingModalClear || newTextTrimmed === '') {
-                clearedTaskKeys.add(taskKey);
-                if (oldTextTrimmed) clearedTexts.add(oldTextTrimmed);
-            }
-
-            // 상위 항목인 토픽(TOPIC)을 CLEAR 했거나 내용을 비운 뒤 SAVE를 누른 경우에만 하위 투두 일괄 초기화 적용
-            if (pendingTopicCascadeClear || (wasOriginallyTopic && newTextTrimmed === '')) {
-                for (let r = rowIdx + 1; r < MIDDLE_ROW_COUNT; r++) {
-                    const subItem = plannerState.columns[colKey][r];
-                    if (!subItem) continue;
-                    if (subItem.rowType === 'topic' && (subItem.text || '').trim() !== '') {
-                        break;
-                    }
-                    if (subItem.text && subItem.text.trim()) {
-                        clearedTexts.add(subItem.text.trim());
-                    }
-                    clearedTaskKeys.add(`${colKey}-${r}`);
-                    plannerState.columns[colKey][r] = {
-                        rowType: (r === 0 || r === 9) ? 'topic' : 'task',
-                        text: '',
-                        done: false,
-                        hl: 'none'
-                    };
-                }
-            }
-
-            item.rowType = activeModalRowType;
+            item.rowType = 'task';
             item.text = newText;
-            item.done = activeModalRowType === 'task' ? activeModalTaskDone : false;
+            item.done = activeModalTaskDone;
             item.hl = activeModalTaskHl;
 
-            if (clearedTaskKeys.size > 0) {
+            if (pendingModalClear || newTextTrimmed === '') {
                 plannerState.timeBlocks = plannerState.timeBlocks.filter(b => {
-                    if (b.id === activeModalTaskBlockId && (!activeModalTaskHasTime || activeModalRowType !== 'task' || newTextTrimmed === '')) return false;
-                    if (b.linkedTaskKey && clearedTaskKeys.has(b.linkedTaskKey)) return false;
-                    if (!b.linkedTaskKey && b.text && clearedTexts.has(b.text.trim())) return false;
+                    if (b.id === activeModalTaskBlockId) return false;
+                    if (b.linkedTaskKey === taskKey) return false;
+                    if (!b.linkedTaskKey && oldTextTrimmed && (b.text || '').trim() === oldTextTrimmed) return false;
                     return true;
                 });
-            }
-
-            const existingLinked = plannerState.timeBlocks.find(b => b.id === activeModalTaskBlockId || b.linkedTaskKey === taskKey);
-            if (activeModalRowType === 'task' && activeModalTaskHasTime && newTextTrimmed !== '') {
-                const startS = Math.min(activeModalTaskStartSlot, activeModalTaskEndSlot);
-                const endS = clampSlotRangeToEmpty(startS, Math.max(activeModalTaskStartSlot, activeModalTaskEndSlot), activeModalTaskBlockId);
-                if (!isSlotOccupied(startS, activeModalTaskBlockId)) {
-                    const blockColor = (activeModalTaskHl && activeModalTaskHl !== 'none')
-                        ? activeModalTaskHl
-                        : ((existingLinked && existingLinked.color && existingLinked.color !== 'none') ? existingLinked.color : (pinnedColors[0] || '#93D5F6'));
-                    if (existingLinked) plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== existingLinked.id);
-                    plannerState.timeBlocks.push({
-                        id: existingLinked?.id || ('tb-' + Date.now()),
-                        startSlot: startS, endSlot: endS, text: newTextTrimmed, color: blockColor, linkedTaskKey: taskKey
-                    });
+            } else {
+                const existingLinked = plannerState.timeBlocks.find(b => b.id === activeModalTaskBlockId || b.linkedTaskKey === taskKey);
+                if (activeModalTaskHasTime) {
+                    const startS = Math.min(activeModalTaskStartSlot, activeModalTaskEndSlot);
+                    const endS = clampSlotRangeToEmpty(startS, Math.max(activeModalTaskStartSlot, activeModalTaskEndSlot), activeModalTaskBlockId);
+                    if (!isSlotOccupied(startS, activeModalTaskBlockId)) {
+                        const blockColor = (activeModalTaskHl && activeModalTaskHl !== 'none')
+                            ? activeModalTaskHl
+                            : ((existingLinked && existingLinked.color && existingLinked.color !== 'none') ? existingLinked.color : (pinnedColors[0] || '#93D5F6'));
+                        if (existingLinked) plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== existingLinked.id);
+                        plannerState.timeBlocks.push({
+                            id: existingLinked?.id || ('tb-' + Date.now()),
+                            startSlot: startS, endSlot: endS, text: newTextTrimmed, color: blockColor, linkedTaskKey: taskKey
+                        });
+                    }
+                } else if (existingLinked) {
+                    plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== existingLinked.id);
                 }
-            } else if (existingLinked) {
-                plannerState.timeBlocks = plannerState.timeBlocks.filter(b => b.id !== existingLinked.id);
             }
 
             pendingModalClear = false;
             pendingTopicCascadeClear = false;
+            sortAndCompactTasks(plannerState);
             saveStateToStorage();
             closeTaskModal();
             renderMiddleRows();
@@ -2411,18 +2420,10 @@
 
         function clearModalTask() {
             if (!activeModalTaskRef) return;
-            const { colKey, rowIdx } = activeModalTaskRef;
-            const currentItem = plannerState.columns[colKey][rowIdx];
-            const wasTopic = (currentItem && currentItem.rowType === 'topic') || activeModalRowType === 'topic';
-
-            // SAVE 버튼을 누르기 전까지는 모달 내부 UI 상태와 예약 플래그만 초기화
             pendingModalClear = true;
-            if (wasTopic) {
-                pendingTopicCascadeClear = true;
-            }
+            pendingTopicCascadeClear = false;
 
-            const defaultRowType = (rowIdx === 0 || rowIdx === 9) ? 'topic' : 'task';
-            setModalRowType(defaultRowType);
+            setModalRowType('task');
             setModalTaskDone(false);
             const textInput = document.getElementById('modalTaskTextInput');
             if (textInput) textInput.value = '';
@@ -2445,10 +2446,10 @@
         }
 
         const WIDGET_SIZE_SPECS = {
-            small: { label: 'SMALL (1 COL · 5 LINES)', columns: 1, linesPerCol: 5, maxWidthClass: 'max-w-[310px]', gridClass: 'grid-cols-1 gap-3' },
-            medium: { label: 'MEDIUM (2 COL · 10 LINES)', columns: 2, linesPerCol: 5, maxWidthClass: 'max-w-xl', gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5' },
-            large: { label: 'LARGE (2 COL · 26 LINES)', columns: 2, linesPerCol: 13, maxWidthClass: 'max-w-2xl', gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5' },
-            xl: { label: 'XL (4 COL · 52 LINES)', columns: 4, linesPerCol: 13, maxWidthClass: 'max-w-5xl', gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5' }
+            small: { label: 'SMALL (1 COL · 6 LINES)', columns: 1, linesPerCol: 6, maxWidthClass: 'max-w-[310px]', gridClass: 'grid-cols-1 gap-3' },
+            medium: { label: 'MEDIUM (2 COL · 12 LINES)', columns: 2, linesPerCol: 6, maxWidthClass: 'max-w-xl', gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5' },
+            large: { label: 'LARGE (2 COL · 28 LINES)', columns: 2, linesPerCol: 14, maxWidthClass: 'max-w-2xl', gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5' },
+            xl: { label: 'XL (4 COL · 56 LINES)', columns: 4, linesPerCol: 14, maxWidthClass: 'max-w-5xl', gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5' }
         };
 
         function escapeHtml(str) {
@@ -2458,21 +2459,52 @@
 
         function getAllTopicCards(targetDateKey = getTodayDateKey()) {
             const targetData = (targetDateKey === selectedDateKey) ? plannerState : getPlannerDataForDate(targetDateKey);
-            const topicGroups = [];
-            let currentTopic = null;
+            const timeBlocks = Array.isArray(targetData.timeBlocks) ? targetData.timeBlocks : [];
+            const timedTasks = [];
+            const untimedTasks = [];
+            let orderCounter = 0;
 
             ['left', 'right'].forEach(colKey => {
                 targetData.columns[colKey].forEach((item, rowIdx) => {
                     const txt = (item.text || '').trim();
-                    if (item.rowType === 'topic') {
-                        if (txt) { currentTopic = { topicName: txt, colKey, tasks: [] }; topicGroups.push(currentTopic); }
-                    } else if (txt) {
-                        if (!currentTopic) { currentTopic = { topicName: '', colKey, tasks: [] }; topicGroups.push(currentTopic); }
-                        currentTopic.tasks.push({ item, rowIdx, colKey });
+                    if (!txt) return;
+                    const taskKey = `${colKey}-${rowIdx}`;
+                    let linked = timeBlocks.find(b => b && b.linkedTaskKey === taskKey);
+                    if (!linked) {
+                        linked = timeBlocks.find(b => b && !b.linkedTaskKey && (b.text || '').trim() === txt);
+                    }
+                    if (linked && typeof linked.startSlot === 'number' && typeof linked.endSlot === 'number') {
+                        timedTasks.push({
+                            item,
+                            rowIdx,
+                            colKey,
+                            startSlot: linked.startSlot,
+                            endSlot: linked.endSlot,
+                            timeStr: `${slotToTimeStr(linked.startSlot, false)} - ${slotToTimeStr(linked.endSlot, true)}`,
+                            order: orderCounter++
+                        });
+                    } else {
+                        untimedTasks.push({
+                            item,
+                            rowIdx,
+                            colKey,
+                            timeStr: '',
+                            order: orderCounter++
+                        });
                     }
                 });
             });
-            return topicGroups.filter(g => g.tasks.length > 0);
+
+            timedTasks.sort((a, b) => {
+                if (a.startSlot !== b.startSlot) return a.startSlot - b.startSlot;
+                if (a.endSlot !== b.endSlot) return a.endSlot - b.endSlot;
+                return a.order - b.order;
+            });
+
+            const groups = [];
+            if (timedTasks.length > 0) groups.push({ topicName: '', tasks: timedTasks });
+            if (untimedTasks.length > 0) groups.push({ topicName: '', tasks: untimedTasks });
+            return groups;
         }
 
         function setWidgetPreviewSize(sizeKey) {
@@ -2486,27 +2518,53 @@
             topicGroups.forEach(group => {
                 let remaining = [...group.tasks];
                 let isCont = false;
-                const hasTitle = Boolean(group.topicName && group.topicName.trim());
-                const headerCost = hasTitle ? 1 : 0;
 
                 while (remaining.length > 0) {
-                    let target = cols.find(c => (linesPerCol - c.usedLines) >= (headerCost + 1));
-                    if (!target) { if (!isCont) hiddenTopicsCount++; hiddenTasksCount += remaining.length; break; }
-                    const free = (linesPerCol - target.usedLines) - headerCost;
-                    const canSplit = topicGroups.length < numCols && cols.some(c => c !== target && c.usedLines === 0);
-                    const title = hasTitle ? (isCont ? `${group.topicName} ···` : group.topicName) : '';
+                    let targetIdx = cols.findIndex(c => {
+                        const gapCost = c.cards.length >= 1 ? 1 : 0;
+                        return (linesPerCol - c.usedLines) >= (gapCost + 1);
+                    });
+                    if (targetIdx === -1) {
+                        if (!isCont) hiddenTopicsCount++;
+                        hiddenTasksCount += remaining.length;
+                        break;
+                    }
+
+                    let target = cols[targetIdx];
+                    let gapCost = target.cards.length >= 1 ? 1 : 0;
+                    let free = (linesPerCol - target.usedLines) - gapCost;
+
+                    if (!isCont && target.usedLines > 0 && remaining.length > free) {
+                        const emptyColIdx = cols.findIndex((c, idx) => idx > targetIdx && c.usedLines === 0);
+                        if (emptyColIdx !== -1) {
+                            targetIdx = emptyColIdx;
+                            target = cols[targetIdx];
+                            gapCost = 0;
+                            free = linesPerCol;
+                        }
+                    }
+
+                    const hasNextColWithSpace = cols.some((c, idx) => {
+                        if (idx <= targetIdx) return false;
+                        const nextGap = c.cards.length >= 1 ? 1 : 0;
+                        return (linesPerCol - c.usedLines) >= (nextGap + 1);
+                    });
 
                     if (remaining.length <= free) {
-                        target.cards.push({ topicName: title, visibleTasks: remaining, overflowCount: 0 });
-                        target.usedLines += headerCost + remaining.length; remaining = [];
-                    } else if (canSplit) {
+                        target.cards.push({ topicName: '', visibleTasks: remaining, overflowCount: 0 });
+                        target.usedLines += gapCost + remaining.length;
+                        remaining = [];
+                    } else if (hasNextColWithSpace) {
                         const chunk = remaining.slice(0, free);
-                        target.cards.push({ topicName: title, visibleTasks: chunk, overflowCount: 0 });
-                        target.usedLines += headerCost + chunk.length; remaining = remaining.slice(free); isCont = true;
+                        target.cards.push({ topicName: '', visibleTasks: chunk, overflowCount: 0 });
+                        target.usedLines += gapCost + chunk.length;
+                        remaining = remaining.slice(free);
+                        isCont = true;
                     } else {
                         const visible = remaining.slice(0, free);
-                        target.cards.push({ topicName: title, visibleTasks: visible, overflowCount: remaining.length - visible.length });
-                        target.usedLines += headerCost + visible.length; remaining = [];
+                        target.cards.push({ topicName: '', visibleTasks: visible, overflowCount: remaining.length - visible.length });
+                        target.usedLines += gapCost + visible.length;
+                        remaining = [];
                     }
                 }
             });
@@ -2524,10 +2582,8 @@
             });
 
             outer.className = `liquid-glass-widget rounded-[32px] w-full p-5 sm:p-6 transition-all duration-200 max-h-[92vh] overflow-y-auto ${spec.maxWidthClass}`;
-            const todayKey = getTodayDateKey(), parts = parseDateKeyToParts(todayKey);
+            const todayKey = getTodayDateKey();
             if (badge) badge.textContent = spec.label;
-            const headerDate = document.getElementById('widgetHeaderDateText');
-            if (headerDate) headerDate.textContent = activeWidgetSize === 'small' ? `${parts.mm}.${parts.dd} (${parts.dow})` : `${parts.yyyy}.${parts.mm}.${parts.dd} (${parts.dow})`;
 
             const groups = getAllTopicCards(todayKey);
             if (groups.length === 0) {
@@ -2543,26 +2599,32 @@
             container.innerHTML = activeCols.map((col, idx) => `
                 <div class="flex flex-col gap-3">
                     ${col.cards.map(card => `
-                        <div class="liquid-glass-subcard rounded-2xl p-3.5 flex flex-col gap-2">
-                            ${(card.topicName || card.overflowCount > 0) ? `
-                                <div class="flex items-center justify-between select-none">
-                                    <span class="text-[13px] sm:text-[13.5px] font-bold text-slate-900 tracking-tight uppercase">${escapeHtml(card.topicName)}</span>
-                                    ${card.overflowCount > 0 ? `<span class="text-[10px] font-semibold text-slate-500 bg-white/60 px-2 py-0.5 rounded-full border border-white/80">+${card.overflowCount} MORE</span>` : ''}
-                                </div>
-                            ` : ''}
-                            <div class="space-y-1">
-                                ${card.visibleTasks.map(({ item, rowIdx, colKey }) => `
-                                    <div onclick="triggerWidgetDeepLinkToTask('${colKey}', ${rowIdx})" class="group flex items-center gap-2.5 px-2 py-1 rounded-xl cursor-pointer hover:bg-white/60 transition">
-                                        <span class="w-[15px] h-[15px] rounded-[3px] border-[1.5px] border-slate-700 bg-transparent flex items-center justify-center flex-shrink-0">
+                        <div class="liquid-glass-subcard rounded-2xl p-3.5 flex flex-col gap-1.5">
+                            <div class="space-y-1.5">
+                                ${card.visibleTasks.map(({ item, rowIdx, colKey, timeStr }) => `
+                                    <div onclick="triggerWidgetDeepLinkToTask('${colKey}', ${rowIdx})" class="group flex items-center gap-2.5 px-2 h-[22px] rounded-xl cursor-pointer hover:bg-white/60 transition">
+                                        <span class="w-[15px] h-[15px] rounded-[3px] border-[1.5px] border-slate-700 bg-transparent flex items-center justify-center flex-shrink-0 self-center">
                                             ${item.done ? '<svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6.2L4.8 9L10.2 2.8" stroke="#111111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
                                         </span>
-                                        <span class="text-[12.5px] font-medium leading-none text-slate-800 truncate select-none ${item.done ? 'line-through text-slate-400' : ''}">${escapeHtml(item.text)}</span>
+                                        ${timeStr ? `
+                                            <div class="flex flex-col justify-center min-w-0 leading-none self-center">
+                                                <span class="text-[11px] font-medium leading-[1.05] text-slate-800 truncate select-none ${item.done ? 'line-through text-slate-400' : ''}">${escapeHtml(item.text)}</span>
+                                                <span class="text-[7.5px] font-normal leading-none text-slate-500 mt-[1px] select-none ${item.done ? 'text-slate-300' : ''}">${escapeHtml(timeStr)}</span>
+                                            </div>
+                                        ` : `
+                                            <span class="text-[12.5px] font-medium leading-none text-slate-800 truncate select-none self-center ${item.done ? 'line-through text-slate-400' : ''}">${escapeHtml(item.text)}</span>
+                                        `}
                                     </div>
                                 `).join('')}
                             </div>
+                            ${card.overflowCount > 0 ? `
+                                <div class="flex justify-end pt-0.5 select-none">
+                                    <span class="text-[9.5px] font-semibold text-slate-500">+${card.overflowCount} MORE</span>
+                                </div>
+                            ` : ''}
                         </div>
                     `).join('')}
-                    ${(idx === activeCols.length - 1 && hiddenTopicsCount > 0) ? `<div class="text-right pr-1"><span class="text-[10px] font-bold text-slate-500 bg-white/50 px-2.5 py-1 rounded-full border border-white/70">+${hiddenTopicsCount} TOPICS (${hiddenTasksCount} TO-DOS)</span></div>` : ''}
+                    ${(idx === activeCols.length - 1 && hiddenTopicsCount > 0) ? `<div class="text-right pr-1"><span class="text-[10px] font-bold text-slate-500 bg-white/50 px-2.5 py-1 rounded-full border border-white/70">+${hiddenTasksCount} MORE TO-DOS</span></div>` : ''}
                 </div>
             `).join('');
         }
@@ -2581,7 +2643,13 @@
         function buildWidgetSyncPayload() {
             const todayKey = getTodayDateKey();
             const topics = getAllTopicCards(todayKey).map(g => ({
-                topic: g.topicName, tasks: g.tasks.map(t => ({ text: t.item.text, done: !!t.item.done, id: `${t.colKey}-${t.rowIdx}` }))
+                topic: '',
+                tasks: g.tasks.map(t => ({
+                    text: t.item.text,
+                    done: !!t.item.done,
+                    id: `${t.colKey}-${t.rowIdx}`,
+                    timeStr: t.timeStr || ''
+                }))
             }));
             return { dateKey: todayKey, updatedAt: new Date().toISOString(), appUrl: BASE_APP_URL, topics };
         }
@@ -2619,20 +2687,10 @@ const FIREBASE_API_KEY = ${JSON.stringify(apiKey)};
 const CLOUD_BASE = ${JSON.stringify(cloudEndpoint)};
 const SYNC_KEY = ${JSON.stringify(syncWorkspaceKey)};
 const DEFAULT_APP_URL = ${JSON.stringify(BASE_APP_URL)};
-const DOW_NAMES = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 function getTodayKey() {
   const now = new Date();
   return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0");
-}
-
-function getTodayHeaderDisplay(compact = false) {
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
-  const dow = DOW_NAMES[now.getDay()];
-  return compact ? (mm + "." + dd + " (" + dow + ")") : (yyyy + "." + mm + "." + dd + " (" + dow + ")");
 }
 
 function slotToTimeStr(slotIndex, isEnd = false) {
@@ -2652,27 +2710,38 @@ function resolveTaskTimeRange(timeBlocks, taskKey, taskText) {
   return slotToTimeStr(found.startSlot, false) + " - " + slotToTimeStr(found.endSlot, true);
 }
 
-async function getFirebaseIdToken() {
+async function getFirebaseIdToken(forceRefresh = false) {
   if (!FIREBASE_API_KEY) return null;
-  try {
-    if (fm.fileExists(tokenPath)) {
-      const cached = JSON.parse(fm.readString(tokenPath));
-      if (cached && cached.idToken && cached.expiresAt > Date.now()) return cached.idToken;
-    }
-  } catch (e) {}
+  if (!forceRefresh) {
+    try {
+      if (fm.fileExists(tokenPath)) {
+        const cached = JSON.parse(fm.readString(tokenPath));
+        if (cached && cached.idToken && cached.expiresAt > Date.now()) return cached.idToken;
+      }
+    } catch (e) {}
+  }
   try {
     const authReq = new Request("https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + FIREBASE_API_KEY);
     authReq.method = "POST";
-    authReq.headers = { "Content-Type": "application/json" };
+    authReq.headers = { "Content-Type": "application/json", "Cache-Control": "no-cache" };
     authReq.body = JSON.stringify({ returnSecureToken: true });
-    authReq.timeoutInterval = 5;
+    authReq.timeoutInterval = 6;
     const authRes = await authReq.loadJSON();
     if (authRes && authRes.idToken) {
-      fm.writeString(tokenPath, JSON.stringify({ idToken: authRes.idToken, expiresAt: Date.now() + 50 * 60 * 1000 }));
+      fm.writeString(tokenPath, JSON.stringify({ idToken: authRes.idToken, expiresAt: Date.now() + 45 * 60 * 1000 }));
       return authRes.idToken;
     }
   } catch (e) {}
   return null;
+}
+
+async function fetchTodayFirestoreDoc(idToken) {
+  const req = new Request(CLOUD_BASE + SYNC_KEY + "_" + getTodayKey());
+  req.timeoutInterval = 6;
+  const headers = { "Cache-Control": "no-cache, no-store, max-age=0", "Pragma": "no-cache" };
+  if (idToken) headers["Authorization"] = "Bearer " + idToken;
+  req.headers = headers;
+  return await req.loadJSON();
 }
 
 let data = ${initialData};
@@ -2696,11 +2765,12 @@ if (args.queryParameters && args.queryParameters.payload) {
 
 if (CLOUD_BASE) {
   try {
-    const idToken = await getFirebaseIdToken();
-    const req = new Request(CLOUD_BASE + SYNC_KEY + "_" + getTodayKey());
-    req.timeoutInterval = 5;
-    if (idToken) req.headers = { "Authorization": "Bearer " + idToken };
-    const res = await req.loadJSON();
+    let idToken = await getFirebaseIdToken(false);
+    let res = await fetchTodayFirestoreDoc(idToken);
+    if (res && res.error && (res.error.code === 401 || res.error.code === 403)) {
+      idToken = await getFirebaseIdToken(true);
+      res = await fetchTodayFirestoreDoc(idToken);
+    }
     if (res && res.fields && res.fields.payloadJson && res.fields.payloadJson.stringValue) {
       const rawState = JSON.parse(res.fields.payloadJson.stringValue);
       const timeBlocks = Array.isArray(rawState.timeBlocks) ? rawState.timeBlocks : [];
@@ -2721,7 +2791,7 @@ if (CLOUD_BASE) {
       });
       data.dateKey = getTodayKey();
       data.appUrl = DEFAULT_APP_URL;
-      data.topics = groups.filter(g => g.tasks.length > 0);
+      data.topics = groups.filter(g => g.tasks.length > 0 || (g.topic && g.topic.trim().length > 0));
       fm.writeString(filePath, JSON.stringify(data));
     } else if (res && res.error && res.error.code === 404) {
       data.dateKey = getTodayKey();
@@ -2734,49 +2804,19 @@ if (CLOUD_BASE) {
 
 const targetAppUrl = DEFAULT_APP_URL;
 const family = config.widgetFamily || "large";
+const isCompactHeight = family === "small" || family === "medium";
 const spec = {
-  small: { cols: 1, lines: 5 },
-  medium: { cols: 2, lines: 5 },
-  large: { cols: 2, lines: 13 },
-  extraLarge: { cols: 4, lines: 13 }
-}[family] || { cols: 2, lines: 13 };
+  small: { cols: 1, lines: 6 },
+  medium: { cols: 2, lines: 6 },
+  large: { cols: 2, lines: 14 },
+  extraLarge: { cols: 4, lines: 14 }
+}[family] || { cols: 2, lines: 14 };
 
 const w = new ListWidget();
 w.backgroundColor = new Color("#EEF2F6");
-w.setPadding(12, 12, 12, 12);
-w.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000);
+w.setPadding(isCompactHeight ? 8 : 10, 10, isCompactHeight ? 8 : 10, 10);
+w.refreshAfterDate = new Date(Date.now() + 30 * 1000);
 w.url = targetAppUrl;
-
-const isSmallWidget = family === "small";
-const headerOuter = w.addStack();
-headerOuter.layoutVertically();
-headerOuter.backgroundColor = new Color("#FFFFFF", 0.94);
-headerOuter.cornerRadius = 12;
-headerOuter.borderColor = new Color("#9CA3AF", 0.65);
-headerOuter.borderWidth = 1.2;
-headerOuter.setPadding(9, isSmallWidget ? 14 : 22, 9, isSmallWidget ? 14 : 22);
-
-const headerRow = headerOuter.addStack();
-headerRow.layoutHorizontally();
-headerRow.centerAlignContent();
-
-const dateText = headerRow.addText(getTodayHeaderDisplay(isSmallWidget));
-dateText.font = Font.semiboldSystemFont(isSmallWidget ? 11 : 12.5);
-dateText.textColor = new Color("#334155");
-dateText.lineLimit = 1;
-
-headerRow.addSpacer(isSmallWidget ? 14 : 24);
-const dividerBar = headerRow.addStack();
-dividerBar.size = new Size(1.2, 15);
-dividerBar.backgroundColor = new Color("#9CA3AF", 0.85);
-
-headerRow.addSpacer();
-const todoTitle = headerRow.addText("TO-DO");
-todoTitle.font = Font.boldSystemFont(isSmallWidget ? 11.5 : 12.5);
-todoTitle.textColor = new Color("#0F172A");
-todoTitle.lineLimit = 1;
-
-w.addSpacer(8);
 
 const cols = Array.from({ length: spec.cols }, () => ({ used: 0, cards: [] }));
 (data.topics || []).forEach(g => {
@@ -2784,23 +2824,59 @@ const cols = Array.from({ length: spec.cols }, () => ({ used: 0, cards: [] }));
   let cont = false;
   const hasTitle = Boolean(g.topic && g.topic.trim());
   const headerCost = hasTitle ? 1 : 0;
+
+  if (rem.length === 0 && hasTitle) {
+    let target = cols.find(c => {
+      const gapCost = c.cards.length >= 2 ? 1 : 0;
+      return (spec.lines - c.used) >= (gapCost + 1);
+    });
+    if (target) {
+      const gapCost = target.cards.length >= 2 ? 1 : 0;
+      target.cards.push({ title: g.topic, tasks: [], more: 0 });
+      target.used += gapCost + 1;
+    }
+    return;
+  }
+
   while (rem.length > 0) {
-    let target = cols.find(c => (spec.lines - c.used) >= (headerCost + 1));
-    if (!target) break;
-    let free = (spec.lines - target.used) - headerCost;
-    let canSplit = data.topics.length < spec.cols && cols.some(c => c !== target && c.used === 0);
+    let targetIdx = cols.findIndex(c => {
+      const gapCost = c.cards.length >= 2 ? 1 : 0;
+      return (spec.lines - c.used) >= (gapCost + headerCost + 1);
+    });
+    if (targetIdx === -1) break;
+
+    let target = cols[targetIdx];
+    let gapCost = target.cards.length >= 2 ? 1 : 0;
+    let free = (spec.lines - target.used) - gapCost - headerCost;
+
+    if (!cont && target.used > 0 && rem.length > free) {
+      const emptyColIdx = cols.findIndex((c, idx) => idx > targetIdx && c.used === 0);
+      if (emptyColIdx !== -1) {
+        targetIdx = emptyColIdx;
+        target = cols[targetIdx];
+        gapCost = 0;
+        free = spec.lines - headerCost;
+      }
+    }
+
+    const hasNextColWithSpace = cols.some((c, idx) => {
+      if (idx <= targetIdx) return false;
+      const nextGap = c.cards.length >= 2 ? 1 : 0;
+      return (spec.lines - c.used) >= (nextGap + headerCost + 1);
+    });
+
     let cardTitle = hasTitle ? (cont ? g.topic + " ···" : g.topic) : "";
     if (rem.length <= free) {
       target.cards.push({ title: cardTitle, tasks: rem, more: 0 });
-      target.used += headerCost + rem.length; rem = [];
-    } else if (canSplit) {
+      target.used += gapCost + headerCost + rem.length; rem = [];
+    } else if (hasNextColWithSpace) {
       let chunk = rem.slice(0, free);
       target.cards.push({ title: cardTitle, tasks: chunk, more: 0 });
-      target.used += headerCost + chunk.length; rem = rem.slice(free); cont = true;
+      target.used += gapCost + headerCost + chunk.length; rem = rem.slice(free); cont = true;
     } else {
       let vis = rem.slice(0, free);
       target.cards.push({ title: cardTitle, tasks: vis, more: rem.length - vis.length });
-      target.used += headerCost + vis.length; rem = [];
+      target.used += gapCost + headerCost + vis.length; rem = [];
     }
   }
 });
@@ -2819,22 +2895,22 @@ if (activeCols.length === 0) {
 } else {
   const mainRow = w.addStack();
   mainRow.layoutHorizontally();
-  mainRow.spacing = 10;
+  mainRow.spacing = 8;
   mainRow.topAlignContent();
 
   activeCols.forEach(col => {
     const colStack = mainRow.addStack();
     colStack.layoutVertically();
-    colStack.spacing = 10;
+    colStack.spacing = isCompactHeight ? 6 : 8;
     colStack.topAlignContent();
 
     col.cards.forEach(card => {
       const box = colStack.addStack();
       box.layoutVertically();
       box.backgroundColor = new Color("#FFFFFF", 0.9);
-      box.cornerRadius = 16;
-      box.setPadding(12, 14, 12, 14);
-      box.spacing = 6;
+      box.cornerRadius = 13;
+      box.setPadding(isCompactHeight ? 7 : 8, 10, isCompactHeight ? 7 : 8, 10);
+      box.spacing = isCompactHeight ? 3 : 4;
       box.topAlignContent();
 
       if (card.title || card.more > 0) {
@@ -2843,14 +2919,16 @@ if (activeCols.length === 0) {
         head.centerAlignContent();
         if (card.title) {
           const titleTxt = head.addText(card.title.toUpperCase());
-          titleTxt.font = Font.boldSystemFont(13);
+          titleTxt.font = Font.boldSystemFont(11.5);
           titleTxt.textColor = new Color("#0F172A");
+          titleTxt.lineLimit = 1;
         }
         head.addSpacer();
         if (card.more > 0) {
           const moreTxt = head.addText("+" + card.more + " MORE");
-          moreTxt.font = Font.semiboldSystemFont(9.5);
+          moreTxt.font = Font.semiboldSystemFont(8.5);
           moreTxt.textColor = new Color("#64748B");
+          moreTxt.lineLimit = 1;
         }
       }
 
@@ -2858,17 +2936,17 @@ if (activeCols.length === 0) {
         const r = box.addStack();
         r.layoutHorizontally();
         r.centerAlignContent();
-        r.spacing = 8;
-        r.size = new Size(0, 18);
+        r.spacing = 6;
+        r.size = new Size(0, 16);
         r.url = t.id ? (targetAppUrl + "?taskId=" + t.id) : targetAppUrl;
         const sym = SFSymbol.named(t.done ? "checkmark.square.fill" : "square");
         if (sym) {
           const img = r.addImage(sym.image);
-          img.imageSize = new Size(17, 17);
+          img.imageSize = new Size(15, 15);
           img.tintColor = t.done ? new Color("#64748B") : new Color("#1E293B");
         } else {
           const chk = r.addText(t.done ? "☑" : "☐");
-          chk.font = Font.mediumSystemFont(14);
+          chk.font = Font.mediumSystemFont(12.5);
           chk.textColor = new Color("#1E293B");
         }
 
@@ -2878,17 +2956,17 @@ if (activeCols.length === 0) {
           textCol.spacing = 0;
 
           const lbl = textCol.addText(t.text);
-          lbl.font = Font.mediumSystemFont(10);
+          lbl.font = Font.mediumSystemFont(9.5);
           lbl.textColor = t.done ? new Color("#94A3B8") : new Color("#1E293B");
           lbl.lineLimit = 1;
 
           const timeLbl = textCol.addText(t.timeStr);
-          timeLbl.font = Font.regularSystemFont(7.5);
+          timeLbl.font = Font.regularSystemFont(7);
           timeLbl.textColor = t.done ? new Color("#CBD5E1") : new Color("#64748B");
           timeLbl.lineLimit = 1;
         } else {
           const lbl = r.addText(t.text);
-          lbl.font = Font.mediumSystemFont(13);
+          lbl.font = Font.mediumSystemFont(12);
           lbl.textColor = t.done ? new Color("#94A3B8") : new Color("#1E293B");
           lbl.lineLimit = 1;
         }
