@@ -2446,10 +2446,10 @@
         }
 
         const WIDGET_SIZE_SPECS = {
-            small: { label: 'SMALL (1 COL · 6 LINES)', columns: 1, linesPerCol: 6, maxWidthClass: 'max-w-[310px]', gridClass: 'grid-cols-1 gap-3' },
-            medium: { label: 'MEDIUM (2 COL · 12 LINES)', columns: 2, linesPerCol: 6, maxWidthClass: 'max-w-xl', gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5' },
-            large: { label: 'LARGE (2 COL · 28 LINES)', columns: 2, linesPerCol: 14, maxWidthClass: 'max-w-2xl', gridClass: 'grid-cols-1 sm:grid-cols-2 gap-3.5' },
-            xl: { label: 'XL (4 COL · 56 LINES)', columns: 4, linesPerCol: 14, maxWidthClass: 'max-w-5xl', gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5' }
+            small: { label: 'SMALL (1단 · 시간 4 / 일반 5)', isCompact: true, maxWidthClass: 'max-w-[350px]' },
+            medium: { label: 'MEDIUM (1단 · 시간 4 / 일반 5)', isCompact: true, maxWidthClass: 'max-w-[370px]' },
+            large: { label: 'LARGE (1단 · 시간 9 / 일반 13 / 반반 5+5)', isCompact: false, maxWidthClass: 'max-w-[380px]' },
+            xl: { label: 'XL (1단 · 시간 9 / 일반 13 / 반반 5+5)', isCompact: false, maxWidthClass: 'max-w-[420px]' }
         };
 
         function escapeHtml(str) {
@@ -2457,17 +2457,22 @@
             return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
-        function getAllTopicCards(targetDateKey = getTodayDateKey()) {
+        function getWidgetTaskBuckets(targetDateKey = getTodayDateKey()) {
             const targetData = (targetDateKey === selectedDateKey) ? plannerState : getPlannerDataForDate(targetDateKey);
             const timeBlocks = Array.isArray(targetData.timeBlocks) ? targetData.timeBlocks : [];
             const timedTasks = [];
             const untimedTasks = [];
+            let totalExistingTasks = 0;
             let orderCounter = 0;
 
             ['left', 'right'].forEach(colKey => {
                 targetData.columns[colKey].forEach((item, rowIdx) => {
                     const txt = (item.text || '').trim();
                     if (!txt) return;
+                    totalExistingTasks++;
+                    // 체크(완료)한 투두는 위젯에서 숨김
+                    if (item.done) return;
+
                     const taskKey = `${colKey}-${rowIdx}`;
                     let linked = timeBlocks.find(b => b && b.linkedTaskKey === taskKey);
                     if (!linked) {
@@ -2501,74 +2506,87 @@
                 return a.order - b.order;
             });
 
-            const groups = [];
-            if (timedTasks.length > 0) groups.push({ topicName: '', tasks: timedTasks });
-            if (untimedTasks.length > 0) groups.push({ topicName: '', tasks: untimedTasks });
-            return groups;
+            return {
+                timedTasks,
+                untimedTasks,
+                allCompleted: totalExistingTasks > 0 && timedTasks.length === 0 && untimedTasks.length === 0
+            };
         }
 
         function setWidgetPreviewSize(sizeKey) {
             if (WIDGET_SIZE_SPECS[sizeKey]) { activeWidgetSize = sizeKey; renderWidgetTopicsGrid(); }
         }
 
-        function allocateTopicsToWidgetColumns(topicGroups, numCols, linesPerCol) {
-            const cols = Array.from({ length: numCols }, () => ({ usedLines: 0, cards: [] }));
-            let hiddenTopicsCount = 0, hiddenTasksCount = 0;
+        function allocateOneColumnWidgetCards(timedList, untimedList, isCompact) {
+            const MAX_HEIGHT = isCompact ? 140 : 325;
+            const CARD_PAD_V = isCompact ? 14 : 16;
+            const ROW_GAP = isCompact ? 3 : 4;
+            const CARD_GAP = isCompact ? 6 : 8;
+            const TIMED_ROW_H = 28;
+            const UNTIMED_ROW_H = 20;
+            const MORE_H = 12;
 
-            topicGroups.forEach(group => {
-                let remaining = [...group.tasks];
-                let isCont = false;
+            const calcCardHeight = (count, isTimed, hasMore) => {
+                if (count <= 0 && !hasMore) return 0;
+                const rowH = isTimed ? TIMED_ROW_H : UNTIMED_ROW_H;
+                const rowsH = count > 0 ? (count * rowH + (count - 1) * ROW_GAP) : 0;
+                const moreH = hasMore ? ((count > 0 ? ROW_GAP : 0) + MORE_H) : 0;
+                return CARD_PAD_V + rowsH + moreH;
+            };
 
-                while (remaining.length > 0) {
-                    let targetIdx = cols.findIndex(c => {
-                        const gapCost = c.cards.length >= 1 ? 1 : 0;
-                        return (linesPerCol - c.usedLines) >= (gapCost + 1);
-                    });
-                    if (targetIdx === -1) {
-                        if (!isCont) hiddenTopicsCount++;
-                        hiddenTasksCount += remaining.length;
-                        break;
-                    }
-
-                    let target = cols[targetIdx];
-                    let gapCost = target.cards.length >= 1 ? 1 : 0;
-                    let free = (linesPerCol - target.usedLines) - gapCost;
-
-                    if (!isCont && target.usedLines > 0 && remaining.length > free) {
-                        const emptyColIdx = cols.findIndex((c, idx) => idx > targetIdx && c.usedLines === 0);
-                        if (emptyColIdx !== -1) {
-                            targetIdx = emptyColIdx;
-                            target = cols[targetIdx];
-                            gapCost = 0;
-                            free = linesPerCol;
-                        }
-                    }
-
-                    const hasNextColWithSpace = cols.some((c, idx) => {
-                        if (idx <= targetIdx) return false;
-                        const nextGap = c.cards.length >= 1 ? 1 : 0;
-                        return (linesPerCol - c.usedLines) >= (nextGap + 1);
-                    });
-
-                    if (remaining.length <= free) {
-                        target.cards.push({ topicName: '', visibleTasks: remaining, overflowCount: 0 });
-                        target.usedLines += gapCost + remaining.length;
-                        remaining = [];
-                    } else if (hasNextColWithSpace) {
-                        const chunk = remaining.slice(0, free);
-                        target.cards.push({ topicName: '', visibleTasks: chunk, overflowCount: 0 });
-                        target.usedLines += gapCost + chunk.length;
-                        remaining = remaining.slice(free);
-                        isCont = true;
-                    } else {
-                        const visible = remaining.slice(0, free);
-                        target.cards.push({ topicName: '', visibleTasks: visible, overflowCount: remaining.length - visible.length });
-                        target.usedLines += gapCost + visible.length;
-                        remaining = [];
-                    }
+            const maxFitCount = (totalCount, isTimed, budgetH) => {
+                if (totalCount <= 0) return 0;
+                if (calcCardHeight(totalCount, isTimed, false) <= budgetH) return totalCount;
+                for (let k = totalCount - 1; k >= 1; k--) {
+                    if (calcCardHeight(k, isTimed, true) <= budgetH) return k;
                 }
-            });
-            return { cols, hiddenTopicsCount, hiddenTasksCount };
+                return 0;
+            };
+
+            const T = timedList.length;
+            const U = untimedList.length;
+            const cards = [];
+            if (T === 0 && U === 0) return cards;
+
+            if (T > 0 && U === 0) {
+                const k = maxFitCount(T, true, MAX_HEIGHT);
+                cards.push({ visibleTasks: timedList.slice(0, k), overflowCount: T - k });
+                return cards;
+            }
+            if (T === 0 && U > 0) {
+                const k = maxFitCount(U, false, MAX_HEIGHT);
+                cards.push({ visibleTasks: untimedList.slice(0, k), overflowCount: U - k });
+                return cards;
+            }
+
+            const fullTimedH = calcCardHeight(T, true, false);
+            const fullUntimedH = calcCardHeight(U, false, false);
+            if (fullTimedH + CARD_GAP + fullUntimedH <= MAX_HEIGHT) {
+                cards.push({ visibleTasks: timedList, overflowCount: 0 });
+                cards.push({ visibleTasks: untimedList, overflowCount: 0 });
+                return cards;
+            }
+
+            const halfTimedCap = isCompact ? 2 : 5;
+            const minUntimedKeep = isCompact ? Math.min(U, 2) : Math.min(U, 4);
+            const minUntimedReserveH = calcCardHeight(minUntimedKeep, false, U > minUntimedKeep);
+
+            if (fullTimedH + CARD_GAP + minUntimedReserveH <= MAX_HEIGHT) {
+                const remBudget = MAX_HEIGHT - fullTimedH - CARD_GAP;
+                const uFit = maxFitCount(U, false, remBudget);
+                cards.push({ visibleTasks: timedList, overflowCount: 0 });
+                if (uFit > 0) cards.push({ visibleTasks: untimedList.slice(0, uFit), overflowCount: U - uFit });
+                return cards;
+            }
+
+            const tShow = Math.min(T, halfTimedCap);
+            const timedCardH = calcCardHeight(tShow, true, T > tShow);
+            const remBudget = MAX_HEIGHT - timedCardH - CARD_GAP;
+            const uShow = Math.max(1, maxFitCount(U, false, remBudget));
+
+            cards.push({ visibleTasks: timedList.slice(0, tShow), overflowCount: T - tShow });
+            cards.push({ visibleTasks: untimedList.slice(0, uShow), overflowCount: U - uShow });
+            return cards;
         }
 
         function renderWidgetTopicsGrid() {
@@ -2585,48 +2603,45 @@
             const todayKey = getTodayDateKey();
             if (badge) badge.textContent = spec.label;
 
-            const groups = getAllTopicCards(todayKey);
-            if (groups.length === 0) {
-                container.className = 'grid grid-cols-1';
-                container.innerHTML = `<div class="col-span-full py-10 text-center text-xs font-semibold tracking-widest text-slate-400 uppercase">NO ACTIVE TASKS FOR TODAY</div>`;
+            const { timedTasks, untimedTasks, allCompleted } = getWidgetTaskBuckets(todayKey);
+            const activeCards = allocateOneColumnWidgetCards(timedTasks, untimedTasks, spec.isCompact);
+
+            container.className = 'grid grid-cols-1 gap-2';
+
+            if (activeCards.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-10 text-center text-xs font-semibold tracking-widest text-slate-400 uppercase">${allCompleted ? 'ALL DONE FOR TODAY' : 'NO TASKS FOR TODAY'}</div>`;
                 return;
             }
 
-            const { cols, hiddenTopicsCount, hiddenTasksCount } = allocateTopicsToWidgetColumns(groups, spec.columns, spec.linesPerCol);
-            const activeCols = cols.filter(c => c.cards.length > 0);
-            container.className = activeCols.length === 1 ? 'grid grid-cols-1 gap-3.5' : `grid ${spec.gridClass}`;
-
-            container.innerHTML = activeCols.map((col, idx) => `
-                <div class="flex flex-col gap-3">
-                    ${col.cards.map(card => `
-                        <div class="liquid-glass-subcard rounded-2xl p-3.5 flex flex-col gap-1.5">
-                            <div class="space-y-1.5">
+            container.innerHTML = `
+                <div class="flex flex-col ${spec.isCompact ? 'gap-1.5' : 'gap-2'}">
+                    ${activeCards.map(card => `
+                        <div class="liquid-glass-subcard rounded-[13px] ${spec.isCompact ? 'py-[7px] px-[10px]' : 'py-[8px] px-[10px]'} flex flex-col">
+                            <div class="flex flex-col ${spec.isCompact ? 'gap-[3px]' : 'gap-[4px]'}">
                                 ${card.visibleTasks.map(({ item, rowIdx, colKey, timeStr }) => `
-                                    <div onclick="triggerWidgetDeepLinkToTask('${colKey}', ${rowIdx})" class="group flex items-center gap-2.5 px-2 h-[22px] rounded-xl cursor-pointer hover:bg-white/60 transition">
-                                        <span class="w-[15px] h-[15px] rounded-[3px] border-[1.5px] border-slate-700 bg-transparent flex items-center justify-center flex-shrink-0 self-center">
-                                            ${item.done ? '<svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6.2L4.8 9L10.2 2.8" stroke="#111111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : ''}
-                                        </span>
+                                    <div onclick="triggerWidgetDeepLinkToTask('${colKey}', ${rowIdx})"
+                                         class="group flex items-center gap-[7px] ${timeStr ? 'h-[28px]' : 'h-[20px]'} rounded-lg cursor-pointer hover:bg-white/60 transition min-w-0">
+                                        <span class="w-[16.5px] h-[16.5px] rounded-[4px] border-[1.6px] border-[#1E293B] bg-transparent flex items-center justify-center flex-shrink-0 self-center"></span>
                                         ${timeStr ? `
-                                            <div class="flex flex-col justify-center min-w-0 leading-none self-center">
-                                                <span class="text-[11px] font-medium leading-[1.05] text-slate-800 truncate select-none ${item.done ? 'line-through text-slate-400' : ''}">${escapeHtml(item.text)}</span>
-                                                <span class="text-[7.5px] font-normal leading-none text-slate-500 mt-[1px] select-none ${item.done ? 'text-slate-300' : ''}">${escapeHtml(timeStr)}</span>
+                                            <div class="flex flex-col justify-center min-w-0 flex-1 gap-[1px] self-center">
+                                                <span class="text-[13px] font-medium leading-[16px] text-[#1E293B] truncate select-none">${escapeHtml(item.text)}</span>
+                                                <span class="text-[9px] font-normal leading-[11px] text-[#64748B] select-none">${escapeHtml(timeStr)}</span>
                                             </div>
                                         ` : `
-                                            <span class="text-[12.5px] font-medium leading-none text-slate-800 truncate select-none self-center ${item.done ? 'line-through text-slate-400' : ''}">${escapeHtml(item.text)}</span>
+                                            <span class="text-[13px] font-medium leading-[16px] text-[#1E293B] truncate select-none self-center">${escapeHtml(item.text)}</span>
                                         `}
                                     </div>
                                 `).join('')}
                             </div>
                             ${card.overflowCount > 0 ? `
-                                <div class="flex justify-end pt-0.5 select-none">
-                                    <span class="text-[9.5px] font-semibold text-slate-500">+${card.overflowCount} MORE</span>
+                                <div class="flex justify-end items-center h-[12px] mt-[3px] select-none">
+                                    <span class="text-[8.5px] font-semibold text-[#64748B] leading-none">+${card.overflowCount} MORE</span>
                                 </div>
                             ` : ''}
                         </div>
                     `).join('')}
-                    ${(idx === activeCols.length - 1 && hiddenTopicsCount > 0) ? `<div class="text-right pr-1"><span class="text-[10px] font-bold text-slate-500 bg-white/50 px-2.5 py-1 rounded-full border border-white/70">+${hiddenTasksCount} MORE TO-DOS</span></div>` : ''}
                 </div>
-            `).join('');
+            `;
         }
 
         function openWidgetSimulator() { renderWidgetTopicsGrid(); document.getElementById('widgetSimModalBackdrop').classList.remove('hidden'); }
@@ -2642,16 +2657,25 @@
 
         function buildWidgetSyncPayload() {
             const todayKey = getTodayDateKey();
-            const topics = getAllTopicCards(todayKey).map(g => ({
-                topic: '',
-                tasks: g.tasks.map(t => ({
+            const { timedTasks, untimedTasks, allCompleted } = getWidgetTaskBuckets(todayKey);
+            return {
+                dateKey: todayKey,
+                updatedAt: new Date().toISOString(),
+                appUrl: BASE_APP_URL,
+                allCompleted,
+                timedTasks: timedTasks.map(t => ({
                     text: t.item.text,
-                    done: !!t.item.done,
+                    done: false,
                     id: `${t.colKey}-${t.rowIdx}`,
                     timeStr: t.timeStr || ''
+                })),
+                untimedTasks: untimedTasks.map(t => ({
+                    text: t.item.text,
+                    done: false,
+                    id: `${t.colKey}-${t.rowIdx}`,
+                    timeStr: ''
                 }))
-            }));
-            return { dateKey: todayKey, updatedAt: new Date().toISOString(), appUrl: BASE_APP_URL, topics };
+            };
         }
 
         function toggleScriptableGuide() { document.getElementById('scriptableSetupBox')?.classList.toggle('hidden'); }
@@ -2700,14 +2724,18 @@ function slotToTimeStr(slotIndex, isEnd = false) {
   return String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
 }
 
-function resolveTaskTimeRange(timeBlocks, taskKey, taskText) {
-  if (!Array.isArray(timeBlocks) || timeBlocks.length === 0) return "";
+function resolveTaskTimeInfo(timeBlocks, taskKey, taskText) {
+  if (!Array.isArray(timeBlocks) || timeBlocks.length === 0) return null;
   let found = timeBlocks.find(b => b && b.linkedTaskKey === taskKey);
   if (!found && taskText) {
     found = timeBlocks.find(b => b && !b.linkedTaskKey && (b.text || "").trim() === taskText);
   }
-  if (!found || typeof found.startSlot !== "number" || typeof found.endSlot !== "number") return "";
-  return slotToTimeStr(found.startSlot, false) + " - " + slotToTimeStr(found.endSlot, true);
+  if (!found || typeof found.startSlot !== "number" || typeof found.endSlot !== "number") return null;
+  return {
+    startSlot: found.startSlot,
+    endSlot: found.endSlot,
+    timeStr: slotToTimeStr(found.startSlot, false) + " - " + slotToTimeStr(found.endSlot, true)
+  };
 }
 
 async function getFirebaseIdToken(forceRefresh = false) {
@@ -2774,29 +2802,45 @@ if (CLOUD_BASE) {
     if (res && res.fields && res.fields.payloadJson && res.fields.payloadJson.stringValue) {
       const rawState = JSON.parse(res.fields.payloadJson.stringValue);
       const timeBlocks = Array.isArray(rawState.timeBlocks) ? rawState.timeBlocks : [];
-      const groups = [];
-      let cur = null;
+      const timedTasks = [];
+      const untimedTasks = [];
+      let totalExistingTasks = 0;
+      let orderCounter = 0;
+
       ["left", "right"].forEach(colKey => {
         ((rawState.columns && rawState.columns[colKey]) || []).forEach((it, idx) => {
           const txt = (it.text || "").trim();
-          if (it.rowType === "topic") {
-            if (txt) { cur = { topic: txt, tasks: [] }; groups.push(cur); }
-          } else if (txt) {
-            if (!cur) { cur = { topic: "", tasks: [] }; groups.push(cur); }
-            const taskKey = colKey + "-" + idx;
-            const timeStr = resolveTaskTimeRange(timeBlocks, taskKey, txt);
-            cur.tasks.push({ text: txt, done: !!it.done, id: taskKey, timeStr: timeStr });
+          if (!txt) return;
+          totalExistingTasks++;
+          if (it.done) return;
+
+          const taskKey = colKey + "-" + idx;
+          const timeInfo = resolveTaskTimeInfo(timeBlocks, taskKey, txt);
+          if (timeInfo) {
+            timedTasks.push({
+              text: txt, done: false, id: taskKey, timeStr: timeInfo.timeStr,
+              startSlot: timeInfo.startSlot, endSlot: timeInfo.endSlot, order: orderCounter++
+            });
+          } else {
+            untimedTasks.push({ text: txt, done: false, id: taskKey, timeStr: "", order: orderCounter++ });
           }
         });
       });
-      data.dateKey = getTodayKey();
-      data.appUrl = DEFAULT_APP_URL;
-      data.topics = groups.filter(g => g.tasks.length > 0 || (g.topic && g.topic.trim().length > 0));
+
+      timedTasks.sort((a, b) => {
+        if (a.startSlot !== b.startSlot) return a.startSlot - b.startSlot;
+        if (a.endSlot !== b.endSlot) return a.endSlot - b.endSlot;
+        return a.order - b.order;
+      });
+
+      data = {
+        dateKey: getTodayKey(), appUrl: DEFAULT_APP_URL,
+        timedTasks: timedTasks, untimedTasks: untimedTasks,
+        allCompleted: totalExistingTasks > 0 && timedTasks.length === 0 && untimedTasks.length === 0
+      };
       fm.writeString(filePath, JSON.stringify(data));
     } else if (res && res.error && res.error.code === 404) {
-      data.dateKey = getTodayKey();
-      data.appUrl = DEFAULT_APP_URL;
-      data.topics = [];
+      data = { dateKey: getTodayKey(), appUrl: DEFAULT_APP_URL, timedTasks: [], untimedTasks: [], allCompleted: false };
       fm.writeString(filePath, JSON.stringify(data));
     }
   } catch (e) {}
@@ -2804,185 +2848,105 @@ if (CLOUD_BASE) {
 
 const targetAppUrl = DEFAULT_APP_URL;
 const family = config.widgetFamily || "large";
-const isCompactHeight = family === "small" || family === "medium";
-const spec = {
-  small: { cols: 1, lines: 6 },
-  medium: { cols: 2, lines: 6 },
-  large: { cols: 2, lines: 14 },
-  extraLarge: { cols: 4, lines: 14 }
-}[family] || { cols: 2, lines: 14 };
+const isCompact = family === "small" || family === "medium";
+const MAX_HEIGHT = isCompact ? 140 : 325;
+const CARD_PAD_V = isCompact ? 14 : 16;
+const ROW_GAP = isCompact ? 3 : 4;
+const CARD_GAP = isCompact ? 6 : 8;
+const TIMED_ROW_H = 28;
+const UNTIMED_ROW_H = 20;
+const MORE_H = 12;
+
+function calcCardHeight(count, isTimed, hasMore) {
+  if (count <= 0 && !hasMore) return 0;
+  const rowH = isTimed ? TIMED_ROW_H : UNTIMED_ROW_H;
+  const rowsH = count > 0 ? (count * rowH + (count - 1) * ROW_GAP) : 0;
+  const moreH = hasMore ? ((count > 0 ? ROW_GAP : 0) + MORE_H) : 0;
+  return CARD_PAD_V + rowsH + moreH;
+}
+
+function maxFitCount(totalCount, isTimed, budgetH) {
+  if (totalCount <= 0) return 0;
+  if (calcCardHeight(totalCount, isTimed, false) <= budgetH) return totalCount;
+  for (let k = totalCount - 1; k >= 1; k--) {
+    if (calcCardHeight(k, isTimed, true) <= budgetH) return k;
+  }
+  return 0;
+}
+
+function buildOneColumnCards(timedList, untimedList) {
+  const T = timedList.length, U = untimedList.length, cards = [];
+  if (T === 0 && U === 0) return cards;
+  if (T > 0 && U === 0) { const k = maxFitCount(T, true, MAX_HEIGHT); cards.push({ tasks: timedList.slice(0, k), more: T - k }); return cards; }
+  if (T === 0 && U > 0) { const k = maxFitCount(U, false, MAX_HEIGHT); cards.push({ tasks: untimedList.slice(0, k), more: U - k }); return cards; }
+  const fullTimedH = calcCardHeight(T, true, false), fullUntimedH = calcCardHeight(U, false, false);
+  if (fullTimedH + CARD_GAP + fullUntimedH <= MAX_HEIGHT) {
+    cards.push({ tasks: timedList, more: 0 }); cards.push({ tasks: untimedList, more: 0 }); return cards;
+  }
+  const halfTimedCap = isCompact ? 2 : 5;
+  const minUntimedKeep = isCompact ? Math.min(U, 2) : Math.min(U, 4);
+  const minUntimedReserveH = calcCardHeight(minUntimedKeep, false, U > minUntimedKeep);
+  if (fullTimedH + CARD_GAP + minUntimedReserveH <= MAX_HEIGHT) {
+    const uFit = maxFitCount(U, false, MAX_HEIGHT - fullTimedH - CARD_GAP);
+    cards.push({ tasks: timedList, more: 0 });
+    if (uFit > 0) cards.push({ tasks: untimedList.slice(0, uFit), more: U - uFit });
+    return cards;
+  }
+  const tShow = Math.min(T, halfTimedCap);
+  const timedCardH = calcCardHeight(tShow, true, T > tShow);
+  const uShow = Math.max(1, maxFitCount(U, false, MAX_HEIGHT - timedCardH - CARD_GAP));
+  cards.push({ tasks: timedList.slice(0, tShow), more: T - tShow });
+  cards.push({ tasks: untimedList.slice(0, uShow), more: U - uShow });
+  return cards;
+}
 
 const w = new ListWidget();
 w.backgroundColor = new Color("#EEF2F6");
-w.setPadding(isCompactHeight ? 8 : 10, 10, isCompactHeight ? 8 : 10, 10);
+w.setPadding(isCompact ? 8 : 10, 10, isCompact ? 8 : 10, 10);
 w.refreshAfterDate = new Date(Date.now() + 30 * 1000);
 w.url = targetAppUrl;
 
-const cols = Array.from({ length: spec.cols }, () => ({ used: 0, cards: [] }));
-(data.topics || []).forEach(g => {
-  let rem = [...(g.tasks || [])];
-  let cont = false;
-  const hasTitle = Boolean(g.topic && g.topic.trim());
-  const headerCost = hasTitle ? 1 : 0;
-
-  if (rem.length === 0 && hasTitle) {
-    let target = cols.find(c => {
-      const gapCost = c.cards.length >= 2 ? 1 : 0;
-      return (spec.lines - c.used) >= (gapCost + 1);
-    });
-    if (target) {
-      const gapCost = target.cards.length >= 2 ? 1 : 0;
-      target.cards.push({ title: g.topic, tasks: [], more: 0 });
-      target.used += gapCost + 1;
-    }
-    return;
-  }
-
-  while (rem.length > 0) {
-    let targetIdx = cols.findIndex(c => {
-      const gapCost = c.cards.length >= 2 ? 1 : 0;
-      return (spec.lines - c.used) >= (gapCost + headerCost + 1);
-    });
-    if (targetIdx === -1) break;
-
-    let target = cols[targetIdx];
-    let gapCost = target.cards.length >= 2 ? 1 : 0;
-    let free = (spec.lines - target.used) - gapCost - headerCost;
-
-    if (!cont && target.used > 0 && rem.length > free) {
-      const emptyColIdx = cols.findIndex((c, idx) => idx > targetIdx && c.used === 0);
-      if (emptyColIdx !== -1) {
-        targetIdx = emptyColIdx;
-        target = cols[targetIdx];
-        gapCost = 0;
-        free = spec.lines - headerCost;
-      }
-    }
-
-    const hasNextColWithSpace = cols.some((c, idx) => {
-      if (idx <= targetIdx) return false;
-      const nextGap = c.cards.length >= 2 ? 1 : 0;
-      return (spec.lines - c.used) >= (nextGap + headerCost + 1);
-    });
-
-    let cardTitle = hasTitle ? (cont ? g.topic + " ···" : g.topic) : "";
-    if (rem.length <= free) {
-      target.cards.push({ title: cardTitle, tasks: rem, more: 0 });
-      target.used += gapCost + headerCost + rem.length; rem = [];
-    } else if (hasNextColWithSpace) {
-      let chunk = rem.slice(0, free);
-      target.cards.push({ title: cardTitle, tasks: chunk, more: 0 });
-      target.used += gapCost + headerCost + chunk.length; rem = rem.slice(free); cont = true;
-    } else {
-      let vis = rem.slice(0, free);
-      target.cards.push({ title: cardTitle, tasks: vis, more: rem.length - vis.length });
-      target.used += gapCost + headerCost + vis.length; rem = [];
-    }
-  }
-});
-
-const activeCols = cols.filter(c => c.cards.length > 0);
-if (activeCols.length === 0) {
+const activeCards = buildOneColumnCards(data.timedTasks || [], data.untimedTasks || []);
+if (activeCards.length === 0) {
   w.addSpacer();
-  const emptyRow = w.addStack();
-  emptyRow.layoutHorizontally();
-  emptyRow.addSpacer();
-  const emptyTxt = emptyRow.addText("NO TASKS FOR TODAY");
-  emptyTxt.font = Font.boldSystemFont(12);
-  emptyTxt.textColor = new Color("#94A3B8");
-  emptyRow.addSpacer();
-  w.addSpacer();
+  const emptyRow = w.addStack(); emptyRow.layoutHorizontally(); emptyRow.addSpacer();
+  const emptyTxt = emptyRow.addText(data.allCompleted ? "ALL DONE FOR TODAY" : "NO TASKS FOR TODAY");
+  emptyTxt.font = Font.boldSystemFont(12); emptyTxt.textColor = new Color("#94A3B8");
+  emptyRow.addSpacer(); w.addSpacer();
 } else {
-  const mainRow = w.addStack();
-  mainRow.layoutHorizontally();
-  mainRow.spacing = 8;
-  mainRow.topAlignContent();
-
-  activeCols.forEach(col => {
-    const colStack = mainRow.addStack();
-    colStack.layoutVertically();
-    colStack.spacing = isCompactHeight ? 6 : 8;
-    colStack.topAlignContent();
-
-    col.cards.forEach(card => {
-      const box = colStack.addStack();
-      box.layoutVertically();
-      box.backgroundColor = new Color("#FFFFFF", 0.9);
-      box.cornerRadius = 13;
-      box.setPadding(isCompactHeight ? 7 : 8, 10, isCompactHeight ? 7 : 8, 10);
-      box.spacing = isCompactHeight ? 3 : 4;
-      box.topAlignContent();
-
-      if (card.title || card.more > 0) {
-        const head = box.addStack();
-        head.layoutHorizontally();
-        head.centerAlignContent();
-        if (card.title) {
-          const titleTxt = head.addText(card.title.toUpperCase());
-          titleTxt.font = Font.boldSystemFont(11.5);
-          titleTxt.textColor = new Color("#0F172A");
-          titleTxt.lineLimit = 1;
-        }
-        head.addSpacer();
-        if (card.more > 0) {
-          const moreTxt = head.addText("+" + card.more + " MORE");
-          moreTxt.font = Font.semiboldSystemFont(8.5);
-          moreTxt.textColor = new Color("#64748B");
-          moreTxt.lineLimit = 1;
-        }
-      }
-
-      card.tasks.forEach(t => {
-        const r = box.addStack();
-        r.layoutHorizontally();
-        r.centerAlignContent();
-        r.spacing = 6;
-        r.size = new Size(0, 16);
-        r.url = t.id ? (targetAppUrl + "?taskId=" + t.id) : targetAppUrl;
-        const sym = SFSymbol.named(t.done ? "checkmark.square.fill" : "square");
-        if (sym) {
-          const img = r.addImage(sym.image);
-          img.imageSize = new Size(15, 15);
-          img.tintColor = t.done ? new Color("#64748B") : new Color("#1E293B");
-        } else {
-          const chk = r.addText(t.done ? "☑" : "☐");
-          chk.font = Font.mediumSystemFont(12.5);
-          chk.textColor = new Color("#1E293B");
-        }
-
-        if (t.timeStr) {
-          const textCol = r.addStack();
-          textCol.layoutVertically();
-          textCol.spacing = 0;
-
-          const lbl = textCol.addText(t.text);
-          lbl.font = Font.mediumSystemFont(9.5);
-          lbl.textColor = t.done ? new Color("#94A3B8") : new Color("#1E293B");
-          lbl.lineLimit = 1;
-
-          const timeLbl = textCol.addText(t.timeStr);
-          timeLbl.font = Font.regularSystemFont(7);
-          timeLbl.textColor = t.done ? new Color("#CBD5E1") : new Color("#64748B");
-          timeLbl.lineLimit = 1;
-        } else {
-          const lbl = r.addText(t.text);
-          lbl.font = Font.mediumSystemFont(12);
-          lbl.textColor = t.done ? new Color("#94A3B8") : new Color("#1E293B");
-          lbl.lineLimit = 1;
-        }
-        r.addSpacer();
-      });
+  const colStack = w.addStack(); colStack.layoutVertically(); colStack.spacing = CARD_GAP; colStack.topAlignContent();
+  activeCards.forEach(card => {
+    const box = colStack.addStack(); box.layoutVertically();
+    box.backgroundColor = new Color("#FFFFFF", 0.92); box.cornerRadius = 13;
+    box.setPadding(isCompact ? 7 : 8, 10, isCompact ? 7 : 8, 10); box.spacing = ROW_GAP; box.topAlignContent();
+    card.tasks.forEach(t => {
+      const hasTime = Boolean(t.timeStr), rowHeight = hasTime ? TIMED_ROW_H : UNTIMED_ROW_H;
+      const r = box.addStack(); r.layoutHorizontally(); r.centerAlignContent(); r.spacing = 7; r.size = new Size(0, rowHeight);
+      r.url = t.id ? (targetAppUrl + "?taskId=" + t.id) : targetAppUrl;
+      const chkWrap = r.addStack(); chkWrap.layoutVertically(); chkWrap.size = new Size(17, rowHeight); chkWrap.addSpacer();
+      const sym = SFSymbol.named("square");
+      if (sym) { const img = chkWrap.addImage(sym.image); img.imageSize = new Size(16.5, 16.5); img.tintColor = new Color("#1E293B"); }
+      else { const chk = chkWrap.addText("☐"); chk.font = Font.mediumSystemFont(14); chk.textColor = new Color("#1E293B"); }
+      chkWrap.addSpacer();
+      const textCol = r.addStack(); textCol.layoutVertically(); textCol.size = new Size(0, rowHeight);
+      if (hasTime) textCol.spacing = 1;
+      textCol.addSpacer();
+      const lbl = textCol.addText(t.text); lbl.font = Font.mediumSystemFont(13); lbl.textColor = new Color("#1E293B"); lbl.lineLimit = 1;
+      if (hasTime) { const timeLbl = textCol.addText(t.timeStr); timeLbl.font = Font.regularSystemFont(9); timeLbl.textColor = new Color("#64748B"); timeLbl.lineLimit = 1; }
+      textCol.addSpacer();
+      r.addSpacer();
     });
+    if (card.more > 0) {
+      const foot = box.addStack(); foot.layoutHorizontally(); foot.size = new Size(0, MORE_H); foot.centerAlignContent(); foot.addSpacer();
+      const moreTxt = foot.addText("+" + card.more + " MORE"); moreTxt.font = Font.semiboldSystemFont(8.5); moreTxt.textColor = new Color("#64748B"); moreTxt.lineLimit = 1;
+    }
   });
   w.addSpacer();
 }
 
 Script.setWidget(w);
-if (config.runsInApp) {
-  await w.presentLarge();
-} else if (!config.runsInWidget) {
-  Safari.open(targetAppUrl);
-}
+if (config.runsInApp) { await w.presentLarge(); }
+else if (!config.runsInWidget) { Safari.open(targetAppUrl); }
 Script.complete();`;
         }
 
