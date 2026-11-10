@@ -2576,7 +2576,18 @@
             container.className = 'grid grid-cols-1 gap-2';
 
             if (activeCards.length === 0) {
-                container.innerHTML = `<div class="col-span-full py-10 text-center text-xs font-semibold tracking-widest text-slate-400 uppercase">${allCompleted ? 'ALL DONE FOR TODAY' : 'NO TASKS FOR TODAY'}</div>`;
+                const iconSvg = allCompleted
+                    ? `<svg class="w-6 h-6 text-[#64748B] stroke-[1.8] mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`
+                    : `<svg class="w-6 h-6 text-[#64748B] stroke-[1.7] mb-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="4" height="4" rx="1"></rect><path d="M10 7h11"></path><rect x="3" y="13" width="4" height="4" rx="1"></rect><path d="M10 15h11"></path></svg>`;
+                const mainTitle = allCompleted ? 'All Tasks Completed' : 'No Tasks Today';
+                const subTitle = allCompleted ? 'No More Tasks Today' : 'Tap to Add';
+                container.innerHTML = `
+                    <div class="col-span-full py-12 flex flex-col items-center justify-center gap-1 select-none">
+                        ${iconSvg}
+                        <span class="text-[14px] font-semibold text-[#334155] tracking-tight">${mainTitle}</span>
+                        <span class="text-[11px] font-normal text-[#94A3B8]">${subTitle}</span>
+                    </div>
+                `;
                 return;
             }
 
