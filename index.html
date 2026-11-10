@@ -9,6 +9,7 @@
     <title>DAILY PLANNER</title>
     <link id="appleTouchIconLink" rel="apple-touch-icon" sizes="512x512" href="">
     <link id="faviconLink" rel="icon" type="image/png" sizes="512x512" href="">
+    <link id="pwaManifestLink" rel="manifest" href="">
     <script>
         (function() {
             try {
@@ -95,8 +96,25 @@
                 const pngUrl = c.toDataURL('image/png');
                 const tLink = document.getElementById('appleTouchIconLink');
                 const fLink = document.getElementById('faviconLink');
+                const mLink = document.getElementById('pwaManifestLink');
                 if (tLink) tLink.href = pngUrl;
                 if (fLink) fLink.href = pngUrl;
+                if (mLink) {
+                    const manifestObj = {
+                        name: "DAILY PLANNER",
+                        short_name: "Planner",
+                        start_url: "https://jinnni91.github.io/planner/",
+                        scope: "https://jinnni91.github.io/planner/",
+                        display: "standalone",
+                        background_color: "#EEF2F6",
+                        theme_color: "#EEF2F6",
+                        icons: [
+                            { src: pngUrl, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+                        ]
+                    };
+                    const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+                    mLink.href = URL.createObjectURL(blob);
+                }
             } catch (e) {}
         })();
     </script>
