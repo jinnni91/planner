@@ -685,6 +685,11 @@
         <button type="button" onclick="cancelTwoTapSelection()" class="w-5 h-5 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-[11px] leading-none">✕</button>
     </div>
 
+    <!-- Floating Overlap Warning Toast -->
+    <div id="plannerToastBanner" class="no-print fixed top-5 left-1/2 -translate-x-1/2 z-[80] hidden items-center gap-2 px-4 py-2.5 rounded-full bg-rose-600/95 text-white text-[12px] font-semibold shadow-xl backdrop-blur-md border border-white/20 transition-all">
+        <span id="plannerToastText">이미 일정이 있는 시간대는 선택할 수 없습니다.</span>
+    </div>
+
     <!-- MODAL 0: DATE PICKER -->
     <div id="datePickerModalBackdrop" onclick="if(event.target===this) closeDatePickerModal()" class="no-print fixed inset-0 z-50 hidden bg-slate-900/20 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="liquid-glass-modal relative rounded-3xl max-w-xs w-full p-5 space-y-3.5 select-none">
@@ -1547,26 +1552,139 @@
             return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
         }
 
-        function populateSlotSelectOptions(startSelectEl, endSelectEl, startSlotVal, endSlotVal) {
-            if (!startSelectEl || !endSelectEl) return;
+        let plannerToastTimer = null;
+        function showPlannerToast(msg) {
+            const banner = document.getElementById('plannerToastBanner');
+            const textEl = document.getElementById('plannerToastText');
+            if (!banner || !textEl) return;
+            textEl.textContent = msg;
+            banner.classList.remove('hidden');
+            banner.classList.add('inline-flex');
+            if (plannerToastTimer) clearTimeout(plannerToastTimer);
+            plannerToastTimer = setTimeout(() => {
+                banner.classList.add('hidden');
+                banner.classList.remove('inline-flex');
+            }, 2200);
+        }
+
+        // 현재 편집 중인 항목을 제외하고 이미 점유된 슬롯 Set 반환
+        function getOccupiedSlotsSet(ignoreBlockId = null, ignoreTaskKey = null) {
+            const occupied = new Set();
+            (plannerState.timeBlocks || []).forEach(b => {
+                if (!b) return;
+                if (ignoreBlockId && b.id === ignoreBlockId) return;
+                if (ignoreTaskKey && b.linkedTaskKey === ignoreTaskKey) return;
+                const s = Math.max(0, Math.min(b.startSlot, b.endSlot));
+                const e = Math.min(TOTAL_SLOTS - 1, Math.max(b.startSlot, b.endSlot));
+                for (let i = s; i <= e; i++) {
+                    occupied.add(i);
+                }
+            });
+            return occupied;
+        }
+
+        function isRangeOccupied(startSlot, endSlot, ignoreBlockId = null, ignoreTaskKey = null) {
+            const occupied = getOccupiedSlotsSet(ignoreBlockId, ignoreTaskKey);
+            const s = Math.min(startSlot, endSlot);
+            const e = Math.max(startSlot, endSlot);
+            for (let i = s; i <= e; i++) {
+                if (occupied.has(i)) return true;
+            }
+            return false;
+        }
+
+        // startSlot부터 다른 일정과 부딪히지 않고 연속으로 선택 가능한 최대 종료 슬롯 반환
+        function getMaxContiguousEndSlot(startSlot, ignoreBlockId = null, ignoreTaskKey = null) {
+            const occupied = getOccupiedSlotsSet(ignoreBlockId, ignoreTaskKey);
+            let maxEnd = startSlot;
+            for (let i = startSlot; i < TOTAL_SLOTS; i++) {
+                if (occupied.has(i)) break;
+                maxEnd = i;
+            }
+            return maxEnd;
+        }
+
+        // 타임테이블 드래그 시 다른 일정을 침범하지 않도록 연속된 빈 슬롯 범위로 제한
+        function clampTargetSlotToFree(anchorSlot, targetSlot, ignoreBlockId = null, ignoreTaskKey = null) {
+            const occupied = getOccupiedSlotsSet(ignoreBlockId, ignoreTaskKey);
+            if (targetSlot >= anchorSlot) {
+                let cur = anchorSlot;
+                for (let i = anchorSlot + 1; i <= targetSlot; i++) {
+                    if (occupied.has(i)) break;
+                    cur = i;
+                }
+                return cur;
+            } else {
+                let cur = anchorSlot;
+                for (let i = anchorSlot - 1; i >= targetSlot; i--) {
+                    if (occupied.has(i)) break;
+                    cur = i;
+                }
+                return cur;
+            }
+        }
+
+        // 비어 있는 첫 시간 구간을 탐색 (기본 09:00부터 우선 탐색)
+        function findInitialFreeSlotRange(preferredStart = 54, preferredSpan = 6, ignoreBlockId = null, ignoreTaskKey = null) {
+            const occupied = getOccupiedSlotsSet(ignoreBlockId, ignoreTaskKey);
+            const searchOrder = [];
+            for (let i = preferredStart; i < TOTAL_SLOTS; i++) searchOrder.push(i);
+            for (let i = 0; i < preferredStart; i++) searchOrder.push(i);
+
+            for (const s of searchOrder) {
+                if (!occupied.has(s)) {
+                    let e = s;
+                    while (e + 1 < TOTAL_SLOTS && (e - s + 1) < preferredSpan && !occupied.has(e + 1)) {
+                        e++;
+                    }
+                    return { startSlot: s, endSlot: e };
+                }
+            }
+            return null;
+        }
+
+        function populateSlotSelectOptions(startSelectEl, endSelectEl, startSlotVal, endSlotVal, ignoreBlockId = null, ignoreTaskKey = null) {
+            if (!startSelectEl || !endSelectEl) return { startSlot: startSlotVal, endSlot: endSlotVal };
+            const occupied = getOccupiedSlotsSet(ignoreBlockId, ignoreTaskKey);
+
+            let validStart = startSlotVal;
+            let validEnd = endSlotVal;
+
+            if (occupied.has(validStart)) {
+                const fallback = findInitialFreeSlotRange(validStart, 6, ignoreBlockId, ignoreTaskKey);
+                if (fallback) {
+                    validStart = fallback.startSlot;
+                    validEnd = fallback.endSlot;
+                }
+            }
+
+            const maxEnd = getMaxContiguousEndSlot(validStart, ignoreBlockId, ignoreTaskKey);
+            if (validEnd < validStart) validEnd = validStart;
+            if (validEnd > maxEnd) validEnd = maxEnd;
+
             startSelectEl.innerHTML = '';
             endSelectEl.innerHTML = '';
 
+            // 이미 선택된 시간대는 시작 시간 드롭다운에서 아예 제외하여 중복 선택 불가 처리
             for (let s = 0; s < TOTAL_SLOTS; s++) {
+                if (occupied.has(s)) continue;
                 const optS = document.createElement('option');
                 optS.value = String(s);
                 optS.textContent = slotToTimeLabel(s, false);
-                if (s === startSlotVal) optS.selected = true;
+                if (s === validStart) optS.selected = true;
                 startSelectEl.appendChild(optS);
             }
 
-            for (let e = startSlotVal; e < TOTAL_SLOTS; e++) {
+            // 선택한 시작 시간부터 다음 일정 직전(maxEnd)까지만 종료 시간 드롭다운에 표시
+            for (let e = validStart; e <= maxEnd; e++) {
                 const optE = document.createElement('option');
                 optE.value = String(e);
                 optE.textContent = slotToTimeLabel(e, true);
-                if (e === endSlotVal) optE.selected = true;
+                if (e === validEnd) optE.selected = true;
                 endSelectEl.appendChild(optE);
             }
+
+            return { startSlot: validStart, endSlot: validEnd };
         }
 
         function renderModalColorCircles() {
@@ -1620,6 +1738,8 @@
             const endSel = document.getElementById('modalTaskEndSlotSelect');
             if (!addWrap || !pickerWrap) return;
 
+            const currentTaskKey = activeModalTaskRef ? `${activeModalTaskRef.colKey}-${activeModalTaskRef.rowIdx}` : null;
+
             if (activeModalTaskHasTime) {
                 addWrap.classList.add('hidden');
                 pickerWrap.classList.remove('hidden');
@@ -1632,7 +1752,16 @@
                     activeModalTaskHl = pinnedColors[0] || '#93D5F6';
                 }
                 renderModalColorCircles();
-                populateSlotSelectOptions(startSel, endSel, activeModalTaskStartSlot, activeModalTaskEndSlot);
+                const synced = populateSlotSelectOptions(
+                    startSel,
+                    endSel,
+                    activeModalTaskStartSlot,
+                    activeModalTaskEndSlot,
+                    activeModalTaskBlockId,
+                    currentTaskKey
+                );
+                activeModalTaskStartSlot = synced.startSlot;
+                activeModalTaskEndSlot = synced.endSlot;
             } else {
                 addWrap.classList.remove('hidden');
                 pickerWrap.classList.add('hidden');
@@ -1645,19 +1774,36 @@
         }
 
         function setModalTaskTimeEnabled(enabled) {
-            activeModalTaskHasTime = Boolean(enabled);
-            if (activeModalTaskHasTime && (!activeModalTaskHl || activeModalTaskHl === 'none')) {
-                activeModalTaskHl = pinnedColors[0] || '#93D5F6';
+            const wantEnable = Boolean(enabled);
+            if (wantEnable) {
+                const currentTaskKey = activeModalTaskRef ? `${activeModalTaskRef.colKey}-${activeModalTaskRef.rowIdx}` : null;
+                if (isRangeOccupied(activeModalTaskStartSlot, activeModalTaskEndSlot, activeModalTaskBlockId, currentTaskKey)) {
+                    const freeRange = findInitialFreeSlotRange(54, 6, activeModalTaskBlockId, currentTaskKey);
+                    if (!freeRange) {
+                        showPlannerToast('오늘 타임테이블에 비어 있는 시간대가 없습니다.');
+                        activeModalTaskHasTime = false;
+                        updateModalTaskTimeUI();
+                        return;
+                    }
+                    activeModalTaskStartSlot = freeRange.startSlot;
+                    activeModalTaskEndSlot = freeRange.endSlot;
+                }
+                if (!activeModalTaskHl || activeModalTaskHl === 'none') {
+                    activeModalTaskHl = pinnedColors[0] || '#93D5F6';
+                }
             }
+            activeModalTaskHasTime = wantEnable;
             updateModalTaskTimeUI();
         }
 
         function handleModalTaskStartSlotChange(val) {
             const s = parseInt(val, 10);
             if (isNaN(s)) return;
+            const currentTaskKey = activeModalTaskRef ? `${activeModalTaskRef.colKey}-${activeModalTaskRef.rowIdx}` : null;
+            const maxEnd = getMaxContiguousEndSlot(s, activeModalTaskBlockId, currentTaskKey);
             activeModalTaskStartSlot = s;
-            if (activeModalTaskEndSlot < s) {
-                activeModalTaskEndSlot = Math.min(TOTAL_SLOTS - 1, s + 5);
+            if (activeModalTaskEndSlot < s || activeModalTaskEndSlot > maxEnd) {
+                activeModalTaskEndSlot = Math.min(maxEnd, s + 5);
             }
             updateModalTaskTimeUI();
         }
@@ -1665,7 +1811,9 @@
         function handleModalTaskEndSlotChange(val) {
             const e = parseInt(val, 10);
             if (isNaN(e)) return;
-            activeModalTaskEndSlot = Math.max(activeModalTaskStartSlot, e);
+            const currentTaskKey = activeModalTaskRef ? `${activeModalTaskRef.colKey}-${activeModalTaskRef.rowIdx}` : null;
+            const maxEnd = getMaxContiguousEndSlot(activeModalTaskStartSlot, activeModalTaskBlockId, currentTaskKey);
+            activeModalTaskEndSlot = Math.min(maxEnd, Math.max(activeModalTaskStartSlot, e));
             updateModalTaskTimeUI();
         }
 
@@ -1693,8 +1841,9 @@
             } else {
                 activeModalTaskHasTime = false;
                 activeModalTaskBlockId = null;
-                activeModalTaskStartSlot = 54;
-                activeModalTaskEndSlot = 59;
+                const freeRange = findInitialFreeSlotRange(54, 6, null, taskKey);
+                activeModalTaskStartSlot = freeRange ? freeRange.startSlot : 54;
+                activeModalTaskEndSlot = freeRange ? freeRange.endSlot : 59;
                 activeModalTaskHl = pinnedColors[0] || '#93D5F6';
             }
 
@@ -1754,20 +1903,12 @@
             const e = Math.max(startSlot, endSlot);
             const newBlocks = [];
 
+            // 다른 일정의 블록은 절대 자르거나 덮어쓰지 않고 그대로 보존하며, 현재 편집 중인 본인 블록만 교체
             (plannerState.timeBlocks || []).forEach(b => {
                 if (!b) return;
                 if (existingId && b.id === existingId) return;
                 if (linkedTaskKey && b.linkedTaskKey === linkedTaskKey) return;
-                if (b.endSlot < s || b.startSlot > e) {
-                    newBlocks.push(b);
-                } else {
-                    if (b.startSlot < s) {
-                        newBlocks.push({ ...b, id: 'tb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), endSlot: s - 1 });
-                    }
-                    if (b.endSlot > e) {
-                        newBlocks.push({ ...b, id: 'tb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), startSlot: e + 1 });
-                    }
-                }
+                newBlocks.push(b);
             });
 
             newBlocks.push({
@@ -1789,6 +1930,13 @@
             const taskKey = `${colKey}-${rowIdx}`;
             const inputEl = document.getElementById('modalTaskTextInput');
             const textVal = (inputEl ? inputEl.value : '').trim();
+
+            if (textVal && activeModalTaskHasTime) {
+                if (isRangeOccupied(activeModalTaskStartSlot, activeModalTaskEndSlot, activeModalTaskBlockId, taskKey)) {
+                    showPlannerToast('이미 일정이 있는 시간대는 중복 선택할 수 없습니다.');
+                    return;
+                }
+            }
 
             if (!textVal) {
                 plannerState.columns[colKey][rowIdx] = {
@@ -1970,13 +2118,25 @@
             slotEl.addEventListener('mousedown', (ev) => {
                 if (ev.button !== 0) return;
                 if (twoTapStartSlot !== null) {
+                    if (existingBlock || isRangeOccupied(twoTapStartSlot, slotIdx)) {
+                        showPlannerToast('이미 일정이 있는 시간대는 중복 선택할 수 없습니다.');
+                        return;
+                    }
                     const startS = Math.min(twoTapStartSlot, slotIdx);
                     const endS = Math.max(twoTapStartSlot, slotIdx);
                     cancelTwoTapSelection();
                     openNewTimeBlockModal(startS, endS);
                     return;
                 }
-                pointerDownOccupiedBlockId = existingBlock ? existingBlock.id : null;
+                if (existingBlock) {
+                    pointerDownOccupiedBlockId = existingBlock.id;
+                    isDraggingTimetable = true;
+                    pointerMovedDuringDrag = false;
+                    dragStartSlot = slotIdx;
+                    dragCurrentSlot = slotIdx;
+                    return;
+                }
+                pointerDownOccupiedBlockId = null;
                 isDraggingTimetable = true;
                 pointerMovedDuringDrag = false;
                 dragStartSlot = slotIdx;
@@ -1986,9 +2146,11 @@
 
             slotEl.addEventListener('mouseenter', () => {
                 if (!isDraggingTimetable) return;
-                if (dragCurrentSlot !== slotIdx) {
+                if (pointerDownOccupiedBlockId) return;
+                const clampedSlot = clampTargetSlotToFree(dragStartSlot, slotIdx);
+                if (dragCurrentSlot !== clampedSlot) {
                     pointerMovedDuringDrag = true;
-                    dragCurrentSlot = slotIdx;
+                    dragCurrentSlot = clampedSlot;
                     highlightSelectingSlots();
                 }
             });
@@ -2003,15 +2165,17 @@
                 isTouchRangeDragging = false;
 
                 if (touchHoldDragTimer) clearTimeout(touchHoldDragTimer);
-                touchHoldDragTimer = setTimeout(() => {
-                    if (!touchWasScrolled && touchSlotCandidate === slotIdx) {
-                        isTouchRangeDragging = true;
-                        isDraggingTimetable = true;
-                        dragStartSlot = slotIdx;
-                        dragCurrentSlot = slotIdx;
-                        highlightSelectingSlots();
-                    }
-                }, 220);
+                if (!existingBlock) {
+                    touchHoldDragTimer = setTimeout(() => {
+                        if (!touchWasScrolled && touchSlotCandidate === slotIdx) {
+                            isTouchRangeDragging = true;
+                            isDraggingTimetable = true;
+                            dragStartSlot = slotIdx;
+                            dragCurrentSlot = slotIdx;
+                            highlightSelectingSlots();
+                        }
+                    }, 220);
+                }
             }, { passive: true });
 
             slotEl.addEventListener('touchmove', (ev) => {
@@ -2033,9 +2197,12 @@
                 const slotTarget = targetEl ? targetEl.closest('.tt-slot') : null;
                 if (slotTarget && slotTarget.dataset.slot !== undefined) {
                     const overSlot = parseInt(slotTarget.dataset.slot, 10);
-                    if (!isNaN(overSlot) && overSlot !== dragCurrentSlot) {
-                        dragCurrentSlot = overSlot;
-                        highlightSelectingSlots();
+                    if (!isNaN(overSlot)) {
+                        const clampedSlot = clampTargetSlotToFree(dragStartSlot, overSlot);
+                        if (clampedSlot !== dragCurrentSlot) {
+                            dragCurrentSlot = clampedSlot;
+                            highlightSelectingSlots();
+                        }
                     }
                 }
             }, { passive: false });
@@ -2061,6 +2228,10 @@
                 }
 
                 if (twoTapStartSlot !== null) {
+                    if (existingBlock || isRangeOccupied(twoTapStartSlot, slotIdx)) {
+                        showPlannerToast('이미 일정이 있는 시간대는 중복 선택할 수 없습니다.');
+                        return;
+                    }
                     const s = Math.min(twoTapStartSlot, slotIdx);
                     const e = Math.max(twoTapStartSlot, slotIdx);
                     cancelTwoTapSelection();
@@ -2079,8 +2250,16 @@
 
             slotEl.addEventListener('dragover', (ev) => {
                 if (!draggedTodoData) return;
+                const { colKey, rowIdx } = draggedTodoData;
+                const taskKey = `${colKey}-${rowIdx}`;
+                if (isRangeOccupied(slotIdx, slotIdx, null, taskKey)) {
+                    dropPreviewSlots = [];
+                    highlightSelectingSlots();
+                    return;
+                }
                 ev.preventDefault();
-                const endPreview = Math.min(TOTAL_SLOTS - 1, slotIdx + 5);
+                const maxEnd = getMaxContiguousEndSlot(slotIdx, null, taskKey);
+                const endPreview = Math.min(TOTAL_SLOTS - 1, slotIdx + 5, maxEnd);
                 dropPreviewSlots = [];
                 for (let s = slotIdx; s <= endPreview; s++) dropPreviewSlots.push(s);
                 highlightSelectingSlots();
@@ -2094,10 +2273,18 @@
 
             slotEl.addEventListener('drop', (ev) => {
                 if (!draggedTodoData) return;
-                ev.preventDefault();
                 const { colKey, rowIdx, item } = draggedTodoData;
                 const taskKey = `${colKey}-${rowIdx}`;
-                const endS = Math.min(TOTAL_SLOTS - 1, slotIdx + 5);
+                if (isRangeOccupied(slotIdx, slotIdx, null, taskKey)) {
+                    showPlannerToast('이미 일정이 있는 시간대에는 놓을 수 없습니다.');
+                    draggedTodoData = null;
+                    dropPreviewSlots = [];
+                    highlightSelectingSlots();
+                    return;
+                }
+                ev.preventDefault();
+                const maxEnd = getMaxContiguousEndSlot(slotIdx, null, taskKey);
+                const endS = Math.min(TOTAL_SLOTS - 1, slotIdx + 5, maxEnd);
                 const colorToUse = (item.hl && item.hl !== 'none') ? item.hl : pinnedColors[0];
                 upsertTimeBlockRange(slotIdx, endS, item.text, colorToUse, null, taskKey);
                 draggedTodoData = null;
@@ -2125,15 +2312,16 @@
 
             if (s === null || e === null) return;
 
+            if (occupiedId) {
+                const blk = (plannerState.timeBlocks || []).find(b => b && b.id === occupiedId);
+                if (blk) openEditTimeBlockModal(blk);
+                return;
+            }
+
             if (!moved) {
-                if (occupiedId) {
-                    const blk = (plannerState.timeBlocks || []).find(b => b && b.id === occupiedId);
-                    if (blk) openEditTimeBlockModal(blk);
-                } else {
-                    twoTapStartSlot = s;
-                    updateTwoTapUI();
-                    highlightSelectingSlots();
-                }
+                twoTapStartSlot = s;
+                updateTwoTapUI();
+                highlightSelectingSlots();
                 return;
             }
 
@@ -2163,17 +2351,27 @@
             tbColorManuallySelected = false;
             activeTbStartSlot = Math.min(startSlot, endSlot);
             activeTbEndSlot = Math.max(startSlot, endSlot);
+
+            if (isRangeOccupied(activeTbStartSlot, activeTbEndSlot, null, null)) {
+                showPlannerToast('이미 일정이 있는 시간대는 중복 선택할 수 없습니다.');
+                return;
+            }
+
             modalTimeBlockColor = pinnedColors[0] || '#F9A8C9';
 
             const tbInput = document.getElementById('tbTextInput');
             if (tbInput) tbInput.value = '';
 
-            populateSlotSelectOptions(
+            const synced = populateSlotSelectOptions(
                 document.getElementById('tbStartSlotSelect'),
                 document.getElementById('tbEndSlotSelect'),
                 activeTbStartSlot,
-                activeTbEndSlot
+                activeTbEndSlot,
+                null,
+                null
             );
+            activeTbStartSlot = synced.startSlot;
+            activeTbEndSlot = synced.endSlot;
             renderModalColorCircles();
             document.getElementById('timeBlockModalBackdrop').classList.remove('hidden');
             setTimeout(() => { if (tbInput) tbInput.focus(); }, 40);
@@ -2191,12 +2389,16 @@
             const tbInput = document.getElementById('tbTextInput');
             if (tbInput) tbInput.value = block.text || '';
 
-            populateSlotSelectOptions(
+            const synced = populateSlotSelectOptions(
                 document.getElementById('tbStartSlotSelect'),
                 document.getElementById('tbEndSlotSelect'),
                 activeTbStartSlot,
-                activeTbEndSlot
+                activeTbEndSlot,
+                editingTimeBlockId,
+                editingTimeBlockLinkedTaskKey
             );
+            activeTbStartSlot = synced.startSlot;
+            activeTbEndSlot = synced.endSlot;
             renderModalColorCircles();
             document.getElementById('timeBlockModalBackdrop').classList.remove('hidden');
             setTimeout(() => { if (tbInput) tbInput.focus(); }, 40);
@@ -2213,20 +2415,28 @@
         function handleTbStartSlotChange(val) {
             const s = parseInt(val, 10);
             if (isNaN(s)) return;
+            const maxEnd = getMaxContiguousEndSlot(s, editingTimeBlockId, editingTimeBlockLinkedTaskKey);
             activeTbStartSlot = s;
-            if (activeTbEndSlot < s) activeTbEndSlot = s;
-            populateSlotSelectOptions(
+            if (activeTbEndSlot < s || activeTbEndSlot > maxEnd) {
+                activeTbEndSlot = Math.min(maxEnd, Math.max(s, activeTbEndSlot));
+            }
+            const synced = populateSlotSelectOptions(
                 document.getElementById('tbStartSlotSelect'),
                 document.getElementById('tbEndSlotSelect'),
                 activeTbStartSlot,
-                activeTbEndSlot
+                activeTbEndSlot,
+                editingTimeBlockId,
+                editingTimeBlockLinkedTaskKey
             );
+            activeTbStartSlot = synced.startSlot;
+            activeTbEndSlot = synced.endSlot;
         }
 
         function handleTbEndSlotChange(val) {
             const e = parseInt(val, 10);
             if (isNaN(e)) return;
-            activeTbEndSlot = Math.max(activeTbStartSlot, e);
+            const maxEnd = getMaxContiguousEndSlot(activeTbStartSlot, editingTimeBlockId, editingTimeBlockLinkedTaskKey);
+            activeTbEndSlot = Math.min(maxEnd, Math.max(activeTbStartSlot, e));
         }
 
         function setModalTimeBlockColor(colorHex, isManual = true) {
@@ -2287,6 +2497,11 @@
                 renderTimetable();
                 renderCalendarGrid();
                 closeTimeBlockModal();
+                return;
+            }
+
+            if (isRangeOccupied(activeTbStartSlot, activeTbEndSlot, editingTimeBlockId, editingTimeBlockLinkedTaskKey)) {
+                showPlannerToast('이미 일정이 있는 시간대는 중복 선택할 수 없습니다.');
                 return;
             }
 
