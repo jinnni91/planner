@@ -314,12 +314,11 @@
             display: inline-flex;
             align-items: center;
             gap: 7px;
-            padding-left: 14px;
-            padding-right: 14px;
+            padding-left: 2px;
+            padding-right: 4px;
             height: 20px;
             border-radius: 0px;
             max-width: calc(100% - 4px);
-            transition: background-color 0.15s ease;
             position: relative;
         }
 
@@ -795,31 +794,8 @@
                     onkeydown="if(event.key==='Enter'){ event.preventDefault(); saveTaskModal(); }">
             </div>
 
-            <div class="flex items-center justify-between gap-2 pt-1">
-                <div class="flex items-center gap-1.5 min-w-0">
-                    <button type="button" id="taskHlNoneBtn" onclick="setModalTaskHighlight('none')"
-                        class="no-color-slash w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-300 shadow-xs transition hover:scale-105 flex-shrink-0"
-                        title="NO SHADE"></button>
-                    <div id="taskModalPinnedColors" class="flex items-center gap-1.5"></div>
-                    <button type="button" onclick="triggerNativePicker({ type: 'taskModalRainbow' })"
-                        class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-white/90 shadow-sm transition hover:scale-105 flex-shrink-0"
-                        style="background: conic-gradient(#f87171, #fbbf24, #34d399, #60a5fa, #a78bfa, #f472b6, #f87171);"
-                        title="COLOR PICKER"></button>
-                </div>
-                <button type="button" id="btnTaskModalClear" onclick="clearModalTask()"
-                    class="text-[11px] font-bold tracking-widest uppercase text-slate-500 hover:text-rose-600 px-1.5 py-1 transition flex-shrink-0 whitespace-nowrap">
-                    CLEAR
-                </button>
-            </div>
-
-            <!-- Integrated Time Setting Section -->
-            <div id="modalTaskTimeSection" class="pt-0.5">
-                <div id="modalTaskTimeAddWrap" class="flex items-center justify-end">
-                    <button type="button" onclick="setModalTaskTimeEnabled(true)"
-                        class="liquid-btn-inactive h-9 px-3.5 rounded-[10px] text-[11px] font-bold tracking-wider uppercase transition">
-                        + TIME
-                    </button>
-                </div>
+            <!-- Integrated Time & Timetable Color Setting Section -->
+            <div id="modalTaskTimeSection" class="space-y-3 pt-0.5">
                 <div id="modalTaskTimePickerWrap" class="hidden grid-cols-[1fr_auto_1fr_auto] items-center gap-2">
                     <select id="modalTaskStartSlotSelect" onchange="handleModalTaskStartSlotChange(this.value)"
                         class="liquid-input h-10 px-2.5 rounded-[10px] text-[13px] font-bold text-slate-800 text-center tracking-wider uppercase focus:outline-none cursor-pointer">
@@ -832,6 +808,28 @@
                         class="liquid-btn-inactive w-9 h-10 rounded-[10px] flex items-center justify-center text-slate-500 hover:text-rose-600 text-xs font-bold transition"
                         title="시간 설정 해제">
                         ✕
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                        <div id="modalTaskTimeAddWrap" class="flex items-center">
+                            <button type="button" onclick="setModalTaskTimeEnabled(true)"
+                                class="liquid-btn-inactive h-9 px-3.5 rounded-[10px] text-[11px] font-bold tracking-wider uppercase transition">
+                                + TIME
+                            </button>
+                        </div>
+                        <div id="modalTaskColorPickerWrap" class="hidden items-center gap-1.5 min-w-0">
+                            <div id="taskModalPinnedColors" class="flex items-center gap-1.5"></div>
+                            <button type="button" onclick="triggerNativePicker({ type: 'taskModalRainbow' })"
+                                class="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-white/90 shadow-sm transition hover:scale-105 flex-shrink-0"
+                                style="background: conic-gradient(#f87171, #fbbf24, #34d399, #60a5fa, #a78bfa, #f472b6, #f87171);"
+                                title="COLOR PICKER"></button>
+                        </div>
+                    </div>
+                    <button type="button" id="btnTaskModalClear" onclick="clearModalTask()"
+                        class="text-[11px] font-bold tracking-widest uppercase text-slate-500 hover:text-rose-600 px-1.5 py-1 transition flex-shrink-0 whitespace-nowrap">
+                        CLEAR
                     </button>
                 </div>
             </div>
@@ -870,9 +868,6 @@
 
             <div class="flex items-center justify-between pt-1">
                 <div class="flex items-center gap-2">
-                    <button type="button" id="tbHlNoneBtn" onclick="setModalTimeBlockColor('none')"
-                        class="no-color-slash w-8 h-8 rounded-full border border-slate-300 shadow-xs transition hover:scale-105"
-                        title="NO SHADE"></button>
                     <div id="tbModalPinnedColors" class="flex items-center gap-2"></div>
                     <button type="button" onclick="triggerNativePicker({ type: 'tbModalRainbow' })"
                         class="w-8 h-8 rounded-full border border-white/90 shadow-sm transition hover:scale-105"
@@ -1511,7 +1506,6 @@
 
                         const pill = document.createElement('div');
                         pill.className = 'shade-pill min-w-0';
-                        applyNaturalShadeStyle(pill, item.hl);
 
                         const chkBtn = document.createElement('button');
                         chkBtn.type = 'button';
@@ -1578,17 +1572,6 @@
         function renderModalColorCircles() {
             const taskContainer = document.getElementById('taskModalPinnedColors');
             const tbContainer = document.getElementById('tbModalPinnedColors');
-            const taskNoneBtn = document.getElementById('taskHlNoneBtn');
-            const tbNoneBtn = document.getElementById('tbHlNoneBtn');
-
-            if (taskNoneBtn) {
-                taskNoneBtn.style.outline = (activeModalTaskHl === 'none') ? '2.5px solid #0f172a' : 'none';
-                taskNoneBtn.style.outlineOffset = '2px';
-            }
-            if (tbNoneBtn) {
-                tbNoneBtn.style.outline = (modalTimeBlockColor === 'none') ? '2.5px solid #0f172a' : 'none';
-                tbNoneBtn.style.outlineOffset = '2px';
-            }
 
             if (taskContainer) {
                 taskContainer.innerHTML = '';
@@ -1632,6 +1615,7 @@
         function updateModalTaskTimeUI() {
             const addWrap = document.getElementById('modalTaskTimeAddWrap');
             const pickerWrap = document.getElementById('modalTaskTimePickerWrap');
+            const colorWrap = document.getElementById('modalTaskColorPickerWrap');
             const startSel = document.getElementById('modalTaskStartSlotSelect');
             const endSel = document.getElementById('modalTaskEndSlotSelect');
             if (!addWrap || !pickerWrap) return;
@@ -1640,16 +1624,31 @@
                 addWrap.classList.add('hidden');
                 pickerWrap.classList.remove('hidden');
                 pickerWrap.classList.add('grid');
+                if (colorWrap) {
+                    colorWrap.classList.remove('hidden');
+                    colorWrap.classList.add('flex');
+                }
+                if (!activeModalTaskHl || activeModalTaskHl === 'none') {
+                    activeModalTaskHl = pinnedColors[0] || '#93D5F6';
+                }
+                renderModalColorCircles();
                 populateSlotSelectOptions(startSel, endSel, activeModalTaskStartSlot, activeModalTaskEndSlot);
             } else {
                 addWrap.classList.remove('hidden');
                 pickerWrap.classList.add('hidden');
                 pickerWrap.classList.remove('grid');
+                if (colorWrap) {
+                    colorWrap.classList.add('hidden');
+                    colorWrap.classList.remove('flex');
+                }
             }
         }
 
         function setModalTaskTimeEnabled(enabled) {
             activeModalTaskHasTime = Boolean(enabled);
+            if (activeModalTaskHasTime && (!activeModalTaskHl || activeModalTaskHl === 'none')) {
+                activeModalTaskHl = pinnedColors[0] || '#93D5F6';
+            }
             updateModalTaskTimeUI();
         }
 
@@ -1676,7 +1675,6 @@
 
             const item = plannerState.columns[colKey]?.[rowIdx] || { rowType: 'task', text: '', done: false, hl: 'none' };
             activeModalTaskDone = !!item.done;
-            activeModalTaskHl = normalizeColorHex(item.hl || 'none');
 
             const taskKey = `${colKey}-${rowIdx}`;
             const txt = (item.text || '').trim();
@@ -1690,11 +1688,14 @@
                 activeModalTaskBlockId = linkedBlock.id;
                 activeModalTaskStartSlot = linkedBlock.startSlot;
                 activeModalTaskEndSlot = linkedBlock.endSlot;
+                activeModalTaskHl = normalizeColorHex(linkedBlock.color || item.hl || pinnedColors[0]);
+                if (activeModalTaskHl === 'none') activeModalTaskHl = pinnedColors[0];
             } else {
                 activeModalTaskHasTime = false;
                 activeModalTaskBlockId = null;
                 activeModalTaskStartSlot = 54;
                 activeModalTaskEndSlot = 59;
+                activeModalTaskHl = pinnedColors[0] || '#93D5F6';
             }
 
             const inputEl = document.getElementById('modalTaskTextInput');
@@ -1729,7 +1730,8 @@
         }
 
         function setModalTaskHighlight(colorHex) {
-            activeModalTaskHl = normalizeColorHex(colorHex);
+            const norm = normalizeColorHex(colorHex);
+            activeModalTaskHl = (norm && norm !== 'none') ? norm : (pinnedColors[0] || '#93D5F6');
             renderModalColorCircles();
         }
 
@@ -1738,7 +1740,6 @@
             const inputEl = document.getElementById('modalTaskTextInput');
             if (inputEl) inputEl.value = '';
             setModalTaskDone(false);
-            setModalTaskHighlight('none');
             setModalTaskTimeEnabled(false);
 
             const clearBtn = document.getElementById('btnTaskModalClear');
@@ -1803,20 +1804,20 @@
                     return true;
                 });
             } else {
+                const chosenBlockColor = (activeModalTaskHl && activeModalTaskHl !== 'none') ? activeModalTaskHl : (pinnedColors[0] || '#93D5F6');
                 plannerState.columns[colKey][rowIdx] = {
                     rowType: 'task',
                     text: textVal,
                     done: activeModalTaskDone,
-                    hl: activeModalTaskHl
+                    hl: activeModalTaskHasTime ? chosenBlockColor : 'none'
                 };
 
                 if (activeModalTaskHasTime) {
-                    const blockColor = activeModalTaskHl !== 'none' ? activeModalTaskHl : pinnedColors[0];
                     upsertTimeBlockRange(
                         activeModalTaskStartSlot,
                         activeModalTaskEndSlot,
                         textVal,
-                        blockColor,
+                        chosenBlockColor,
                         activeModalTaskBlockId,
                         taskKey
                     );
@@ -2229,7 +2230,8 @@
         }
 
         function setModalTimeBlockColor(colorHex, isManual = true) {
-            modalTimeBlockColor = normalizeColorHex(colorHex);
+            const norm = normalizeColorHex(colorHex);
+            modalTimeBlockColor = (norm && norm !== 'none') ? norm : (pinnedColors[0] || '#F9A8C9');
             if (isManual) tbColorManuallySelected = true;
             renderModalColorCircles();
         }
@@ -2238,7 +2240,6 @@
             pendingTbClear = true;
             const tbInput = document.getElementById('tbTextInput');
             if (tbInput) tbInput.value = '';
-            setModalTimeBlockColor('none', false);
 
             const clearBtn = document.getElementById('btnTbModalClear');
             if (clearBtn) {
@@ -2250,17 +2251,31 @@
         function saveTimeBlockModal() {
             const tbInput = document.getElementById('tbTextInput');
             const textVal = (tbInput ? tbInput.value : '').trim();
+            const existingBlock = editingTimeBlockId
+                ? (plannerState.timeBlocks || []).find(b => b && b.id === editingTimeBlockId)
+                : null;
+            const oldBlockText = existingBlock ? (existingBlock.text || '').trim() : '';
 
-            if (pendingTbClear || (!textVal && modalTimeBlockColor === 'none')) {
-                const targetBlock = editingTimeBlockId
-                    ? (plannerState.timeBlocks || []).find(b => b && b.id === editingTimeBlockId)
-                    : null;
-                const linkedKey = editingTimeBlockLinkedTaskKey || (targetBlock && targetBlock.linkedTaskKey) || null;
+            // CLEAR를 눌렀거나 텍스트를 비운 채 SAVE한 경우: 타임테이블 블록 및 연결된 투두 항목 삭제
+            if (pendingTbClear || !textVal) {
+                const linkedKey = editingTimeBlockLinkedTaskKey || (existingBlock && existingBlock.linkedTaskKey) || null;
+                let removedFromCol = false;
                 if (linkedKey && /^(left|right)-\d+$/.test(linkedKey)) {
                     const [cKey, rIdxStr] = linkedKey.split('-');
                     const rIdx = parseInt(rIdxStr, 10);
                     if (plannerState.columns[cKey] && plannerState.columns[cKey][rIdx]) {
                         plannerState.columns[cKey][rIdx] = { rowType: 'task', text: '', done: false, hl: 'none' };
+                        removedFromCol = true;
+                    }
+                }
+                if (!removedFromCol && oldBlockText) {
+                    for (const cKey of ['left', 'right']) {
+                        const col = plannerState.columns[cKey] || [];
+                        const matchIdx = col.findIndex(it => (it.text || '').trim() === oldBlockText);
+                        if (matchIdx !== -1) {
+                            col[matchIdx] = { rowType: 'task', text: '', done: false, hl: 'none' };
+                            break;
+                        }
                     }
                 }
                 if (editingTimeBlockId) {
@@ -2275,36 +2290,55 @@
                 return;
             }
 
-            let targetTaskKey = editingTimeBlockLinkedTaskKey;
-            if (textVal) {
-                if (targetTaskKey && /^(left|right)-\d+$/.test(targetTaskKey)) {
-                    const [cKey, rIdxStr] = targetTaskKey.split('-');
-                    const rIdx = parseInt(rIdxStr, 10);
-                    if (plannerState.columns[cKey] && plannerState.columns[cKey][rIdx]) {
-                        plannerState.columns[cKey][rIdx].text = textVal;
-                        if (tbColorManuallySelected) {
-                            plannerState.columns[cKey][rIdx].hl = modalTimeBlockColor;
-                        }
-                    }
-                } else {
-                    for (const cKey of ['left', 'right']) {
-                        const col = plannerState.columns[cKey] || [];
-                        const emptyIdx = col.findIndex(it => !(it.text || '').trim());
-                        if (emptyIdx !== -1) {
-                            col[emptyIdx] = {
-                                rowType: 'task',
-                                text: textVal,
-                                done: false,
-                                hl: tbColorManuallySelected ? modalTimeBlockColor : 'none'
-                            };
-                            targetTaskKey = `${cKey}-${emptyIdx}`;
-                            break;
-                        }
+            const finalColor = (modalTimeBlockColor && modalTimeBlockColor !== 'none')
+                ? modalTimeBlockColor
+                : (pinnedColors[0] || '#F9A8C9');
+
+            let targetTaskKey = editingTimeBlockLinkedTaskKey || (existingBlock && existingBlock.linkedTaskKey) || null;
+            let updatedExistingTask = false;
+
+            if (targetTaskKey && /^(left|right)-\d+$/.test(targetTaskKey)) {
+                const [cKey, rIdxStr] = targetTaskKey.split('-');
+                const rIdx = parseInt(rIdxStr, 10);
+                if (plannerState.columns[cKey] && plannerState.columns[cKey][rIdx] && (plannerState.columns[cKey][rIdx].text || '').trim()) {
+                    plannerState.columns[cKey][rIdx].text = textVal;
+                    plannerState.columns[cKey][rIdx].hl = finalColor;
+                    updatedExistingTask = true;
+                }
+            }
+
+            if (!updatedExistingTask && oldBlockText) {
+                for (const cKey of ['left', 'right']) {
+                    const col = plannerState.columns[cKey] || [];
+                    const matchIdx = col.findIndex(it => (it.text || '').trim() === oldBlockText);
+                    if (matchIdx !== -1) {
+                        col[matchIdx].text = textVal;
+                        col[matchIdx].hl = finalColor;
+                        targetTaskKey = `${cKey}-${matchIdx}`;
+                        updatedExistingTask = true;
+                        break;
                     }
                 }
             }
 
-            const finalColor = modalTimeBlockColor === 'none' ? pinnedColors[0] : modalTimeBlockColor;
+            if (!updatedExistingTask) {
+                for (const cKey of ['left', 'right']) {
+                    const col = plannerState.columns[cKey] || [];
+                    const emptyIdx = col.findIndex(it => !(it.text || '').trim());
+                    if (emptyIdx !== -1) {
+                        col[emptyIdx] = {
+                            rowType: 'task',
+                            text: textVal,
+                            done: false,
+                            hl: finalColor
+                        };
+                        targetTaskKey = `${cKey}-${emptyIdx}`;
+                        updatedExistingTask = true;
+                        break;
+                    }
+                }
+            }
+
             upsertTimeBlockRange(
                 activeTbStartSlot,
                 activeTbEndSlot,
